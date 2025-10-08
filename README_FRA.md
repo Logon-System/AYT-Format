@@ -26,7 +26,7 @@ Des optimisations complémentaires comme le retrait des registres inutilisés ou
 - un système de *builder* permet de créer un *player* à une adresse spécifiée et offre plusieurs avantages. 
   - il n'est plus nécessaire une fois le *player* créé et peut donc être totalement absent du programme dans lequel le *player* est utilisé.
   - il est de taille modeste.
-  - il génère la routine d'initialisation des registres inacrtifs (cette routine étant transparente pour les utilisateurs de CPC "old")
+  - il génère la routine d'initialisation des registres inactifs (cette routine étant transparente pour les utilisateurs de CPC "old")
   - il n'est pas nécessaire d'appeler le *builder* si la musique reboucle ou pour initialiser les registres. 
 - le *player* est construit par le *builder* en fonction de la musique qu'il devra jouer
   - il est très performant en **CPU** (*voir tableaux de performances*).
