@@ -1,3 +1,111 @@
+;;**********************************************************************************************************************************************
+;; ZX SPECTRUM WITH AY-3-8912 (128, +2, +3, ...)
+;;**********************************************************************************************************************************************
+;; EXAMPLE / SAMPLE
+;; NOTE :
+;; I adapted my source to remove directives that the ZXSPIN emulator does not know (and I do not have the documentation for this assembler, 
+;; which I have not found). This emulator and especially its assembler/debugger are buggy and it is not uncommon for it to go into an unrecoverable 
+;; loop of "memory access violation". Maybe an OS problem... 
+;; The memory page between C000-FFFF where the code is assembled cannot be selected. 
+;; The assembler seems to select page 7 without anyone knowing exactly why, and does not assemble after &C000, whether I am in ZX 128 or +2 emulation. 
+;; The debugger menu on page management is just indigestible, incomprehensible and buggy, limiting disassembly to one page, without the screen being refreshed... (!!).
+;;
+;; If you are used to ZX, the code must be able to compile over a 16k page boundary. 
+;; I invite you to take the separate Builder version (which comes from the Winape assembler on Cpc) where the compilation directives are present because 
+;; I had to merge the builder with the example to be able to assemble it (read "file.asm" is not known). 
+;; There are probably minor adjustments to be made (& instead of # for hexadecimal values). 
+;; Because of this assembly problem, the music is not complete, but the example shows 95% of the music playing stably with a raster that indicates the execution length.
+;;
+;; If you make a version that compiles on most assemblers for ZX, please let me know so that it can benefit the rest of the ZX community.
+;; Longshot / Logon System @ logon.system@free.fr
+;;**********************************************************************************************************************************************
+		org 32768
+MAIN
+		di
+		ld sp,mapile
+		;
+		;-----------------------------------------------------------------------------------------------
+		; Swith to Im2
+		;-----------------------------------------------------------------------------------------------
+		ld bc,256		; 257 bytes to write
+		ld a,&c9		; between C900 and CA00 included
+		ld h,a			; with C9 byte = RET
+		ld l,c
+		ld (hl),a
+		ld d,h
+		ld e,b
+		ldir
+		ld i,a			; Msb of vector tab
+		im 2
+
+
+		; ld bc,&7ffd
+		; ld a,7	; Wtf
+		; out (c),a
+		;
+		;-----------------------------------------------------------------------------------------------
+		; Build the player routine (needs 338 or 353 bytes) + 19 bytes (init player) 
+		;-----------------------------------------------------------------------------------------------
+		;
+		ld ix,AYT_File		; Ptr on AYT_File
+		ld de,AYT_Player	; Ptr of Adress where Player is built
+		ld bc,0			; Ptr on 19 bytes for init (if 0, Builder create the init after the player)
+		ld a,1			; Nb of loop for the music
+		call AYT_Builder	; Build the player at &<d>00 for file pointed by <ix> for <a> loop
+		ld (InitRegAy),hl
+InitRegAy	equ $+1
+		call 0			; Init Ay reg
+		;
+		;
+		;-----------------------------------------------------------------------------------------------
+		; Main Code Playing Music
+		;-----------------------------------------------------------------------------------------------
+MainLoop	
+		;-----------------------------------------------------------
+		; Magenta border
+		;-----------------------------------------------------------
+		ld a,3
+		out (&fe),a   	; select border color
+		;
+		;-----------------------------------------------------------
+		; Calling player (JP or CALL method
+		;-----------------------------------------------------------
+		;
+		di
+		call AYT_Player
+		;
+		;-----------------------------------------------------------
+		; Black border
+		;-----------------------------------------------------------
+		xor a
+		out (&fe),a
+		;
+		;-----------------------------------------------------------
+		; Waiting Vsync
+		;-----------------------------------------------------------
+		ei			; Int authorized
+		halt			; wait for irq on vsync via Im2
+		; 
+		;-----------------------------------------------------------
+		; Little delay to let electron beam to be visible
+		;-----------------------------------------------------------
+		ld bc,250		; 10+ (bc x 26 Ts)
+wait_border
+		dec bc
+		ld a,b
+		or c
+		jr nz,wait_border
+		;
+		jr MainLoop
+;;------------------------------------------------------------------------------------------------------------
+;; Stack
+		ds 20
+mapile
+;;============================================================================================================================================ 
+AYT_Player
+	  	ds 353,&FF
+		
+AYT_Builder
 ;;============================================================================================================================================ 
 ;;              _____  __     _____  _____  _____    _____  _____  _____  _____    _____  __     _____  __ __  _____  _____
 ;;             |  |  ||  |   |_   _|| __  ||  _  |  |   __||  _  ||   __||_   _|  |  _  ||  |   |  _  ||  |  ||   __|| __  |
@@ -46,8 +154,8 @@
 ;; 30th October 2025
 ;; Credits 
 ;; Delphi original AYT SeqMarker   
-;; Web YM to AYT converter       : Tronic (GPA)
-;; C Unix/Windows AYT converter  : Siko (Logon System) (Stephane Sikora @ https://www.sikorama.fr)
+;; Web YM to AUT converter       : Tronic (GPA)
+;; C Unix/Windows AYT SeqMarker  : Siko (Logon System) (Stephane Sikora @ https://www.sikorama.fr)
 ;; ZX AYT Z80A player/Builder    : Longshot (Logon System) (Serge Querne @ logon.system@free.fr)
 ;;
 ;;============================================================================================================================================
@@ -183,10 +291,8 @@ AYT_OFS_PlatformFreq	equ 12  ;; Platform & Freq of play (see table)
 AYT_OFS_Reserved	equ 13	;; Rhaaaaaaa
 AYT_SIZE_HEADER		equ 14	;; Header size to find first pattern
 
-ifnot PlayerAccessByJP
-	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
-	OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
-endif
+OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
+OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
 OFS_B1_FirstSeq		equ Ayt_FirstSeq-Ayt_Player_B1_Start 
 OFS_B1_to_PatIdx	equ Ayt_PatternIdx-Ayt_FirstSeq
 OFS_B1_to_B2_Start	equ Ayt_Player_B2_Start-Ayt_PatternIdx
@@ -223,11 +329,7 @@ AYT_Builder_Start
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
 		push bc				; Save Ptr for Init routine
-if PlayerAccessByJP
-		ld (Ayt_ExitPtr01),hl		; Set Main code return address
-else
 		push de				; save ptr on first bloc for SP reload
-endif	
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; In AYT file , relocate sequence list ptr on rxx data. (absolute address)
 		;; In >> ix=Ptr on AYT File
@@ -295,12 +397,12 @@ Ayt_PtrFix_b1
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		ld l,(ix+AYT_OFS_ActiveRegs)
 		ld h,(ix+AYT_OFS_ActiveRegs+1)	; bit 15, 14, 13, ... of HL are active ay reg 0, 1, 2, 3... if 1
-		ld a,#f0			; ay num 1st reg
+		ld a,&f0			; ay num 1st reg
 Ayt_SearchActiveReg
 		add hl,hl			; seek 1st non constant reg
 		jr c,Ayt_ActiveReg_Found	; Active reg found				; 
 		inc a				; not found , next reg
-		cp #f0+13
+		cp &f0+13
 		jr nz,Ayt_SearchActiveReg
 		jr $				; error in Ayt file >> no active reg in file check ayt file
 Ayt_ActiveReg_Found
@@ -330,7 +432,7 @@ Ayt_CreateActiveReg
 		add hl,hl			; seek next active reg
 		jr c,Ayt_NextActReg		; next reg (+1) is active 
 Ayt_SearchNextActReg				; current ay reg is not active
-		cp #f0+12				; is it the last one before r13?
+		cp &f0+12				; is it the last one before r13?
 		jr z,Ayt_Active_Reg		; yes, set 'ld a,12'
 		inc a				; searching next active reg
 		add hl,hl			; 
@@ -338,7 +440,7 @@ Ayt_SearchNextActReg				; current ay reg is not active
 Ayt_Active_Reg
 		ex de,hl			; ay reg active found and not consecutive
 		dec hl				; roll back last byte copied
-		ld (hl),#3e			; coding [ld a,<regA>] instead of [inc a]
+		ld (hl),&3e			; coding [ld a,<regA>] instead of [inc a]
 		inc hl
 		ld (hl),a
 		inc hl
@@ -346,7 +448,7 @@ Ayt_Active_Reg
                 jr nz,Ayt_CreateActiveReg	; not last register
 		jr Ayt_LastReg
 Ayt_NextActReg
-		cp #f0+13
+		cp &f0+13
 		jr nz,Ayt_CreateActiveReg	; Create next "send ay bloc"
 		dec de				; Last reg before r13 was r12, then inc a deleted (r13 manage "a" )
 Ayt_LastReg
@@ -377,13 +479,11 @@ Ayt_LastReg
 		ld (iy+OFS_B3_SeqPatPtr_Upd),l	; HL=ptr on sequence ptr 
 		ld (iy+OFS_B3_SeqPatPtr_Upd+1),h
 		;
-ifnot PlayerAccessByJP				; Player called by call then reload SP
 		ld hl,OFS_B3_Ayt_ReloadSP
 		add hl,bc
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_PtrSaveSP),l
 		ld (iy+OFS_B1_PtrSaveSP+1),h
-endif	
 		;----------------------------------------------------------------
 		; Last block for init routine
 		;----------------------------------------------------------------
@@ -394,7 +494,7 @@ endif
 		ld e,l				; else DE is the User Defined Ptr 
 		ld d,h
 Ayt_InitDefByBuilder
-		ld (hl),#c9			; Init routine default off
+		ld (hl),&c9			; Init routine default off
 Ayt_InitCreate	equ $+1
 		ld a,0				; Ay Reg to init ?
 		or a
@@ -412,21 +512,19 @@ Ayt_InitCreate	equ $+1
 ;===============================================================================================================================================
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1_Start
-ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 20 ts SP is saved if player is "called"
-endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 Ayt_FirstAyReg	equ $+1
-		ld a,#f0		; Ay Idx Select & i/o Port (bit 14=1)
-		ld bc,#c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
+		ld a,&f0		; Ay Idx Select & i/o Port (bit 14=1)
+		ld bc,&c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
 Ayt_PatternIdx	equ $+1
 		ld de,0
 Ayt_Player_B1_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B2_Start	
-		out (#fd),a 		; Select Ay Idx Acc and %1111
+		out (&fd),a 		; Select Ay Idx Acc and %1111
 		pop hl			; Get Pattern Ptr
 		add hl,de		; + offset in Pattern
 		outi			; Send to Ay 
@@ -466,7 +564,7 @@ Ayt_NotLastSeq				;
 		;------------------------
 Ayt_SendAY_r13				; <<<
 		inc a			; 04/00/00/00/04/00 
-		out (#fd),a		; 11/00/00/00/11/00 Select R13 AY reg
+		out (&fd),a		; 11/00/00/00/11/00 Select R13 AY reg
 	        outi        		; 16/00/00/00/16/00 SendAY Data
 Ayt_Player_r13end			; <<<
 					;------------------
@@ -489,33 +587,34 @@ Ayt_SeqPat
 Ayt_PatCountPtr2 equ $+1		; 
 		ld (0),a		; 13/13/00/13/13/13 update offset on patterns (4th=116Ts)(1th=116Ts)(2th=116Ts)
 Ayt_PlayerExit
-if PlayerAccessByJP
-Ayt_ExitPtr01	equ $+1
-		jp 0 			; exit from player via JP 
-else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; Player was called , SP is restored
 		ret			; and return to main code
-endif
 Ayt_Player_B3_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 ; Init of not active AY reg
 ; 
 Ayt_Player_B4_Start
-		ld bc,#c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
+		ld bc,&c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
 Ayt_PtrInitList	equ $+1
 		ld hl,0
 Ayt_InitReg_Loop
 		ld a,(hl)		; get register
 		bit 7,a			; End list of init ay reg
 		ret nz			; yes
-		or #f0			; Ay Idx Select & i/o Port (bit 14=1)
+		or &f0			; Ay Idx Select & i/o Port (bit 14=1)
 		inc hl			; no ptr on data
-		out (#fd),a 		; Select Ay Idx 
+		out (&fd),a 		; Select Ay Idx 
 		outi			; Send to Ay 
 		jr Ayt_InitReg_Loop	; next reg
 Ayt_Player_B4_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Builder_End
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+;;**********************************************************************************************************************************************
+;; FILE AYT LOGON PHOENIX 13 REGISTRES
+;;**********************************************************************************************************************************************
+AYT_File
+;;		incbin "kenotron.ayt"		; 14 registers 0..13
+;;		incbin "logon.ayt"		; 11 registers (- 3, 11, 12)
+		incbin "discmal.ayt"
