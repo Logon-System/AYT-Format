@@ -472,7 +472,7 @@ Si l'option PlayerAcessByJP vaut 1, il faut également définir l'adresse de ret
 		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
-On retrouve l'adresse de retour derrière l'appel du *player* 
+On retrouve en général l'adresse de retour derrière l'appel du *player* (mais vous pouvez la placer où vous voulez)
 
 			jp AYT_Player	; Joue la musique
 	AYT_Player_Ret			; Adresse de retour du player
@@ -528,7 +528,7 @@ Fort heureusement, le Z80A permet de déplacer ses interruptions via le mode IM2
 Ce mode a rarement été exploité dans les architectures des anciennes plateformes.
 Pour l'utiliser il faut tricher un peu pour contourner l'absence de périphériques vectorisés, et construire une table de vecteurs compatible avec toutes les situations.
 
-Sans rentrer dans des considérations trop techniques qui dépasseraient le cadre de ce document, voici la méthode employée pour cadencer l'appel de *AYT_Player**
+Sans rentrer dans des considérations trop techniques qui dépasseraient le cadre de ce document, voici la méthode employée pour cadencer l'appel de *AYT_Player*
 
 		;
 		; Swith to Im2
@@ -580,7 +580,7 @@ Si l'option PlayerAcessByJP vaut 1, il faut également définir l'adresse de ret
 		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
-On retrouve l'adresse de retour derrière l'appel du *player* 
+On retrouve en général l'adresse de retour derrière l'appel du *player* (mais vous pouvez la placer où vous voulez) 
 
 			jp AYT_Player	; Joue la musique
 	AYT_Player_Ret			; Adresse de retour du player
@@ -675,7 +675,7 @@ Si l'option **PlayerAcessByJP** vaut 1, il faut également définir l'adresse de
 		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
-On retrouve l'adresse de retour derrière l'appel du *player** 
+On retrouve en général l'adresse de retour derrière l'appel du *player* (mais vous pouvez la placer où vous voulez)
 
 			jp AYT_Player	; Joue la musique
 	AYT_Player_Ret			; Adresse de retour du player
@@ -732,7 +732,7 @@ Fort heureusement, le Z80A permet de déplacer ses interruptions via le mode **I
 Ce mode a rarement été exploité dans les architectures des anciennes plateformes.
 Pour l'utiliser il faut alors tricher pour contourner l'absence de périphériques vectorisés, et construire une table de vecteurs compatible avec toutes les situations.
 
-Sans rentrer dans des considérations trop techniques qui dépasseraient le cadre de ce document, voici la méthode employée pour cadencer l'appel de *AYT_Player**
+Sans rentrer dans des considérations trop techniques qui dépasseraient le cadre de ce document, voici la méthode employée pour cadencer l'appel de *AYT_Player*
 
 		;
 		; Swith to Im2
