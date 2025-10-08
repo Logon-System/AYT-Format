@@ -20,6 +20,7 @@
 ;; Longshot / Logon System @ logon.system@free.fr
 ;;**********************************************************************************************************************************************
 		org 32768
+Start_Example
 MAIN
 		di
 		ld sp,mapile
@@ -618,3 +619,5 @@ AYT_File
 ;;		incbin "kenotron.ayt"		; 14 registers 0..13
 ;;		incbin "logon.ayt"		; 11 registers (- 3, 11, 12)
 		incbin "discmal.ayt"
+End_Example
+save "bin/EXE8000.BIN",Start_Examplen,End_Example-Start_Example
