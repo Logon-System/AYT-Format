@@ -181,7 +181,7 @@ AYT_SIZE_HEADER		equ 14	;; Header size to find first pattern
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
-;PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
+PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;;
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
