@@ -312,7 +312,7 @@ Si l'option **PlayerAcessByJP** vaut 1, il faut également définir l'adresse de
 		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
-On retrouve l'adresse de retour derrière l'appel du *player** 
+On retrouve en général l'adresse de retour derrière l'appel du *player* (mais vous pouvez la mettre ailleurs).
 
 			jp AYT_Player	; Joue la musique
 	AYT_Player_Ret			; Adresse de retour du player
