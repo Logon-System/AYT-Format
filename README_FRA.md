@@ -2,7 +2,7 @@
 ***Tronic*** (du groupe *GPA*), ***Longshot*** & ***Siko*** (du groupe *Logon System*) sont fiers de présenter un nouveau format de fichier audio appelé ***AYT***.
 C'est un format compact associé utilisable simplement par tout programme nécessitant une haute performance **CPU** et un fonctionnement en **durée constante au cycle près**. 
 Ce format est prévu pour toutes les plateformes utilisant un processeur sonore ***AY-3-8910/AY-3-8912*** (General Instrument) ou compatible (***YM-2149*** de Yamaha). 
-Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC-***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (VG5210)*** 
+Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (VG5210)*** 
 
 ![Image Presentation CPC+](./images/AYTPRES1.jpg)
 # Principe 
