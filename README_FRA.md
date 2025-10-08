@@ -163,7 +163,7 @@ Si ce type d'option reste possible avec les outils créés pour **AYT**, le proc
 Il suffit d'indiquer au compresseur quelle est la plateforme cible et il se charge seul de la conversion en tenant compte des fréquences de base et d'arrivée, tout en calculant les meilleurs compromis en terme de taille.
 
 
-Le format AYT **contient dans son header l'information de la plateforme et la fréquence d'appel du player**, ce qui permet de convertir des fichiers **AYT** prévus pour une plateforme A vers une plateforme B.
+Le format **AYT** **contient dans son header l'information de la plateforme et la fréquence d'appel du player**, ce qui permet de convertir des fichiers **AYT** prévus pour une plateforme A vers une plateforme B.
 
 Le compresseur existe également sur une **interface web** très simple à utiliser.
 L'algorithme cherchera la meilleure compression possible sans qu'il soit nécessaire de refaire des essais, ou, pire, de de déteriorer des données.
@@ -174,7 +174,7 @@ De quoi réaliser de beaux medley AY...
 ### Simplification du player
 Au niveau de l'utilisation d'un fichier **AYT**, le processus est simplifié à l'extrême. 
 
-Sur un **CPC-** par exemple en mode d'appel **CALL**, le programme indique au *builder* l'adresse où le *player* doit être créé, l'adresse où la musique se trouve et le nombre de fois qu'elle sera jouée.
+Sur un **CPC** par exemple en mode d'appel **CALL**, le programme indique au *builder* l'adresse où le *player* doit être créé, l'adresse où la musique se trouve et le nombre de fois qu'elle sera jouée.
 
 Le *builder* renvoie au programme **l'adresse du premier octet libre après le player**, ainsi que **le nombre de µsecondes qu'occupera le player avec le CALL**.
 (c'est utile pour les programmes gérant des processus en temps constant).
