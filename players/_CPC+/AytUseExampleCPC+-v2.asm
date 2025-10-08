@@ -1,0 +1,141 @@
+;;**********************************************************************************************************************************************
+;; AMSTRAD CPC+ (CPC 464+, CPC 6128+, GX 4000)
+;;**********************************************************************************************************************************************
+;;
+;; AYT EXAMPLE / SAMPLE
+;;
+;;**********************************************************************************************************************************************
+;;==============================================================================================================================================
+;;----------------------------------------------------------------------------------------------------------------------------------------------
+AYT_DmaList	equ #40			; Address for DMA List Bit 0 must be 0 and The table must not cross a page boundary (for 28 bytes max)
+					; for example #E4 is ok (#E4+28-1=#ff) but #E5 is not ok (#E5+28-1=#100)
+AYT_Player	equ #100		; Address for player created by builder (131 to 169 bytes according AYT file & Player settings)
+AYT_Builder	equ #200		; Builder can be deleted once AYT file is initialised and player created.
+AYT_File	equ #8000		; Address of AYT file in memory
+
+MyProgram	equ #400
+;;----------------------------------------------------------------------------------------------------------------------------------------------
+;;==============================================================================================================================================
+		org AYT_Builder
+		read "AytbuilderCpc+-v2.asm"
+;;==============================================================================================================================================
+;;==============================================================================================================================================
+		org MyProgram		; Test program
+		run $
+StartExample
+		ld sp,MyStack
+		ld hl,#c9fb		; Cpc interrupt reduced to ei/ret
+		ld (#38),hl		;
+					; int active
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Unlock Asic 
+		;-------------------------------------------------------------------------------------------------------------------------------
+		;
+		call Asic_Unlock	; ASIC page must be unlocked!!
+		;
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Build the player routine (needs 155 to 169 bytes, and 34 bytes more if Ay Init is allocated by Builder) 
+		;-------------------------------------------------------------------------------------------------------------------------------
+		;
+		ld ix,AYT_File		; Ptr on AYT_File
+		ld iy,0			; Let the Builder define Ay-init routine address (needs 34 bytes more)
+		ld bc,AYT_DmaList	; Ptr on the DMA List to create (bit 0 of address=0, no cross boundary adr+28 bytes)
+		ld de,AYT_Player	; Ptr of Address where Player is built
+		ld a,2			; Nb of loop for the music
+if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
+		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
+endif
+		call AYT_Builder	; Build the player at <de> for file pointed by <ix> for <a> loop 
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Init AY Regs
+		; Note that if there are 14 registers, this function will only contain one ret
+		;-------------------------------------------------------------------------------------------------------------------------------
+		ld (InitPlayer),hl	; Store the AY Init address created by Builder after the call to come
+InitPlayer	equ $+1
+		call 0			; Call Ay Init reg created by Builder (at address in IY or after player)
+		;
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Manages actions related to compilation options
+		;-------------------------------------------------------------------------------------------------------------------------------
+		;------------------------
+if PlayerAccessByJP			; If JP Method is on, you may need to save SP
+		ld (AYT_Player_Ret+1),sp ; Save Stack Pointer 
+endif
+		;------------------------		;
+ifnot PlayerConnectAsic 		; If ASIC connect if off, you need to connect asic page
+		ld bc,#7fb8		; Note that in this case, the DMA list cannot be between 4000 and 7FFF (because the player will no longer be able to update it).
+		out (c),c
+endif
+		;------------------------
+		ei			; Builder do a "di" (You can leave interruptions if necessary)
+		;
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Main Code Playing Music
+		;-------------------------------------------------------------------------------------------------------------------------------
+MainLoop	
+		ld b,#f5		; ppi port b
+WaitVsync		
+		in a,(c)		; Wait Vsync
+		rra
+		jr nc,WaitVsync
+		;
+		halt			; some delay
+		halt
+
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Red Color Border
+		;-------------------------------------------------------------------------------------------------------------------------------
+		ld bc,#7f10		; Border 
+		ld a,#4c
+		out (c),c		; select border
+		out (c),a		; in red
+		;
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Calling player (JP or CALL method)
+		;-------------------------------------------------------------------------------------------------------------------------------
+		;
+if PlayerAccessByJP
+		jp AYT_Player		; jump to the player
+AYT_Player_Ret	ld sp,0			; address return of the player
+
+else
+		call AYT_Player		; call to player (do not need save sp, and no constraint with return address)
+endif
+		;-------------------------------------------------------------------------------------------------------------------------------
+		; Black Color Border
+		;-------------------------------------------------------------------------------------------------------------------------------
+		ld bc,#7f54
+		out (c),c
+		; 
+		jr MainLoop
+;
+;===============================================================================================================================================	
+		ds 20
+MyStack
+
+;===============================================================================================================================================
+; Asic Unlock
+;===============================================================================================================================================
+Asic_Unlock	
+		ld de,#eecd		; winape bug
+		ld hl,Asic_Tab_Prbs
+		ld bc,#BC00+15
+Asic_Prbs_B1
+		ld a,(hl)
+		out (c),a
+		inc hl
+		dec c
+		jr nz,Asic_Prbs_B1
+		out (c),e		; Last byte of code
+		out (c),d		; Acq
+		ret
+Asic_Tab_Prbs
+		db 255,0
+		db 255,119,179,81,168
+		db 212,98,57,156,70,43,21,138
+
+;;**********************************************************************************************************************************************
+;; FILE AYT 
+;;**********************************************************************************************************************************************
+		org AYT_File
+		incbin "MUSIQUES\phoenix.ayt"
