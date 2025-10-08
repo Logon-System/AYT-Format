@@ -266,7 +266,7 @@ Cette option est définie par défaut ainsi
 - Lorsque cette option vaut **0**, cela signifie que *Ayt_Builder* créera un player qui devra être appelé avec l'instruction **CALL**.
 - Lorsque cette option vaut **1**, cela signifie que *Ayt_Builder* créera un player qui devra être appelé avec l'instruction **JP** (dans ce cas, un paramètre complémentaire est nécessaire lors de l'appel de la fonction)
 
-Sauf à vouloir briller en société en prétendant avoir économisé **11 µsecondes** (ou **37 Tstates**), je vous conseille de laisser cette option à 0, ce qui vous évitera notamment de devoir sauvegarder et restituer le pointeur de pile.
+Sauf à vouloir briller en société en prétendant avoir économisé **11 µsecondes** (ou **37 Tstates**), je vous conseille de laisser cette option à 0, ce qui vous évitera notamment de devoir sauvegarder et restituer le pointeur de pile, ce qui, in fine, vous fera reperdre ces 11 µsecondes.
 
 Le **fichier AYT** de votre choix est intégrable dans votre code via la directive **incbin** qui permet d'intégrer un fichier binaire nommé à l'emplacement de la directive.
 
