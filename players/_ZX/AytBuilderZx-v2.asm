@@ -168,7 +168,7 @@
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
-PlayerAccessByJP	equ 1		; If 1, requires you to take into account that SP has been wildly modified
+PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,11 +239,10 @@ endif
 		; 
 		ld l,(ix+AYT_OFS_ListInit)	; Offset on Init List 
 		ld h,(ix+AYT_OFS_ListInit+1)
-		ld a,h				; If Offset=0 no Init List
-		or l
-		ld (Ayt_InitCreate),a
 		add hl,bc			; Ptr on Ay Init List 
 		ld (Ayt_PtrInitList),hl		; In Block 4 if created
+		ld a,(hl)			; If empty list, RET as init code
+		ld (Ayt_InitCreate),a
 		;
 		ld l,(ix+AYT_OFS_LoopSeq)	; Offset of Loop Sequence
 		ld h,(ix+AYT_OFS_LoopSeq+1)
@@ -397,7 +396,7 @@ Ayt_InitDefByBuilder
 		ld (hl),#c9			; Init routine default off
 Ayt_InitCreate	equ $+1
 		ld a,0				; Ay Reg to init ?
-		or a
+		inc a				; Empty init list if 0xff
 		ret z				; No (14 register or non available) & give ptr
 		ld hl,Ayt_Player_B4_Start
 		ld bc,AYT_B4_SIZE		; block 4 created

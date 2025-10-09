@@ -342,11 +342,11 @@ AYT_Builder_Start
 		; 
 		ld l,(ix+AYT_OFS_ListInit)	; Offset on Init List 
 		ld h,(ix+AYT_OFS_ListInit+1)
-		ld a,h				; If Offset=0 no Init List
-		or l
-		ld (Ayt_InitCreate),a
 		add hl,bc			; Ptr on Ay Init List 
 		ld (Ayt_PtrInitList),hl		; In Block 4 if created
+		ld a,(hl)			; Read 1st byte of Init List
+		ld (Ayt_InitCreate),a
+
 		;
 		ld l,(ix+AYT_OFS_LoopSeq)	; Offset of Loop Sequence
 		ld h,(ix+AYT_OFS_LoopSeq+1)
@@ -498,7 +498,7 @@ Ayt_InitDefByBuilder
 		ld (hl),&c9			; Init routine default off
 Ayt_InitCreate	equ $+1
 		ld a,0				; Ay Reg to init ?
-		or a
+		inc a				; Empty init list if 0xFF
 		ret z				; No (14 register or non available) & give ptr
 		ld hl,Ayt_Player_B4_Start
 		ld bc,AYT_B4_SIZE		; block 4 created
@@ -620,4 +620,4 @@ AYT_File
 ;;		incbin "logon.ayt"		; 11 registers (- 3, 11, 12)
 		incbin "discmal.ayt"
 End_Example
-save "bin/EXE8000.BIN",Start_Examplen,End_Example-Start_Example
+save "bin/EXE8000.BIN",Start_Example,End_Example-Start_Example
