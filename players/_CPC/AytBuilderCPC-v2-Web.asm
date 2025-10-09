@@ -179,7 +179,7 @@ mend
 ;;
 ;;
 ifndef PlayerAccessByJP
-PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
+	PlayerAccessByJP	equ 1		; If 1, requires you to take into account that SP has been wildly modified
 endif
 ;;
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ endif
 		ld h,(ix+AYT_OFS_ListInit+1)
 		add hl,bc			; Ptr on Ay Init List 
 		ld (Ayt_PtrInitList),hl		; In Block 4 if created
-		ld a,(hl)			; 1st byte of list init
+		ld a,(hl)			; 1st byte of init list
 		ld (Ayt_InitCreate),a
 
 		;
@@ -425,7 +425,7 @@ endif
 		
 Ayt_InitCreate	equ $+1
 		ld a,0				; Init Ay Reg at 1st call of player ?
-		inc a				; Empty init list if #ff
+		inc a				; Empry init list if #ff
 		jr nz,Ayt_BuilderAlloc		; Yes
 		exx
 		push hl				; Rec cpu 
@@ -480,7 +480,7 @@ Ayt_Exit_CntReg
 		ldir				; DE=Ptr on last byte free
 		pop hl				; Hl=Cpu player in nop
 		ret
-		
+
 ;===============================================================================================================================================
 ; Raw code template for the constructor
 ;===============================================================================================================================================
