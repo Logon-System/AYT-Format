@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AYT Player (émulation YM avec horloge réglable)</title>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root { --bg:#0b0c10; --panel:#12131b; --txt:#e8ebf3; --muted:#9aa1b4; --line:#232533; --btn:#1a1c27; --btnh:#232739; --ok:#34d399; }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:880px;margin:26px auto;padding:0 16px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 10px 24px rgba(0,0,0,.22)}
+    h1{font-size:18px;margin:0 0 8px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .drop{border:2px dashed #2b3143;border-radius:12px;padding:16px;text-align:center;background:#0f121a;cursor:pointer}
+    .drop.hover{background:#111626;border-color:#4f8cff}
+    input[type=file]{display:none}
+    button{background:var(--btn);border:1px solid #2a2d3d;color:var(--txt);border-radius:10px;padding:8px 14px;cursor:pointer}
+    button:hover{background:var(--btnh)}
+    label {margin-right:4px;}
+    select {background:var(--btn); color:var(--txt); border:1px solid var(--line); border-radius:4px; padding:4px;}
+    .meta{white-space:pre-wrap;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);background:#0f111a;border:1px dashed var(--line);border-radius:10px;padding:10px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>AYT Player (émulation YM avec horloge réglable)</h1>
+    <div class="card">
+      <div id="drop" class="drop">Glisse un fichier <b>.ayt</b> ici (ou clique)</div>
+      <input id="file" type="file" accept=".ayt" />
+      <div class="row" style="margin-top:10px; gap:8px;">
+        <label for="clockSel">Horloge (Master Clock) :</label>
+        <select id="clockSel" title="Fréquence du chip sonore (Master Clock)">
+          <option value="1000000" selected>1 000 000 Hz (défaut)</option>
+          <option value="1750000">1 750 000 Hz</option>
+          <option value="1773400">1 773 400 Hz</option>
+          <option value="2000000">2 000 000 Hz</option>
+        </select>
+        <button id="play" disabled>Play</button>
+        <button id="stop" disabled>Stop</button>
+        <button id="$exportYM" disabled title="Exporter les données YM reconstruites">💾 Exporter YM</button>
+      </div>
+      <div id="meta" class="meta" style="margin-top:10px;">Aucun AYT chargé.</div>
+    </div>
+  </div>
+
+  <script>
+    // ========== Utils ========== 
+    function readU16LE(view, off) {
+      return view.getUint8(off) | (view.getUint8(off + 1) << 8);
+    }
+
+    // ========== Parser AYT ========== 
+    class AYT_Parser {
+      constructor(arrayBuffer) {
+        this.buf = arrayBuffer;
+        this.u8 = new Uint8Array(arrayBuffer);
+        this.view = new DataView(arrayBuffer);
+        this.header = null;
+        this.patt = null;
+        this.seq = null;
+        this.presentRegs = [];
+        this.constInits = [];
+      }
+      parse() {
+        const v = this.view;
+        const magic = v.getUint8(0);
+        const b0 = v.getUint8(1), b1 = v.getUint8(2);
+        const N = v.getUint8(3);
+        const ptr_first = readU16LE(v, 4);
+        const ptr_loop = readU16LE(v, 6);
+        const ptr_init = readU16LE(v, 8);
+        const t2 = readU16LE(v, 10);
+        const pf_lsb = v.getUint8(12);
+        const pattDeb = 14;
+
+        const present = new Array(14).fill(false);
+        for (let r = 0; r <= 7; r++) if (b1 & (1 << (7 - r))) present[r] = true;
+        for (let r = 8; r <= 13; r++) if (b0 & (1 << (7 - (r - 8)))) present[r] = true;
+        const presentCount = present.reduce((a, x) => a + (x ? 1 : 0), 0);
+
+        const pattLen = ptr_first - pattDeb;
+        this.patt = new Uint8Array(this.buf, pattDeb, pattLen);
+
+        const seqWords = t2 - presentCount;
+        const seqLen = seqWords * 2;
+        const seqStart = ptr_first;
+        this.seq = new Uint8Array(this.buf, seqStart, seqLen);
+
+        const addrStart = seqStart + seqLen;
+        const addrs = [];
+        for (let i = 0; i < presentCount; i++) {
+          addrs.push(readU16LE(v, addrStart + i * 2));
+        }
+
+        let p = addrStart + presentCount * 2;
+        if (v.getUint8(p) !== 0x00 || v.getUint8(p + 1) !== 0x3F || v.getUint8(p + 2) !== 0xBF) {
+          console.warn("AYT marker 00 3F BF non trouvé à", p);
+        } else {
+          p += 3;
+        }
+        const constInits = [];
+        while (p < this.u8.length) {
+          const a = v.getUint8(p++);
+          if (a === 0xFF) break;
+          const b = v.getUint8(p++);
+          constInits.push({ regIndex: a & 0xFF, value: b & 0xFF });
+        }
+
+        this.header = {
+          magic, b0, b1, N, ptr_first, ptr_loop, ptr_init, t2, pf: pf_lsb,
+          pattDeb, pattLen, seqLen, presentCount, addrs
+        };
+        this.presentRegs = present.map((x, i) => x ? i : -1).filter(i => i >= 0);
+        this.constInits = constInits;
+      }
+
+      expandToRegisters() {
+        const N = this.header.N | 0;
+        const regs = Array.from({ length: 16 }, () => new Uint8Array(0));
+        const constMap = new Map(this.constInits.map(ci => [ci.regIndex | 0, ci.value | 0]));
+        const P = this.presentRegs.length;
+        const blocks = (this.seq.length / 2) / P | 0;
+        const frames = blocks * N;
+        if (frames <= 0) {
+          console.error("expandToRegisters: frames invalid", frames);
+        }
+        for (let r = 0; r <= 12; r++) {
+          const c = constMap.has(r) ? constMap.get(r) : 0;
+          regs[r] = new Uint8Array(frames).fill(c);
+        }
+        const c13 = constMap.has(13) ? constMap.get(13) : 0xFF;
+        regs[13] = new Uint8Array(frames).fill(c13);
+
+        let sp = 0;
+        for (let b = 0; b < blocks; b++) {
+          for (let idx = 0; idx < P; idx++) {
+            const r = this.presentRegs[idx];
+            const off = this.seq[sp++] | (this.seq[sp++] << 8);
+            if (off + N > this.patt.length) {
+              console.warn("slice hors limites: r=", r, "off=", off, "N=", N);
+            }
+            const slice = this.patt.subarray(off, off + N);
+            regs[r].set(slice, b * N);
+          }
+        }
+
+        let loopFrame = 0;
+        if (this.header.ptr_loop >= this.header.ptr_first) {
+          const bytesFromFirst = this.header.ptr_loop - this.header.ptr_first;
+          const blockIdx = Math.round(bytesFromFirst / (P * 2));
+          if (blockIdx * (P * 2) === bytesFromFirst) {
+            loopFrame = blockIdx * N;
+          }
+        }
+
+        return { regs, frames, loopFrame };
+      }
+    }
+
+    // ========== Moteur YM / AY ========== 
+    class AYChip {
+      constructor(useYMTable, masterClock) {
+        this.R = new Uint8Array(16);
+        this.TonePeriod = [1, 1, 1];
+        this.ToneCnt = [0, 0, 0];
+        this.ToneOut = [0, 0, 0];
+        this.NoisePeriod = 1;
+        this.NoiseCnt = 0;
+        this.NoiseLFSR = 0x1FFFF;
+        this.NoiseOut = 1;
+        this.EnvPeriod = 1;
+        this.EnvCnt = 0;
+        this.EnvShape = 0;
+        this.EnvLevel = 0;
+        this.EnvHold = false;
+        this.EnvAlt = false;
+        this.EnvAtk = false;
+        this.EnvCont = false;
+
+        const AY_DAC = [
+          0.0000000, 0.0000000, 0.0099947, 0.0099947,
+          0.0144503, 0.0144503, 0.0210575, 0.0210575,
+          0.0307012, 0.0307012, 0.0455482, 0.0455482,
+          0.0644999, 0.0644999, 0.1073625, 0.1073625,
+          0.1265888, 0.1265888, 0.2049897, 0.2049897,
+          0.2922103, 0.2922103, 0.3728389, 0.3728389,
+          0.4925307, 0.4925307, 0.6353246, 0.6353246,
+          0.8055848, 0.8055848, 1.0000000, 1.0000000
+        ];
+        const YM_DAC = [
+          0.0000000, 0.0000000, 0.0046540, 0.0077211,
+          0.0109560, 0.0139620, 0.0169986, 0.0200198,
+          0.0243687, 0.0296941, 0.0350652, 0.0403906,
+          0.0485389, 0.0583352, 0.0680552, 0.0777752,
+          0.0925154, 0.1110857, 0.1297475, 0.1484855,
+          0.1766690, 0.2115511, 0.2463874, 0.2811017,
+          0.3337301, 0.4004273, 0.4673838, 0.5344320,
+          0.6351720, 0.7580072, 0.8799268, 1.0000000
+        ];
+        this.DAC = new Float32Array(32);
+        const tbl = useYMTable ? YM_DAC : AY_DAC;
+        for (let i = 0; i < 32; i++) this.DAC[i] = tbl[i];
+
+        this.master_clock = masterClock;
+        this.reset();
+      }
+
+      reset() {
+        this.R.fill(0);
+        for (let i = 0; i < 3; i++) {
+          this.TonePeriod[i] = 1;
+          this.ToneCnt[i] = 0;
+          this.ToneOut[i] = 0;
+        }
+        this.NoisePeriod = 1;
+        this.NoiseCnt = 0;
+        this.NoiseLFSR = 0x1FFFF;
+        this.NoiseOut = 1;
+        this.EnvPeriod = 1;
+        this.EnvCnt = 0;
+        this.EnvShape = 0;
+        this.EnvLevel = 0;
+        this.EnvHold = false;
+        this.EnvAlt = false;
+        this.EnvAtk = false;
+        this.EnvCont = false;
+      }
+
+      recalcTonePeriods() {
+        this.TonePeriod[0] = Math.max(1, this.R[0] | ((this.R[1] & 0x0F) << 8));
+        this.TonePeriod[1] = Math.max(1, this.R[2] | ((this.R[3] & 0x0F) << 8));
+        this.TonePeriod[2] = Math.max(1, this.R[4] | ((this.R[5] & 0x0F) << 8));
+      }
+      recalcNoisePeriod() {
+        this.NoisePeriod = Math.max(1, this.R[6] & 0x1F);
+      }
+      recalcEnvPeriod() {
+        this.EnvPeriod = Math.max(1, this.R[0x0B] | (this.R[0x0C] << 8));
+      }
+      envReload() {
+        this.EnvShape = this.R[0x0D] & 0x0F;
+        this.EnvCont = (this.EnvShape & 0x08) !== 0;
+        this.EnvAtk = (this.EnvShape & 0x04) !== 0;
+        this.EnvAlt = (this.EnvShape & 0x02) !== 0;
+        this.EnvHold = (this.EnvShape & 0x01) !== 0;
+        if (this.EnvAtk) this.EnvLevel = 0; else this.EnvLevel = 31;
+      }
+      envStep() {
+        if (this.EnvAtk) {
+          if (this.EnvLevel < 31) this.EnvLevel++;
+        } else {
+          if (this.EnvLevel > 0) this.EnvLevel--;
+        }
+        if (((this.EnvAtk) && (this.EnvLevel === 31)) ||
+            ((!this.EnvAtk) && (this.EnvLevel === 0))) {
+          if (!this.EnvCont) {
+            if (this.EnvAtk) this.EnvLevel = 31;
+            else this.EnvLevel = 0;
+            return;
+          }
+          if (this.EnvHold) {
+            return;
+          }
+          if (this.EnvAlt) {
+            this.EnvAtk = !this.EnvAtk;
+          } else {
+            if (this.EnvAtk) this.EnvLevel = 0;
+            else this.EnvLevel = 31;
+          }
+        }
+      }
+
+      writeReg(idx, value) {
+        idx = idx & 0x0F;
+        value = value & 0xFF;
+        this.R[idx] = value;
+        if (idx >= 0 && idx <= 5) {
+          this.recalcTonePeriods();
+        } else if (idx === 6) {
+          this.recalcNoisePeriod();
+        } else if (idx === 0x0B || idx === 0x0C) {
+          this.recalcEnvPeriod();
+        } else if (idx === 0x0D) {
+          this.envReload();
+        }
+      }
+
+      tick() {
+        for (let i = 0; i < 3; i++) {
+          if (this.ToneCnt[i] === 0) this.ToneCnt[i] = this.TonePeriod[i];
+          this.ToneCnt[i]--;
+          if (this.ToneCnt[i] === 0) {
+            this.ToneOut[i] ^= 1;
+          }
+        }
+        if (this.NoiseCnt === 0) this.NoiseCnt = this.NoisePeriod;
+        this.NoiseCnt--;
+        if (this.NoiseCnt === 0) {
+          const bit = ((this.NoiseLFSR ^ (this.NoiseLFSR >> 3)) & 1);
+          this.NoiseLFSR = (this.NoiseLFSR >> 1) | (bit ? 0x10000 : 0);
+          this.NoiseOut = this.NoiseLFSR & 1;
+        }
+        if (this.EnvCnt === 0) this.EnvCnt = this.EnvPeriod;
+        this.EnvCnt--;
+        if (this.EnvCnt === 0) this.envStep();
+      }
+
+      mixSample() {
+        let mixL = 0, mixR = 0;
+        for (let i = 0; i < 3; i++) {
+          const gateTone = (((this.R[7] >> i) & 1) === 0) ? 1 : 0;
+          const gateNoise = (((this.R[7] >> (i + 3)) & 1) === 0) ? 1 : 0;
+          let chanOut = 1;
+          if (gateTone !== 0) chanOut &= this.ToneOut[i];
+          if (gateNoise !== 0) chanOut &= (1 - this.NoiseOut);
+          const envActive = (this.R[8 + i] & 0x10) !== 0;
+          let volIdx;
+          if (envActive) {
+            volIdx = Math.min(Math.max(this.EnvLevel, 0), 31);
+          } else {
+            const v = this.R[8 + i] & 0x0F;
+            volIdx = v * 2 + 1;
+          }
+          const vol = this.DAC[volIdx];
+          const c = (2 * chanOut - 1) * vol;
+          if (i === 0) {
+            mixL += c;
+          } else if (i === 1) {
+            mixL += c * 0.5;
+            mixR += c * 0.5;
+          } else if (i === 2) {
+            mixR += c;
+          }
+        }
+        mixL = Math.max(-1, Math.min(1, mixL * 0.6));
+        mixR = Math.max(-1, Math.min(1, mixR * 0.6));
+        return [mixL, mixR];
+      }
+    }
+
+    class HighPass {
+      constructor(sampleRate, cutHz = 20.0) {
+        const dt = 1.0 / sampleRate;
+        const RC = 1.0 / (2 * Math.PI * cutHz);
+        this.alpha = RC / (RC + dt);
+        this.prevInL = 0; this.prevOutL = 0;
+        this.prevInR = 0; this.prevOutR = 0;
+      }
+      process(L, R) {
+        const yL = this.alpha * (this.prevOutL + L - this.prevInL);
+        const yR = this.alpha * (this.prevOutR + R - this.prevInR);
+        this.prevInL = L; this.prevOutL = yL;
+        this.prevInR = R; this.prevOutR = yR;
+        return [yL, yR];
+      }
+    }
+
+    class AYT_YM_Player {
+      constructor(expanded) {
+        this.regs = expanded.regs;
+        this.totalFrames = expanded.frames | 0;
+        this.loopFrame = expanded.loopFrame | 0;
+        this.masterClock = expanded.masterClock || 1000000;
+        console.log("Player init:", { frames: this.totalFrames, loopFrame: this.loopFrame, mc: this.masterClock });
+        this.ay = new AYChip(true, this.masterClock);
+        this.hp = null;
+        this.sampleRate = 48000;
+        this.frameRate = 50;
+        this.smpPerFrame = this.sampleRate / this.frameRate;
+        this.curFrame = 0;
+        this.sampleInFrame = 0;
+        this.applyRegs = true;
+        this.audio = null;
+        this.proc = null;
+        this.isPlaying = false;
+      }
+
+      initAudioNode() {
+        this.proc = this.audio.createScriptProcessor(1024, 0, 2);
+        this.proc.onaudioprocess = (e) => this.onAudio(e);
+        this.proc.connect(this.audio.destination);
+        this.hp = new HighPass(this.sampleRate, 20.0);
+        console.log("initAudioNode");
+      }
+
+      start() {
+        console.log("start()");
+        if (!this.audio) {
+          this.audio = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this.sampleRate });
+          console.log("AudioContext sr =", this.audio.sampleRate);
+        }
+        if (this.proc) {
+          this.proc.disconnect();
+          this.proc = null;
+        }
+        this.curFrame = 0;
+        this.sampleInFrame = 0;
+        this.applyRegs = true;
+        this.isPlaying = true;
+        this.ay.reset();
+        this.initAudioNode();
+      }
+
+      stop() {
+        console.log("stop()");
+        this.isPlaying = false;
+        if (this.proc) {
+          this.proc.disconnect();
+          this.proc = null;
+        }
+      }
+
+      applyFrame(frameIdx) {
+        console.log("applyFrame", frameIdx);
+        for (let r = 0; r <= 13; r++) {
+          const v = this.regs[r][frameIdx] | 0;
+          console.log("  reg[" + r + "] =", v);
+          if (!(r === 13 && v === 0xFF)) {
+            this.ay.writeReg(r, v);
+          }
+        }
+      }
+
+      onAudio(evt) {
+        if (!this.isPlaying) return;
+        const outL = evt.outputBuffer.getChannelData(0);
+        const outR = evt.outputBuffer.getChannelData(1);
+        const N = outL.length;
+        const ticks = Math.max(1, Math.round((this.ay.master_clock / 8) / this.sampleRate));
+        for (let i = 0; i < N; i++) {
+          if (this.applyRegs) {
+            if (this.curFrame >= this.totalFrames) {
+              this.curFrame = Math.min(this.loopFrame, this.totalFrames - 1);
+            }
+            this.applyFrame(this.curFrame);
+            this.applyRegs = false;
+          }
+          for (let t = 0; t < ticks; t++) {
+            this.ay.tick();
+          }
+          const [Lf, Rf] = this.ay.mixSample();
+          if (i === 0) {
+            console.log("ticks:", ticks, "mix:", Lf.toFixed(6), Rf.toFixed(6));
+          }
+          const [Ld, Rd] = this.hp.process(Lf, Rf);
+          outL[i] = Ld;
+          outR[i] = Rd;
+
+          this.sampleInFrame += 1;
+          if (this.sampleInFrame >= this.smpPerFrame) {
+            this.sampleInFrame -= this.smpPerFrame;
+            this.curFrame++;
+            this.applyRegs = true;
+          }
+        }
+      }
+
+      exportToYM() {
+        const regs = this.regs;
+        const frames = this.totalFrames;
+        const loopFrame = this.loopFrame;
+        const frameDataSize = frames * 16;
+        const metaDataSize = 3;
+        const totalSize = 34 + metaDataSize + frameDataSize + 4;
+        const buffer = new ArrayBuffer(totalSize);
+        const view = new DataView(buffer);
+        let offset = 0;
+        const writeNTString = (str) => {
+          for (let i = 0; i < str.length; i++) {
+            view.setUint8(offset++, str.charCodeAt(i));
+          }
+          view.setUint8(offset++, 0);
+        };
+        view.setUint32(offset, 0x594D3621, false); offset += 4;
+        writeNTString("LeOnArD!");
+        offset = 12;
+        view.setUint32(offset, frames, false); offset += 4;
+        view.setUint32(offset, 0, false); offset += 4;
+        view.setUint16(offset, 0, false); offset += 2;
+        view.setUint32(offset, this.ay.master_clock || 1000000, false); offset += 4;
+        view.setUint16(offset, this.frameRate, false); offset += 2;
+        view.setUint32(offset, loopFrame, false); offset += 4;
+        view.setUint16(offset, 0, false); offset += 2;
+        writeNTString("");
+        writeNTString("");
+        writeNTString("");
+        for (let f = 0; f < frames; f++) {
+          for (let r = 0; r < 16; r++) {
+            view.setUint8(offset++, regs[r][f]);
+          }
+        }
+        view.setUint32(offset, 0x456E6421, false); offset += 4;
+        return buffer;
+      }
+    }
+
+    // ========== UI wiring ========== 
+    const $drop = document.getElementById('drop');
+    const $file = document.getElementById('file');
+    const $meta = document.getElementById('meta');
+    const $play = document.getElementById('play');
+    const $stop = document.getElementById('stop');
+    const $exportYM = document.getElementById('$exportYM');
+    const $clockSel = document.getElementById('clockSel');
+
+    let parser = null;
+
+    function showMeta(txt) {
+      $meta.textContent = txt;
+    }
+    function saveFile(buffer, filename) {
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function handleFile(f) {
+      f.arrayBuffer().then(buf => {
+        parser = new AYT_Parser(buf);
+        parser.parse();
+        const { regs, frames, loopFrame } = parser.expandToRegisters();
+        console.log("expandToRegisters:", { frames, loopFrame });
+        for (let r = 0; r < regs.length; r++) {
+          console.log(`regs[${r}].length =`, regs[r].length);
+        }
+        $play.disabled = false;
+        $stop.disabled = true;
+        $exportYM.disabled = false;
+        showMeta(`AYT chargé — frames=${frames}, loopFrame=${loopFrame}, regs présents: ${parser.presentRegs.join(", ")}`);
+      }).catch(err => {
+        showMeta("Erreur : " + err.message);
+        console.error(err);
+      });
+    }
+
+    $drop.addEventListener('click', () => $file.click());
+    $drop.addEventListener('dragover', e => { e.preventDefault(); $drop.classList.add('hover'); });
+    $drop.addEventListener('dragleave', () => $drop.classList.remove('hover'));
+    $drop.addEventListener('drop', e => {
+      e.preventDefault();
+      $drop.classList.remove('hover');
+      const f = e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
+    $file.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (f) handleFile(f);
+    });
+
+    $play.addEventListener('click', () => {
+      if (!parser) return;
+      const { regs, frames, loopFrame } = parser.expandToRegisters();
+      const mc = parseInt($clockSel.value, 10) || 1000000;
+      player = new AYT_YM_Player({ regs, frames, loopFrame, masterClock: mc });
+      player.start();
+      $play.disabled = true;
+      $stop.disabled = false;
+    });
+
+    $stop.addEventListener('click', () => {
+      if (!player) return;
+      player.stop();
+      $play.disabled = false;
+      $stop.disabled = true;
+    });
+
+    $exportYM.addEventListener('click', () => {
+      if (!parser || !player) {
+        showMeta("Erreur : aucun fichier AYT chargé.");
+        return;
+      }
+      const buf = player.exportToYM();
+      const original = $file.files[0] ? $file.files[0].name.replace(/\.ayt$/i, "") : "export";
+      saveFile(buf, original + ".ym");
+      showMeta(`Exporté ${original}.ym — ${buf.byteLength} octets`);
+    });
+  </script>
+</body>
+</html>
