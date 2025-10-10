@@ -35,7 +35,7 @@ RunVg5000
 		; Swith to Im2
 		;-----------------------------------------------------------------------------------------------
 		ld bc,256		; 257 bytes to write
-		ld a,&c9		; between C900 and CA00 included
+		ld a,#c9		; between C900 and CA00 included
 		ld h,a			; with C9 byte = RET
 		ld l,c
 		ld (hl),a
@@ -135,7 +135,7 @@ AYT_Builder
 ;; FILE AYT 
 ;;**********************************************************************************************************************************************
 AYT_File
-		incbin "discmal.ayt"	
+		incbin "../../ayt-files/still_scrolling.ayt"	
 AYT_Player	
 		ds 370+16,#FF
 
