@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YM → AYT (Modern)</title>
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#151821; --muted:#9aa3b2; --fg:#e6e8ee; --pri:#4f8cff; --pri-600:#3c73d7;
+    --line:#202433; --in:#0f121a; --chip:#23293a; --chip-t:#a9b3c7; --ok:#3ad29f; --err:#ff6b6b; --br:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--fg);font:13.5px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0}
+  header{background:linear-gradient(180deg,#151928,#121521);border-bottom:1px solid var(--line);padding:14px 12px}
+  header .wrap{max-width:1200px;margin:0 auto;padding:0 12px;display:flex;align-items:center;gap:12px}
+  header h1{font-size:18px;margin:0;letter-spacing:.3px}
+  header .small{opacity:.8}
+  .wrap{max-width:1200px;margin:16px auto;padding:0 12px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:12px;align-items:start}
+  @media (max-width: 980px){ .layout{grid-template-columns:1fr} }
+
+  .card{background:var(--panel);border-radius:var(--br);padding:12px;border:1px solid var(--line);box-shadow:0 8px 18px rgba(0,0,0,.2)}
+  h2{font-size:14px;margin:0 0 8px 0;color:#d9e1f2;letter-spacing:.2px}
+
+  .section{display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .col{flex:1 1 220px;min-width:220px}
+  label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+  input[type="file"]{width:100%}
+  input[type="number"],input[type="text"],select{
+    width:100%;padding:7px 10px;border-radius:10px;border:1px solid #2a2e3a;background:var(--in);color:var(--fg);height:32px;font-size:13px
+  }
+  input.num{max-width:86px}
+  input.small{max-width:360px}
+  input[type="checkbox"]{transform:translateY(1px)}
+  .btn{background:#2b3143;color:#d6d9e2;border:0;border-radius:999px;padding:7px 16px;cursor:pointer;height:32px;display:inline-flex;align-items:center;font-size:13px}
+  .btn.primary{background:var(--pri);color:#fff}
+  .btn.primary:hover{background:var(--pri-600)}
+  .btn.preset{min-width:84px;justify-content:center}
+  .btn.preset.active{background:var(--pri);color:#fff}
+  .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .muted{color:var(--muted)}
+  .separator{height:1px;background:#23273a;margin:2px 0 6px 0}
+  .chip{display:inline-block;background:var(--chip);color:var(--chip-t);border-radius:999px;padding:2px 8px;font-size:11px;margin-right:6px}
+  .spacer{flex:1}
+
+  /* Triple */
+  .triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .mini{display:flex;align-items:center;gap:8px;background:#121520;border:1px solid var(--line);border-radius:10px;padding:8px;flex-wrap:wrap}
+  .mini .lbl{width:78px;min-width:78px;color:var(--muted);font-size:11px}
+
+  /* Drop + progress */
+  .drop{border:2px dashed #2b3143;border-radius:12px;padding:18px;text-align:center;background:#0f1219;cursor:pointer;transition:.2s}
+  .drop.hover{background:#111626;border-color:var(--pri)}
+  .drop input{display:none}
+  .progress{height:10px;background:#202636;border-radius:999px;overflow:hidden;border:1px solid #2b3143}
+  .bar{height:100%;width:0%;background:linear-gradient(90deg,#4f8cff,#3c73d7);transition:width .2s}
+
+  /* Switchpair fix: stable layout + bigger click area */
+  .switchpair{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .switchpair .toggle{display:inline-flex;align-items:center;gap:6px;padding:2px 6px;border-radius:8px;cursor:pointer;user-select:none;background:transparent}
+  .switchpair .toggle input{margin:0;accent-color:var(--pri)}
+
+  /* Aside (logs) */
+  .aside .head{font-size:11px;color:var(--muted);margin-bottom:6px}
+  .aside .log{white-space:pre-wrap;overflow:auto;background:#0b0d12;border-radius:10px;padding:10px;border:1px solid var(--line);
+              font-size:11.5px;line-height:1.3;min-height:640px;max-height:70vh}
+
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+  .ok{background:var(--ok)} .err{background:var(--err)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>YM2AYT (web version) : Convert YM5/YM6 → AYT</h1>
+    <div class="small">Warning : This web version do not include "simulated annealing/recuit" option.<br>Use the other converters available for better final size results.</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+    <!-- LEFT -->
+    <div class="card section">
+      <!-- Dropzone + out name -->
+      <div class="row">
+        <div class="col">
+          <label>Load file (Uncompressed YM5/YM6)</label>
+          <div id="drop" class="drop">
+            Drag'n'drop your file there or click to import one
+            <input type="file" id="file" accept=".ym,.YM,.Ym, .ym5, .ym6">
+          </div>
+        </div>
+        <div class="col">
+          <label>Name of exported file</label>
+          <input id="outName" class="small" type="text" placeholder="ex: music.ayt">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Plateform origin of the YM (preset)</label>
+          <div class="inline">
+            <button class="btn preset" id="preset-cpc">CPC</button>
+            <button class="btn preset" id="preset-zx">ZX</button>
+            <button class="btn preset" id="preset-pent">Pentagon</button>
+            <button class="btn preset" id="preset-msx">MSX</button>
+            <button class="btn preset" id="preset-atari">Atari</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SP / SE / SN -->
+      <div class="triple">
+        <!-- Periods -->
+        <div class="mini">
+          <span class="lbl">Periods</span>
+          <input type="checkbox" id="doSp" checked="checked">
+          <input class="num" type="number" id="sp" step="0.01" value="0.5">
+          <div class="switchpair">
+            <label class="toggle" for="splow">
+              <input type="checkbox" id="splow" checked="checked">
+              <span class="muted">low</span>
+            </label>
+            <label class="toggle" for="sphigh">
+              <input type="checkbox" id="sphigh">
+              <span class="muted">high</span>
+            </label>
+          </div>
+        </div>
+        <!-- Envelope -->
+        <div class="mini">
+          <span class="lbl">Envelope</span>
+          <input type="checkbox" id="doSe" checked="checked">
+          <input class="num" type="number" id="se" step="0.01" value="1.0">
+          <div class="switchpair">
+            <label class="toggle" for="selow">
+              <input type="checkbox" id="selow" checked="checked">
+              <span class="muted">low</span>
+            </label>
+            <label class="toggle" for="sehigh">
+              <input type="checkbox" id="sehigh">
+              <span class="muted">high</span>
+            </label>
+          </div>
+        </div>
+        <!-- Noise -->
+        <div class="mini">
+          <span class="lbl">Noise</span>
+          <input type="checkbox" id="doSn" checked="checked">
+          <input class="num" type="number" id="sn" step="0.01" value="1.0">
+          <div class="switchpair">
+            <label class="toggle" for="snlow">
+              <input type="checkbox" id="snlow" checked="checked">
+              <span class="muted">low</span>
+            </label>
+            <label class="toggle" for="snhigh">
+              <input type="checkbox" id="snhigh">
+              <span class="muted">high</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skip constants -->
+      <div class="separator"></div>
+      <div class="row">
+        <div class="col">
+          <label>Skip constants</label>
+          <div class="inline">
+            <input type="checkbox" id="scAll" checked="checked">
+            <label for="scAll" class="muted">All</label>
+            <input type="text" id="scList" class="small" placeholder="r00,r01,..,r11,r12 (Optionnel)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Target -->
+      <div class="row">
+        <div class="col">
+          <label>Target Platform ID (5 bits)</label>
+          <select id="tp">
+            <option value="0" selected="selected">Amstrad CPC (00000)</option>
+            <option value="1">Oric (00001)</option>
+            <option value="2">ZXUno (00010)</option>
+            <option value="3">Pentagon (00011)</option>
+            <option value="4">Timex TS2068 (00100)</option>
+            <option value="5">ZX128 (00101)</option>
+            <option value="6">MSX (00110)</option>
+            <option value="7">Atari ST (00111)</option>
+            <option value="8">VG5000 (01000)</option>
+            <option value="31">Unknown (11111)</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Target Frequency ID (3 bits)</label>
+          <select id="tf">
+            <option value="0" selected="selected">50 Hz (000)</option>
+            <option value="32">25 Hz (001)</option>
+            <option value="64">60 Hz (010)</option>
+            <option value="96">30 Hz (011)</option>
+            <option value="224">Unknown (111)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div>
+        <label>Progression</label>
+        <div class="progress"><div id="bar" class="bar"></div></div>
+      </div>
+
+      <!-- Convert + tags -->
+      <div class="row">
+        <div class="inline">
+          <button class="btn primary" id="run">Convert to AYT</button>
+          <a id="dl" class="btn" style="display:none" download="">⭳ Télécharger</a>
+        </div>
+        <div class="spacer"></div>
+        <div class="tags">
+          <span class="chip" id="ymId">YM?:?</span>
+          <span class="chip" id="frames">Frames: ?</span>
+          <span class="chip" id="rate">Rate: ? Hz</span>
+          <span class="chip" id="loop">Loop: ?</span>
+          <span class="chip" id="stats">N=?</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card aside">
+      <div class="head">Logs</div>
+      <div id="log" class="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = sel => document.querySelector(sel);
+  const logEl = $('#log');
+  const barEl = $('#bar');
+  const state = { header:null, original:null, registers:null, interleaved:false, fileName:'', preset:null, lastUrl:null };
+
+  function log(s, type='info'){
+    const pre = type==='error' ? '⛔ ' : type==='ok' ? '✅ ' : '• ';
+    logEl.textContent += pre + s + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function clearLog(){ logEl.textContent=''; }
+  function resetTags(){ $('#ymId').textContent='YM?:?'; $('#frames').textContent='Frames: ?'; $('#rate').textContent='Rate: ? Hz'; $('#loop').textContent='Loop: ?'; $('#stats').textContent='N=?'; }
+  function setProgress(p){ barEl.style.width = Math.max(0, Math.min(100, p)).toFixed(1) + '%'; }
+  function tick(){ return new Promise(r=>setTimeout(r)); }
+
+  // ===== Binary helpers =====
+  function readBEWord(v, off){ return (v.getUint8(off)<<8) | v.getUint8(off+1); }
+  function readBEDWord(v, off){ return (v.getUint8(off)<<24)|(v.getUint8(off+1)<<16)|(v.getUint8(off+2)<<8)|v.getUint8(off+3); }
+  function makeKey(u8, start, len){ let s=''; for(let i=0;i<len;i++) s+=String.fromCharCode(u8[start+i]); return s; }
+  function classicRound(x){ return x>=0 ? Math.floor(x+0.5) : Math.ceil(x-0.5); }
+  function bankersRoundDelphi(x){ const floor=Math.floor(x), frac=x-floor;
+    if (x>=0){ if (frac>0.5) return floor+1; if (frac<0.5) return floor; return (floor%2===0)?floor:floor+1; }
+    const ceilv=Math.ceil(x), fracAbs=Math.abs(x-ceilv);
+    if (fracAbs>0.5) return ceilv-1; if (fracAbs<0.5) return ceilv; return (ceilv%2===0)?ceilv:ceilv-1; }
+  function toWordLEBytes(w){ return [w & 0xFF, (w>>8)&0xFF]; }
+  function bytesConcat(arrs){ let tot=0; arrs.forEach(a=>tot+=a.length); const out=new Uint8Array(tot); let o=0; arrs.forEach(a=>{out.set(a,o);o+=a.length}); return out; }
+
+  // ===== YM reader =====
+  async function parseYM(file){
+    clearLog(); resetTags(); setProgress(3);
+    const buf = new Uint8Array(await file.arrayBuffer());
+    setProgress(6);
+    const dv  = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    let off=0;
+
+    const id = String.fromCharCode(buf[off],buf[off+1],buf[off+2],buf[off+3]); off+=4;
+    if (id!=='YM6!' && id!=='YM5!') throw new Error('Not a YM6 or YM5 file');
+
+    const control=[]; for(let i=0;i<8;i++) control.push(String.fromCharCode(buf[off++]));
+    const frameCount  = readBEDWord(dv, off); off+=4;
+    const songAttr    = readBEDWord(dv, off); off+=4;
+    const digicnt     = readBEWord(dv, off);  off+=2;
+    const masterClock = readBEDWord(dv, off); off+=4;
+    const frameRate   = readBEWord(dv, off);  off+=2;
+    const loopFrame   = readBEDWord(dv, off); off+=4;
+    const future      = readBEWord(dv, off);  off+=2;
+
+    const interleaved = (songAttr & 1) === 1;
+    off += future;
+
+    for(let i=0;i<digicnt;i++){ const sz=readBEDWord(dv, off); off+=4; off+=sz; }
+
+    function readNT(){ let s=''; while(off<buf.length){ const c=buf[off++]; if (c===0) break; s+=String.fromCharCode(c);} return s; }
+    const title=readNT(), author=readNT(), comment=readNT();
+
+    setProgress(12);
+
+    const regs=new Array(16); for(let i=0;i<16;i++) regs[i]=new Uint8Array(frameCount);
+    const framesBytes=frameCount*16;
+    if (off+framesBytes>buf.length) throw new Error('Unexpected end while reading frames');
+    const frames=buf.slice(off,off+framesBytes); off+=framesBytes;
+
+    if (interleaved){ for(let r=0;r<16;r++) for(let f=0;f<frameCount;f++) regs[r][f]=frames[r*frameCount+f]; }
+    else { for(let f=0;f<frameCount;f++) for(let r=0;r<16;r++) regs[r][f]=frames[f*16+r]; }
+
+    if (off+4<=buf.length){ const e=String.fromCharCode(buf[off],buf[off+1],buf[off+2],buf[off+3]); if (e!=='End!') log('Warning: YM6 end marker missing'); }
+
+    state.header={ id, control:control.join(''), frameCount, songAttr, digicnt, masterClock, frameRate, loopFrame, future, title, author, comment };
+    state.original=regs.map(r=>r.slice());
+    state.registers=regs.map(r=>r.slice());
+    state.interleaved=interleaved;
+    state.fileName=file.name;
+
+    $('#ymId').textContent = `${id}`;
+    $('#frames').textContent = `Frames: ${frameCount}`;
+    $('#rate').textContent   = `Rate: ${frameRate} Hz`;
+    $('#loop').textContent   = `Loop: ${loopFrame}`;
+
+    const dl=$('#dl'); if (state.lastUrl) { URL.revokeObjectURL(state.lastUrl); state.lastUrl=null; }
+    dl.style.display='none'; dl.removeAttribute('href');
+
+    log('------------- YM FILE HEADER -------------');
+    log(`ID            : ${id}`);
+    log(`Control Str   : ${control.join('')}`);
+    log(`Frame Count   : ${frameCount}`);
+    log(`SongAttr      : #${songAttr.toString(16).padStart(8,'0').toUpperCase()}`);
+    log(`Digidrums     : ${digicnt}`);
+    log(`Master Clock  : ${masterClock} Hz`);
+    log(`Frame Rate    : ${frameRate} Hz`);
+    log(`Loop Frame    : ${loopFrame}`);
+    log(`Future (ext.) : ${future}`);
+    log(`Interleaved   : ${interleaved}`);
+    log(`Title         : ${title}`);
+    log(`Author        : ${author}`);
+    log(`Comment       : ${comment}`);
+    log('------------------------------------------');
+    setProgress(18);
+    await tick();
+  }
+
+  function getRegisterInfo(u8){ const n=u8.length; if (n===0) return {isConstant:true,value:0}; const v=u8[0]; for(let i=1;i<n;i++) if(u8[i]!==v) return {isConstant:false,value:v}; return {isConstant:true,value:v}; }
+  function scalePeriods(regLo, regHi, coeff, useDelphiRound){
+    const lo=state.registers[regLo].slice(), hi=state.registers[regHi].slice();
+    if (lo.length!==hi.length) throw new Error('Register lengths differ');
+    for(let i=0;i<lo.length;i++){
+      const period=((hi[i]&0x0F)<<8)|lo[i], scaled=period*coeff;
+      const newP=useDelphiRound?bankersRoundDelphi(scaled):classicRound(scaled);
+      let p=Math.max(0,Math.min(0x0FFF,newP)); lo[i]=p&0xFF; hi[i]=(hi[i]&0xF0)|((p>>8)&0x0F);
+    }
+    state.registers[regLo]=lo; state.registers[regHi]=hi; log(`Periods corrected : R${regLo}+R${regHi} with coefficient=${coeff}`);
+  }
+  function scaleEnvelope(coeff, useDelphiRound){
+    const hi=state.registers[11].slice(), lo=state.registers[12].slice();
+    if (hi.length!==lo.length) throw new Error('Envelope registers lengths differ');
+    for(let i=0;i<hi.length;i++){
+      const period=(hi[i]<<8)|lo[i], scaled=period*coeff;
+      const newP=useDelphiRound?bankersRoundDelphi(scaled):classicRound(scaled);
+      let p=Math.max(0,Math.min(0xFFFF,newP)); lo[i]=p&0xFF; hi[i]=(p>>8)&0xFF;
+    }
+    state.registers[11]=hi; state.registers[12]=lo; log(`Enveloppe corrected : R11+R12 with coefficient=${coeff}`);
+  }
+  function scaleNoise(coeff, useDelphiRound){
+    const r6=state.registers[6].slice();
+    for(let i=0;i<r6.length;i++){
+      const v=r6[i]&0x1F, scaled=v*coeff;
+      const n=useDelphiRound?bankersRoundDelphi(scaled):classicRound(scaled);
+      const nv=Math.max(0,Math.min(0x1F,n)); r6[i]=(r6[i]&0xE0)|nv;
+    }
+    state.registers[6]=r6; log(`Noise corrected : R6 with coefficient=${coeff}`);
+  }
+
+  // ===== Seq/pack core =====
+  function buildOverlappedPack(uniques, N){
+    if (uniques.length===0) return { ok:true, pack:new Uint8Array(0), offsets:[] };
+    const used=new Array(uniques.length).fill(false);
+    const simpleSize=uniques.length*N;
+    const buckets=Array.from({length:256},()=>[]);
+    for(let i=0;i<uniques.length;i++){ const u=uniques[i]; if (u.length===0) continue; buckets[u[0]].push(i); }
+
+    let pack=uniques[0].slice(); const offsets=new Array(uniques.length).fill(0);
+    offsets[0]=0; used[0]=true; let currLen=N; let placed=1;
+
+    while(placed<uniques.length){
+      if (currLen>=simpleSize) return { ok:false };
+      if (currLen>0xFFFF) return { ok:false };
+      const tail=pack.slice(currLen-N,currLen); let bestJ=-1,bestK=0;
+
+      for(let k=N-1;k>=1;k--){
+        const first=tail[N-k], list=buckets[first]; if (!list) continue;
+        for(let t=0;t<list.length;t++){
+          const j=list[t]; if (used[j]) continue; const u=uniques[j]; let ok=true;
+          for(let q=0;q<k;q++){ if (u[q]!==tail[N-k+q]){ ok=false; break; } }
+          if (ok){ bestJ=j; bestK=k; break; }
+        }
+        if (bestJ>=0) break;
+      }
+
+      if (bestJ<0){
+        let j=-1; for(let t=0;t<uniques.length;t++){ if(!used[t]){ j=t; break; } }
+        if (j<0) break; offsets[j]=currLen;
+        const np=new Uint8Array(currLen+N); np.set(pack,0); np.set(uniques[j],currLen);
+        currLen+=N; used[j]=true; placed++; if (currLen>0xFFFF) return { ok:false }; pack=np;
+      } else {
+        const appendLen=N-bestK;
+        const np=new Uint8Array(currLen+appendLen); np.set(pack,0); np.set(uniques[bestJ].slice(bestK),currLen);
+        offsets[bestJ]=currLen-bestK; currLen+=appendLen; used[bestJ]=true; placed++; if (currLen>0xFFFF) return { ok:false }; pack=np;
+      }
+    }
+    for(let i=0;i<offsets.length;i++){ if (offsets[i]<0 || offsets[i]>0xFFFF) return { ok:false }; }
+    return { ok:true, pack, offsets };
+  }
+  function computeGlobalTop(buffers, topK=5){
+    const results=[]; let nonEmpty=0; for(const b of buffers) if (b.length>0) nonEmpty++;
+    for(let N=1; N<=255; N++){
+      const map=new Map(); const uniques=[]; let totalMarked=0; let fail=false;
+      for(const raw of buffers){
+        const cut=raw.length-(raw.length%N), blocks=Math.floor(cut/N);
+        totalMarked += blocks*2;
+        for(let blk=0; blk<blocks; blk++){
+          const key=makeKey(raw, blk*N, N);
+          if (!map.has(key)){ const idx=map.size; if (idx>0xFFFF){ fail=true; break; } map.set(key,idx); uniques.push(raw.slice(blk*N,blk*N+N)); }
+        } if (fail) break;
+      }
+      if (fail) continue;
+      const { ok, pack } = buildOverlappedPack(uniques, N);
+      const packSize = ok ? pack.length : uniques.length*N;
+      results.push({ N, total: totalMarked + packSize, count: nonEmpty });
+    }
+    results.sort((a,b)=> a.total - b.total); return results.slice(0, topK);
+  }
+  function buildGlobalPackFromBuffersMem(names, buffers, N, useOverlap=true){
+    const map=new Map(), globalSeqs=[], markedPer=new Array(buffers.length);
+    for(let i=0;i<buffers.length;i++){
+      const raw=buffers[i], cut=raw.length-(raw.length%N), blocks=Math.floor(cut/N);
+      const marked=new Uint8Array(blocks*2); let idx=0;
+      for(let blk=0; blk<blocks; blk++){
+        const key=makeKey(raw, blk*N, N);
+        if (!map.has(key)){ const index=map.size; if (index>0xFFFF) throw new Error(`Too many unique sequences for N=${N}`); map.set(key,index); globalSeqs.push(raw.slice(blk*N,blk*N+N)); }
+        marked[idx++]=0; marked[idx++]=0;
+      } markedPer[i]=marked;
+    }
+    let pack, uOffsets;
+    if (useOverlap){
+      const r=buildOverlappedPack(globalSeqs, N), overlapMsg=r.ok?'Yes':'No (fallback)';
+      if (!r.ok){ pack=bytesConcat(globalSeqs); uOffsets=globalSeqs.map((_,i)=>i*N); }
+      else { pack=r.pack; uOffsets=r.offsets; }
+      log(`Glouton pack : N=${N}, uniques=${globalSeqs.length}, size=${pack.length} (overlap=${overlapMsg})`);
+      const simpleSize=globalSeqs.length*N;
+      if (pack.length<simpleSize){ const saved=simpleSize-pack.length; const perc=(100.0*saved/simpleSize).toFixed(1); log(`Overlap gain : -${saved} bytes (${perc}%)`); }
+      else log('Overlap gain : 0 byte');
+    } else { pack=bytesConcat(globalSeqs); uOffsets=globalSeqs.map((_,i)=>i*N); }
+
+    for(let i=0;i<buffers.length;i++){
+      const raw=buffers[i], cut=raw.length-(raw.length%N), blocks=Math.floor(cut/N); let idx=0;
+      for(let blk=0; blk<blocks; blk++){
+        const key=makeKey(raw, blk*N, N), index=map.get(key), off=uOffsets[index];
+        if (off<0 || off>0xFFFF) throw new Error('Offset out of range 16 bit');
+        markedPer[i][idx++]=off&0xFF; markedPer[i][idx++]=(off>>8)&0xFF;
+      }
+    }
+    return { markedPer, pack };
+  }
+  function buildInterleavedMarkedMem(markedPer){
+    const pos=new Array(markedPer.length).fill(0); const out=[];
+    let remaining=true; while(remaining){ remaining=false;
+      for(let i=0;i<markedPer.length;i++){
+        if (pos[i]+1<markedPer[i].length){ out.push(markedPer[i][pos[i]], markedPer[i][pos[i]+1]); pos[i]+=2; remaining=true; }
+      }
+    }
+    return new Uint8Array(out);
+  }
+  function parseRegIndexFromName(name){
+    if (name.length===3 && (name[0]==='R'||name[0]==='r')){ const n=parseInt(name.slice(1),10); if(!Number.isNaN(n)&&n>=0&&n<=13) return n; }
+    return -1;
+  }
+  function buildAytFileFromMem(patt, seq, N, tp, tf, readerHeader, present, constInits){
+    if ((seq.length & 1)!==0) throw new Error('Interleave must have an even length');
+    const pattLen=patt.length, seqLen=seq.length;
+    const pattDeb=14, seqqDeb=pattDeb+pattLen, seqqFin=seqqDeb+seqLen;
+    let presentCount=0; for(let r=0;r<=13;r++) if (present[r]) presentCount++;
+    const offRXX=seqqFin+presentCount*2, offR07=offRXX+1, offR13=offR07+1;
+    if (seqqDeb>0xFFFF) throw new Error('ptr_first exceeds 64 KB');
+    const ptrFirst=seqqDeb&0xFFFF;
+
+    let ptrLoop=ptrFirst;
+    const loopFrame=readerHeader.loopFrame>>>0, frameCount=readerHeader.frameCount>>>0;
+    if (N>=1&&N<=255&&presentCount>0&&loopFrame!==0xFFFFFFFF&&loopFrame<frameCount){
+      if ((loopFrame%N)===0){
+        const frameBlocks=Math.floor(loopFrame/N);
+        const ptrLoopBytes64 = BigInt(seqqDeb) + BigInt(frameBlocks)*BigInt(presentCount)*2n;
+        if (ptrLoopBytes64<=0xFFFFn) ptrLoop=Number(ptrLoopBytes64)&0xFFFF;
+        else log('Warning! ptr_loop > 64 KB -> fallback on ptr_first');
+      } else log(`Warning! ptr_loop is NOT OK : LoopFrame (${loopFrame}) / N (${N}) (remains=${loopFrame%N}) -> ptr_loop = ptr_first`);
+    } else {
+      if (loopFrame===0xFFFFFFFF||loopFrame>=frameCount) log(`Warning! LoopFrame is NOT VALID (${loopFrame}) -> ptr_loop = ptr_first`);
+      else if (N<1||N>255) log(`Warning! N is NOT VALID (${N}) -> ptr_loop = ptr_first`);
+      else if (presentCount===0) log('Warning! No register -> ptr_loop = ptr_first');
+    }
+
+    const t2 = ((seqLen/2) + presentCount) & 0xFFFF;
+    let b0=0,b1=0; for(let r=0;r<=7;r++) if (present[r]) b1|=(1<<(7-r)); for(let r=8;r<=13;r++) if (present[r]) b0|=(1<<(7-(r-8)));
+
+    const out=[];
+    out.push(0x20, b0&0xFF, b1&0xFF, (N&0xFF));
+    out.push(...toWordLEBytes(ptrFirst));
+    out.push(...toWordLEBytes(ptrLoop));
+    if ((offR13+1)>0xFFFF) throw new Error('ptr_init exceeds 64 KB');
+    const ptrInit=(offR13+1)&0xFFFF; out.push(...toWordLEBytes(ptrInit));
+    out.push(...toWordLEBytes(t2));
+    const pf = (tp & 0x1F) | (tf & 0xE0); out.push(pf&0xFF, 0x00);
+
+    for(const b of patt) out.push(b);
+    for(const b of seq) out.push(b);
+
+    for(let r=0;r<=13;r++){
+      if (!present[r]) continue;
+      let addr; if (r===7) addr=(offR07-pattDeb)&0xFFFF; else if (r===13) addr=(offR13-pattDeb)&0xFFFF; else addr=(offRXX-pattDeb)&0xFFFF;
+      out.push(...toWordLEBytes(addr));
+    }
+    out.push(0x00,0x3F,0xBF);
+    for(const ci of constInits){ out.push(ci.regIndex&0xFF, ci.value&0xFF); }
+    out.push(0xFF);
+    const u8=new Uint8Array(out);
+    log(`File size : ${u8.length} bytes.`);
+    return u8;
+  }
+
+  // ===== UI: presets + exclusivité low/high =====
+  function setPresetActive(name){
+    state.preset=name;
+    ['cpc','zx','pent','msx','atari'].forEach(id=>{
+      const el=$('#preset-'+id);
+      if (!el) return;
+      if (id===name) el.classList.add('active'); else el.classList.remove('active');
+    });
+  }
+  function applyPreset(name){
+    const set=(sp,se,sn)=>{ $('#doSp').checked=true; $('#sp').value=sp.toString(); $('#doSe').checked=true; $('#se').value=se.toString(); $('#doSn').checked=true; $('#sn').value=sn.toString(); };
+    if (name==='cpc') set(1.0,1.0,1.0);
+    else if (name==='zx') set(0.56,1.0,1.0);
+    else if (name==='pent') set(0.57,1.0,1.0);
+    else if (name==='msx') set(0.55,1.0,1.0);
+    else if (name==='atari') set(0.50,1.0,1.0);
+    setPresetActive(name);
+  }
+  function bindExclusive(lowSel, highSel){
+    const low=$(lowSel), high=$(highSel);
+    low.addEventListener('change', ()=>{ if (low.checked) high.checked=false; });
+    high.addEventListener('change', ()=>{ if (high.checked) low.checked=false; });
+  }
+  bindExclusive('#splow','#sphigh'); bindExclusive('#selow','#sehigh'); bindExclusive('#snlow','#snhigh');
+
+  // Preset buttons
+  $('#preset-cpc').onclick=()=>applyPreset('cpc');
+  $('#preset-zx').onclick=()=>applyPreset('zx');
+  $('#preset-pent').onclick=()=>applyPreset('pent');
+  $('#preset-msx').onclick=()=>applyPreset('msx');
+  $('#preset-atari').onclick=()=>applyPreset('atari');
+
+  // ===== Drag & Drop + file input =====
+  const drop = $('#drop'), fileInput = $('#file');
+  drop.addEventListener('click', ()=> fileInput.click());
+  ;['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('hover'); }));
+  ;['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('hover'); }));
+  drop.addEventListener('drop', async e=>{
+    const f=e.dataTransfer.files[0]; if(!f) return;
+    await handleFile(f);
+  });
+  fileInput.addEventListener('change', async (e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    await handleFile(f);
+  });
+
+  async function handleFile(f){
+  if (!/\.ym(?:5|6)?$/i.test(f.name)) {
+    log('File must be .YM, .YM5 or .YM6', 'error');
+    return;}
+
+    state.fileName=f.name;
+    const outName=f.name.replace(/\.[Yy][Mm]$/,'') + '.ayt';
+    $('#outName').value=outName;
+    setProgress(1);
+    try{ await parseYM(f); setProgress(22); log('YM file loaded ✅','ok'); }
+    catch(err){ log(`Error : ${err.name} - ${err.message}`,'error'); setProgress(0); }
+  }
+
+  // ===== Helpers =====
+  function parseScList(){
+    const txt=$('#scList').value.trim(); if(!txt) return [];
+    const parts=txt.split(','); const out=[];
+    for (let p of parts){
+      p=p.trim().toUpperCase();
+      if (p && p[0]==='R'){
+        const n=parseInt(p.slice(1),10);
+        if (!Number.isNaN(n) && n>=0 && n<=12){ if(!out.includes(n)) out.push(n); }
+        else log(`Warning! -sc: ${p} ignored : Only R00..R12 authorized ; R13 protected.`);
+      } else log(`Warning! -sc: "${p}" ignored : Expected format Rxx.`);
+    }
+    return out;
+  }
+
+  // ===== Run conversion =====
+  $('#run').onclick = async ()=>{
+    try{
+      if (!state.header) throw new Error('No YM file loaded.');
+      clearLog();
+      state.registers = state.original.map(r=>r.slice());
+      $('#stats').textContent='N=?';
+      setProgress(25); await tick();
+
+      const doSp=$('#doSp').checked, doSe=$('#doSe').checked, doSn=$('#doSn').checked;
+      const coeff=parseFloat($('#sp').value||'0.5');
+      const coeffEnv=parseFloat($('#se').value||'1.0');
+      const coeffNoise=parseFloat($('#sn').value||'1.0');
+      const sparrondi=$('#sphigh').checked, searrondi=$('#sehigh').checked, snarrondi=$('#snhigh').checked;
+
+      log('------------- Processing -------------');
+      if (doSp){ log(`Periods correction with coefficient=${coeff}`); scalePeriods(0,1,coeff,sparrondi); scalePeriods(2,3,coeff,sparrondi); scalePeriods(4,5,coeff,sparrondi); }
+      if (doSe){ log(`Enveloppe correction with coefficient=${coeffEnv}`); scaleEnvelope(coeffEnv,searrondi); }
+      if (doSn){ log(`Noise correction with coefficient=${coeffNoise}`); scaleNoise(coeffNoise,snarrondi); }
+      setProgress(45); await tick();
+
+      const doDeleteConst = $('#scAll').checked || ($('#scList').value.trim()!=='');
+      const deleteList = $('#scAll').checked ? [] : parseScList();
+
+      const names=[], buffers=[], constInits=[];
+      log('----------- Registers analysis -----------');
+      log('From R00 to R13 only (R14 & R15 excluded)');
+      for(let i=0;i<=15;i++){
+        if (i===14||i===15) continue;
+        const info=getRegisterInfo(state.registers[i]);
+        if (info.isConstant) log(`R${String(i).padStart(2,'0')} : constant (With byte=#${info.value.toString(16).padStart(2,'0').toUpperCase()})   size=${state.registers[i].length}`);
+        else log(`R${String(i).padStart(2,'0')} : variable                   size=${state.registers[i].length}`);
+
+        let includeThis=true;
+        if (i===13) includeThis=true;
+        else if (i>=0 && i<=12){
+          if (doDeleteConst){
+            if (deleteList.length>0){ if (deleteList.includes(i) && info.isConstant) includeThis=false; }
+            else { if (info.isConstant) includeThis=false; }
+          }
+        } else includeThis=false;
+
+        if (includeThis){ names.push(`R${String(i).padStart(2,'0')}`); buffers.push(state.registers[i]); }
+        else if (i>=0 && i<=12 && info.isConstant){ constInits.push({ regIndex:i, value:info.value }); }
+      }
+      if (names.length===0){ log('No register to process after filtering R00..R13. End.'); setProgress(0); return; }
+      setProgress(60); await tick();
+
+      const top=computeGlobalTop(buffers,5);
+      log('Bruteforcing patterns - TOP 5 :');
+      if (top.length===0){ log('No valid candidates found !'); setProgress(0); return; }
+      else top.forEach((t,idx)=> log(`#${idx+1}  Size N=${String(t.N).padStart(3,' ')} (${t.count} registers) -> Total ${t.total} bytes`));
+      const bestN=top[0].N; $('#stats').textContent=`N=${bestN}`;
+      log(`Registers taken into account : ${names.join(',')}`);
+      log(`The AYT player will play these ${names.length} registers.`);
+      log(`Building patterns and pointers with best size (N=${bestN})`);
+      setProgress(72); await tick();
+
+      const { markedPer, pack } = buildGlobalPackFromBuffersMem(names, buffers, bestN, true);
+      const interleave = buildInterleavedMarkedMem(markedPer);
+      setProgress(86); await tick();
+
+      const present=new Array(14).fill(false);
+      for(let i=0;i<names.length;i++){ const rIdx=parseRegIndexFromName(names[i]); if (rIdx>=0&&rIdx<=13) present[rIdx]=markedPer[i].length>0; }
+
+      const tp=parseInt($('#tp').value,10)&0x1F;
+      const tf=parseInt($('#tf').value,10)&0xE0;
+      const ayt = buildAytFileFromMem(pack, interleave, bestN, tp, tf,
+        { loopFrame: state.header.loopFrame>>>0, frameCount: state.header.frameCount>>>0 },
+        present, constInits);
+      setProgress(94); await tick();
+
+      const outName = ($('#outName').value || (state.fileName.replace(/\.[Yy][Mm]$/,'')+'.ayt')).trim() || 'output.ayt';
+      const blob = new Blob([ayt], {type:'application/octet-stream'});
+      const url = URL.createObjectURL(blob);
+      const dl=$('#dl'); if (state.lastUrl) URL.revokeObjectURL(state.lastUrl);
+      state.lastUrl=url; dl.href=url; dl.download=outName; dl.style.display='';
+      dl.textContent=`⭳ Download ${outName}`;
+      log(`Building AYT file : ${outName}`);
+      log('Done.');
+      setProgress(100);
+    }catch(err){ log(`Error : ${err.name} - ${err.message}`,'error'); setProgress(0); }
+  };
+
+  // Exclusivité low/high (sécurité redondante)
+  [['#splow','#sphigh'],['#selow','#sehigh'],['#snlow','#snhigh']].forEach(([l,h])=>{
+    const low=$(l), high=$(h); low.addEventListener('change',()=>{ if(low.checked) high.checked=false; });
+    const hi=$(h); hi.addEventListener('change',()=>{ if(hi.checked) low.checked=false; });
+  });
+
+})();
+</script>
+
+
+</body></html>
