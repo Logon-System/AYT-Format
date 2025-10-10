@@ -618,6 +618,6 @@ Ayt_Builder_End
 AYT_File
 ;;		incbin "kenotron.ayt"		; 14 registers 0..13
 ;;		incbin "logon.ayt"		; 11 registers (- 3, 11, 12)
-		incbin "discmal.ayt"
+		incbin "./../ayt-files/still_scrolling.ayt"
 End_Example
 save "bin/EXE8000.BIN",Start_Example,End_Example-Start_Example

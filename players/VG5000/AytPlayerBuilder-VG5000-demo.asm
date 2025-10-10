@@ -129,7 +129,7 @@ wait_border
 Mapile
 ;;============================================================================================================================================
 AYT_Builder
-		read "AytbuilderVG5000-v2.asm"
+		read "AytPlayerBuilder-VG5000.asm"
 ;;
 ;;**********************************************************************************************************************************************
 ;; FILE AYT 
@@ -139,4 +139,4 @@ AYT_File
 AYT_Player	
 		ds 370+16,#FF
 
-save "RAW\VG5KAYT.BIN",MyProgram,Ayt_Player+370+16-MyProgram
+save "VG5KAYT.BIN",MyProgram,Ayt_Player+370+16-MyProgram

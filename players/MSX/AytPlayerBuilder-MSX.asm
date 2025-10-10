@@ -167,7 +167,9 @@
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
+    ifndef PlayerAccessByJP
 PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
+	endif
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 
 ;-----------------------------------------------------------------------------------------------------------------------------------------------

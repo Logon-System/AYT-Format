@@ -81,7 +81,7 @@ AYT_Player_Ret	ld sp,0			; address return of the player
 
 ;==================================================================================================================
 Ayt_Builder
-		read "AytbuilderMSX-v2.asm"
+		read "AytPlayerBuilder-MSX.asm"
 
 ;;**********************************************************************************************************************************************
 ;; FILE AYT 
@@ -89,6 +89,6 @@ Ayt_Builder
 AYT_File
 ;		incbin "kenotron.ayt"		; 14 registres 0..13
 ;		incbin "logon.ayt"		; 3 registres en moins 3, 11, 12
-		include "discmal.ayt"
+		incbin "../../ayt-files/still_scrolling.ayt"
 AYT_Player	
-save "DISK\MSXAYT.BIN",MyProgram,Ayt_Player+166+16-MyProgram
+save "MSXAYT.BIN",MyProgram,Ayt_Player+166+16-MyProgram
