@@ -53,16 +53,16 @@ RunVg5000
 		ld de,AYT_Player	; Ptr of Adress where Player is built
 		ld bc,0			; Ptr on 16 bytes for init (if 0, Builder create the init after the player)
 		ld a,255		; Nb of loop for the music
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
-endif
+    endif
 		call AYT_Builder	; Build the player at #<d>00 for file pointed by <ix> for <a> loop
 		ld (InitRegAy),hl
 InitRegAy	equ $+1
 		call 0
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld (AYT_Player_Ret+1),sp ; Save Stack Pointer 
-endif
+    endif
 		;-----------------------------------------------------------------------------------------------
 		; Main Code Playing Music
 		;-----------------------------------------------------------------------------------------------
@@ -86,13 +86,13 @@ MainLoop
 		;-----------------------------------------------------------
 		;
 		di			; Interrupt off (for SP)
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		jp AYT_Player		; jump to the player
 AYT_Player_Ret	ld sp,0			; address return of the player
 
-else
+    else
 		call AYT_Player
-endif
+    endif
 		;-----------------------------------------------------------
 		; Border Black color with VDP
 		;-----------------------------------------------------------

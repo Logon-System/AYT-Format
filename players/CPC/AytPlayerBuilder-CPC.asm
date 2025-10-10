@@ -178,9 +178,9 @@ mend
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
-ifndef PlayerAccessByJP
+    ifndef PlayerAccessByJP
 PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
-endif
+    endif
 ;;
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;;
@@ -196,10 +196,10 @@ AYT_OFS_PlatformFreq	equ 12  ;; Platform & Freq of play (see table)
 AYT_OFS_Reserved	equ 13	;; Rhaaaaaaa
 AYT_SIZE_HEADER		equ 14	;; Header size to find first pattern
 
-ifnot PlayerAccessByJP
+    ifnot PlayerAccessByJP
 	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
 	OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
-endif
+    endif
 OFS_B1_FirstSeq		equ Ayt_FirstSeq-Ayt_Player_B1_Start 
 OFS_B1_to_PatIdx	equ Ayt_PatternIdx-Ayt_FirstSeq
 
@@ -234,11 +234,11 @@ AYT_Builder_Start
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
 		push de				; Save ptr on player for init (if coded)
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld (Ayt_ExitPtr01),hl		; Set Main code return address
-else
+    else
 		push de				; save ptr on first bloc (to restore player)
-endif	
+    endif	
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; In AYT file , relocate sequence list ptr on rxx data. (absolute address)
 		;; In >> ix=Ptr on AYT File
@@ -305,11 +305,11 @@ Ayt_PtrFix_b1
 		;; init nop counter
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		exx 
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld hl,21+56			; part of constant time player jp mode
-else
+    else
 		ld hl,29+59			; part of constant time player call mode
-endif
+    endif
 		ld bc,31			; cpu in nop for send ay with inc c
 		exx
 		;;
@@ -411,13 +411,13 @@ Ayt_LastReg
 		ld (iy+OFS_B3_SeqPatPtr_Upd),l	; HL=ptr on sequence ptr 
 		ld (iy+OFS_B3_SeqPatPtr_Upd+1),h
 		;
-ifnot PlayerAccessByJP				; Player called by call then reload SP
+    ifnot PlayerAccessByJP				; Player called by call then reload SP
 		ld hl,OFS_B3_Ayt_ReloadSP
 		add hl,bc
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_PtrSaveSP),l
 		ld (iy+OFS_B1_PtrSaveSP+1),h
-endif	
+    endif	
 		;----------------------------------------------------------------
 		; Last bloc built only if less than 14 registers
 		;----------------------------------------------------------------
@@ -443,11 +443,11 @@ Ayt_BuilderAlloc
 		; Compute Cpu of Init Reg Ay Routine
 		; 
 		ld iy,(Ayt_PtrInitList)		; get ptr on ay reg to set
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld hl,83-35			; constant cpu for init jp mode
-else
+    else
 		ld hl,82-35			; constant cpu for init call mode
-endif
+    endif
 		ld bc,35
 Ayt_Init_CntReg
 		bit 7,(iy+0)
@@ -487,10 +487,10 @@ Ayt_Exit_CntReg
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1_Start
 		ld bc,#f680		; Port C + Data Reg AY 
-ifnot PlayerAccessByJP
+    ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 6 nop SP is saved if player is "called"
-endif		
+    endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 		exx
@@ -578,14 +578,14 @@ Ayt_SeqPat
 Ayt_PatCountPtr2 equ $+1		; 
 		ld (0),a		; 0/4 update offset on patterns
 Ayt_PlayerExit
-if PlayerAccessByJP
+    if PlayerAccessByJP
 Ayt_ExitPtr01	equ $+1
 		jp 0 			; 0/3 exit from player >> 23 nops
-else	
+    else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; 3 nop Player was called , SP is restored
 		ret			; 3 and return to main code
-endif
+    endif
 Ayt_PatternCur				; 10+7=17 
 		cp (hl)			; 2
 		nop			; 1
@@ -636,11 +636,11 @@ Ayt_CptWait	equ $+1			; wait by 4 nop steps
 Ayt_WaitForCoffee
 		dec a
 		jr nz,Ayt_WaitForCoffee
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		jr Ayt_PlayerExit	; End of init
-else
+    else
 		ret
-endif
+    endif
 Ayt_Player_B4_End
 
 Ayt_Builder_End

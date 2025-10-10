@@ -30,16 +30,16 @@ RunMsx
 		ld de,AYT_Player	; Ptr of Adress where Player is built
 		ld bc,0			; Ptr on 16 bytes for init (if 0, Builder create the init after the player)
 		ld a,255		; Nb of loop for the music
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
-endif
+    endif
 		call AYT_Builder	; Build the player at #<d>00 for file pointed by <ix> for <a> loop
 		ld (InitRegAy),hl
 InitRegAy	equ $+1
 		call 0
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld (AYT_Player_Ret+1),sp ; Save Stack Pointer 
-endif
+    endif
 		;==================================================================================================================
 		;;
 		;; 3.580.000 Ts >> 60 Frame (ntsc)>> 59659 Ts /Frame >> 59659-(729+12)=58918 >> 26 ts by loop >> 2266 lpops
@@ -66,13 +66,13 @@ WaitLoop:
 		ld a,#80+7	; 4
 		out (#99),a	; 11
 
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		jp AYT_Player		; jump to the player			
 AYT_Player_Ret	ld sp,0			; address return of the player
 
-else
+    else
 		call AYT_Player		;; 729 Ts
-endif
+    endif
 		ld a,#f1	; 4
 		out (#99),a	; 11
 		ld a,#80+7	; 4

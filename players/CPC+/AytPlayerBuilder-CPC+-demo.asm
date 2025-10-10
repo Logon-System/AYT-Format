@@ -16,6 +16,8 @@ AYT_File	equ #8000		; Address of AYT file in memory
 MyProgram	equ #400
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;;==============================================================================================================================================
+PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
+
 		org AYT_Builder
 		read "AytPlayerBuilder-Cpc+.asm"
 ;;==============================================================================================================================================
@@ -42,9 +44,9 @@ StartExample
 		ld bc,AYT_DmaList	; Ptr on the DMA List to create (bit 0 of address=0, no cross boundary adr+28 bytes)
 		ld de,AYT_Player	; Ptr of Address where Player is built
 		ld a,2			; Nb of loop for the music
-if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
+    if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
-endif
+    endif
 		call AYT_Builder	; Build the player at <de> for file pointed by <ix> for <a> loop 
 		;-------------------------------------------------------------------------------------------------------------------------------
 		; Init AY Regs
@@ -58,14 +60,14 @@ InitPlayer	equ $+1
 		; Manages actions related to compilation options
 		;-------------------------------------------------------------------------------------------------------------------------------
 		;------------------------
-if PlayerAccessByJP			; If JP Method is on, you may need to save SP
+    if PlayerAccessByJP			; If JP Method is on, you may need to save SP
 		ld (AYT_Player_Ret+1),sp ; Save Stack Pointer 
-endif
+    endif
 		;------------------------		;
-ifnot PlayerConnectAsic 		; If ASIC connect if off, you need to connect asic page
+    ifnot PlayerConnectAsic 		; If ASIC connect if off, you need to connect asic page
 		ld bc,#7fb8		; Note that in this case, the DMA list cannot be between 4000 and 7FFF (because the player will no longer be able to update it).
 		out (c),c
-endif
+    endif
 		;------------------------
 		ei			; Builder do a "di" (You can leave interruptions if necessary)
 		;
@@ -94,13 +96,13 @@ WaitVsync
 		; Calling player (JP or CALL method)
 		;-------------------------------------------------------------------------------------------------------------------------------
 		;
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		jp AYT_Player		; jump to the player
 AYT_Player_Ret	ld sp,0			; address return of the player
 
-else
+    else
 		call AYT_Player		; call to player (do not need save sp, and no constraint with return address)
-endif
+    endif
 		;-------------------------------------------------------------------------------------------------------------------------------
 		; Black Color Border
 		;-------------------------------------------------------------------------------------------------------------------------------

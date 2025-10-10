@@ -265,10 +265,10 @@ AYT_Asic_DCSRM2		equ %00000100
 AYT_AsicPage_On	 	equ #b8
 AYT_AsicPage_Off 	equ #a0
 ;;
-ifnot PlayerAccessByJP
+    ifnot PlayerAccessByJP
 	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
 	OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
-endif
+    endif
 OFS_B1_FirstSeq		equ Ayt_FirstSeq-Ayt_Player_B1_Start 
 OFS_B1_to_PatIdx	equ Ayt_PatternIdx-Ayt_FirstSeq
 OFS_B1_to_B2_Start	equ Ayt_Player_B2_Start-Ayt_PatternIdx
@@ -306,11 +306,11 @@ AYT_Builder_Start
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
 		push iy				; Save Ptr for Init routine
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld (Ayt_ExitPtr01),hl		; Set Main code return address
-else
+    else
 		push de				; save ptr on 1st address of player for SP reload update
-endif	
+    endif	
 		;----------------------------------------------------------------------------------------------
 		; Init dma list (ptr in bc)
 		;----------------------------------------------------------------------------------------------
@@ -463,13 +463,13 @@ Ayt_Build_Nreg
 		ld (iy+OFS_B3_SeqPatPtr_Upd),l	; HL=ptr on sequence ptr 
 		ld (iy+OFS_B3_SeqPatPtr_Upd+1),h
 		;
-ifnot PlayerAccessByJP				; Player called by call then reload SP
+    ifnot PlayerAccessByJP				; Player called by call then reload SP
 		ld hl,OFS_B3_Ayt_ReloadSP
 		add hl,bc
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_PtrSaveSP),l
 		ld (iy+OFS_B1_PtrSaveSP+1),h
-endif	
+    endif	
 		;----------------------------------------------------------------
 		; Last block for init routine
 		;----------------------------------------------------------------
@@ -497,10 +497,10 @@ Ayt_InitCreate	equ $+1
 ;===============================================================================================================================================
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1_Start
-ifnot PlayerAccessByJP
+    ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 6 nop SP is saved if player is "called"
-endif		
+    endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 Ayt_DmaListPtr	equ $+1
@@ -544,26 +544,26 @@ Ayt_SeqPat
 Ayt_PatCountPtr2 equ $+1		; 
 		ld (0),a		; 4/4/0/4/4/4 update offset on patterns
 Ayt_PlayerExit				; 1st=32, 2th=32, 3th=32, 4th=32 5th=32, 6th=32
-if PlayerConnectAsic
+    if PlayerConnectAsic
 		ld bc,#7f00+AYT_AsicPage_On
 		out (c),c
-endif
+    endif
 		ld (PlayerDMAUsed_SAR),de; update Ptr DMA Liste 
 		ld a,(AYT_Asic_DCSR)	; read dcsr (active dma channels)
 		or PlayerDMAUsed_DCSRMask ; activate selected dma
 		ld (AYT_Asic_DCSR),a	; update dcsr
-if PlayerConnectAsic
+    if PlayerConnectAsic
 		ld c,AYT_AsicPage_Off
 		out (c),c
-endif
-if PlayerAccessByJP
+    endif
+    if PlayerAccessByJP
 Ayt_ExitPtr01	equ $+1
 		jp 0 			; 0/3 exit from player >> 23 nops
-else	
+    else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; 3 nop Player was called , SP is restored
 		ret			; 3 and return to main code
-endif
+    endif
 Ayt_MusicEnd				; Player on mute
 					; >>15
 		ex (sp),hl		; 0/0/6/0/0/0

@@ -31,16 +31,16 @@ StartExample
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Adress where Player is built
 		ld a,1			; Nb of loop for the music
- if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
+    if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
- endif
+    endif
 		call AYT_Builder	; Build the player at <de> for file pointed by <ix> for <a> loop
 		;-------------------------------------------------------------------------------------------------------------------------------
 		; Manages actions related to compilation options
 		;-------------------------------------------------------------------------------------------------------------------------------
- if PlayerAccessByJP			; If JP Method is on, you may need to save SP
+    if PlayerAccessByJP			; If JP Method is on, you may need to save SP
 		ld (AYT_Player_ReloadSP),sp ; Save current Stack Pointer 
- endif
+    endif
 		;-------------------------------------------------------------------------------------------------------------------------------
 		ei			; Builder do a "di" (You can leave interruptions if necessary)
 		;
@@ -74,14 +74,14 @@ WaitVsync
 		;; - When the music ends, the sound is stopped, and the routine continues to play a constant duration.
 		;-------------------------------------------------------------------------------------------------------------------------------
 		;
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		jp AYT_Player		; jump to the player
 AYT_Player_Ret				; address return of the player	
 AYT_Player_ReloadSP equ $+1
 		ld sp,0			
-else
+    else
 		call AYT_Player		; call method for the player. 
-endif
+    endif
 		;-------------------------------------------------------------------------------------------------------------------------------
 		; Black Color Border
 		;-------------------------------------------------------------------------------------------------------------------------------

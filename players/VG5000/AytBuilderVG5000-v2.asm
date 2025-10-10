@@ -199,10 +199,10 @@ PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has be
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
-ifnot PlayerAccessByJP
+    ifnot PlayerAccessByJP
 	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1a_Start
 	OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
-endif
+    endif
 OFS_B1a_FirstSeq	equ Ayt_FirstSeq-Ayt_Player_B1a_Start 
 OFS_B1b_PatternIdx	equ Ayt_PatternIdx-Ayt_Player_B1b_Start
  
@@ -224,11 +224,11 @@ AYT_Builder_Start
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
 		push bc				; Save Ptr for Init routine
-if PlayerAccessByJP
+    if PlayerAccessByJP
 		ld (Ayt_ExitPtr01),hl		; Set Main code return address
-else
+    else
 		push de				; save ptr on first bloc for SP reload
-endif	
+    endif	
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; In AYT file , relocate sequence list ptr on rxx data. (absolute address)
 		;; In >> ix=Ptr on AYT File
@@ -404,13 +404,13 @@ Ayt_PatternidxPtr equ $+1
 		ld (iy+OFS_B3_SeqPatPtr_Upd),l	; HL=ptr on sequence ptr 
 		ld (iy+OFS_B3_SeqPatPtr_Upd+1),h
 		;
-ifnot PlayerAccessByJP				; Player called by call then reload SP
+    ifnot PlayerAccessByJP				; Player called by call then reload SP
 		ld hl,OFS_B3_Ayt_ReloadSP
 		add hl,bc
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_PtrSaveSP),l
 		ld (iy+OFS_B1_PtrSaveSP+1),h
-endif	
+    endif	
 		;----------------------------------------------------------------
 		; Last block for init routine
 		;----------------------------------------------------------------
@@ -438,10 +438,10 @@ Ayt_InitCreate	equ $+1
 ;===============================================================================================================================================
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1a_Start
-ifnot PlayerAccessByJP
+    ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 20 ts SP is saved if player is "called"
-endif		
+    endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 Ayt_Player_B1a_End
@@ -517,14 +517,14 @@ Ayt_SeqPat
 Ayt_PatCountPtr2 equ $+1		; 
 		ld (0),a		; 13/13/00/13/13/13 update offset on patterns (4th=116Ts)(1th=116Ts)(2th=116Ts)
 Ayt_PlayerExit
-if PlayerAccessByJP
+    if PlayerAccessByJP
 Ayt_ExitPtr01	equ $+1
 		jp 0 			; exit from player via JP 
-else	
+    else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; Player was called , SP is restored
 		ret			; and return to main code
-endif
+    endif
 Ayt_Player_B3_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 ; Init of not active AY reg
