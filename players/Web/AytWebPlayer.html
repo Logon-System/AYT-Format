@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AYT Player (émulation YM avec horloge réglable)</title>
+  <title>AYT Web Player</title>
   <meta name="color-scheme" content="dark" />
   <style>
     :root { --bg:#0b0c10; --panel:#12131b; --txt:#e8ebf3; --muted:#9aa1b4; --line:#232533; --btn:#1a1c27; --btnh:#232739; --ok:#34d399; }
@@ -25,23 +25,25 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>AYT Player (émulation YM avec horloge réglable)</h1>
+    <h1>AYT Web Player</h1>
     <div class="card">
-      <div id="drop" class="drop">Glisse un fichier <b>.ayt</b> ici (ou clique)</div>
+      <div id="drop" class="drop">Drag and drop a <b>.ayt</b> file or click to load one</div>
       <input id="file" type="file" accept=".ayt" />
       <div class="row" style="margin-top:10px; gap:8px;">
-        <label for="clockSel">Horloge (Master Clock) :</label>
+        <label for="clockSel">AY Master Clock :</label>
         <select id="clockSel" title="Fréquence du chip sonore (Master Clock)">
-          <option value="1000000" selected>1 000 000 Hz (défaut)</option>
+          <option value="1000000" selected>1 000 000 Hz (default)</option>
           <option value="1750000">1 750 000 Hz</option>
+	  <option value="1764000">1 764 000 Hz</option>
           <option value="1773400">1 773 400 Hz</option>
+	  <option value="1789772">1 789 772 Hz</option>
           <option value="2000000">2 000 000 Hz</option>
         </select>
         <button id="play" disabled>Play</button>
         <button id="stop" disabled>Stop</button>
-        <button id="$exportYM" disabled title="Exporter les données YM reconstruites">💾 Exporter YM</button>
+        <button id="$exportYM" disabled title="Exporter les données YM reconstruites">💾 Export YM</button>
       </div>
-      <div id="meta" class="meta" style="margin-top:10px;">Aucun AYT chargé.</div>
+      <div id="meta" class="meta" style="margin-top:10px;">No AYT loaded.</div>
     </div>
   </div>
 
@@ -534,7 +536,7 @@
         $play.disabled = false;
         $stop.disabled = true;
         $exportYM.disabled = false;
-        showMeta(`AYT chargé — frames=${frames}, loopFrame=${loopFrame}, regs présents: ${parser.presentRegs.join(", ")}`);
+        showMeta(`AYT Loaded — frames=${frames}, loopFrame=${loopFrame}, registers : ${parser.presentRegs.join(", ")}`);
       }).catch(err => {
         showMeta("Erreur : " + err.message);
         console.error(err);
@@ -580,7 +582,7 @@
       const buf = player.exportToYM();
       const original = $file.files[0] ? $file.files[0].name.replace(/\.ayt$/i, "") : "export";
       saveFile(buf, original + ".ym");
-      showMeta(`Exporté ${original}.ym — ${buf.byteLength} octets`);
+      showMeta(`Exported ${original}.ym — ${buf.byteLength} bytes`);
     });
   </script>
 </body>
