@@ -7,13 +7,11 @@
 ;;**********************************************************************************************************************************************
 ;;==============================================================================================================================================
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
-AYT_DmaList	equ #40			; Address for DMA List Bit 0 must be 0 and The table must not cross a page boundary (for 28 bytes max)
-					; for example #E4 is ok (#E4+28-1=#ff) but #E5 is not ok (#E5+28-1=#100)
 AYT_Player	equ #100		; Address for player created by builder (131 to 169 bytes according AYT file & Player settings)
 AYT_Builder	equ #200		; Builder can be deleted once AYT file is initialised and player created.
 AYT_File	equ #8000		; Address of AYT file in memory
 
-MyProgram	equ #400
+MyProgram	equ #500
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;;==============================================================================================================================================
 		org AYT_Builder
@@ -38,13 +36,15 @@ StartExample
 		;-------------------------------------------------------------------------------------------------------------------------------
 		;
 		ld ix,AYT_File		; Ptr on AYT_File
-		ld iy,0			; Let the Builder define Ay-init routine address (needs 34 bytes more)
-		ld bc,AYT_DmaList	; Ptr on the DMA List to create (bit 0 of address=0, no cross boundary adr+28 bytes)
 		ld de,AYT_Player	; Ptr of Address where Player is built
+		ld bc,#0100		; Asic io connected at entry, connected at exit of player
 		ld a,2			; Nb of loop for the music
     if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
     endif
+ld (ix+1),%00111111
+ld (ix+2),%11111111
+
 		call AYT_Builder	; Build the player at <de> for file pointed by <ix> for <a> loop 
 		;-------------------------------------------------------------------------------------------------------------------------------
 		; Init AY Regs
@@ -62,10 +62,8 @@ InitPlayer	equ $+1
 		ld (AYT_Player_Ret+1),sp ; Save Stack Pointer 
     endif
 		;------------------------		;
-    ifnot PlayerConnectAsic 		; If ASIC connect if off, you need to connect asic page
 		ld bc,#7fb8		; Note that in this case, the DMA list cannot be between 4000 and 7FFF (because the player will no longer be able to update it).
 		out (c),c
-    endif
 		;------------------------
 		ei			; Builder do a "di" (You can leave interruptions if necessary)
 		;
