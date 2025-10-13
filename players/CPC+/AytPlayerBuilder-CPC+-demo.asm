@@ -42,9 +42,6 @@ StartExample
     if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
     endif
-ld (ix+1),%00111111
-ld (ix+2),%11111111
-
 		call AYT_Builder	; Build the player at <de> for file pointed by <ix> for <a> loop 
 		;-------------------------------------------------------------------------------------------------------------------------------
 		; Init AY Regs
