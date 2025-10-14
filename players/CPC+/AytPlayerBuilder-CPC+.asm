@@ -212,7 +212,7 @@ mend
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
-PlayerAccessByJP	equ 1		; If set to 1, requires you to take into account that SP has been wildly modified
+PlayerAccessByJP	equ 0		; If set to 1, requires you to take into account that SP has been wildly modified
 ;;
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -262,10 +262,10 @@ AYT_Asic_DCSRM2		equ %00000100
 AYT_AsicPage_On	 	equ #b8
 AYT_AsicPage_Off 	equ #a0
 ;;
-ifnot PlayerAccessByJP
-	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
-	OFS_B5_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B5_Start	
-endif
+	ifnot PlayerAccessByJP
+		OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
+		OFS_B5_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B5_Start	
+	endif
 OFS_B1_FirstSeq		equ Ayt_FirstSeq-Ayt_Player_B1_Start 
 OFS_B1_to_PatIdx	equ Ayt_PatternIdx-Ayt_FirstSeq
 OFS_B1_to_B2_Start	equ Ayt_Player_B2_Start-Ayt_PatternIdx
@@ -311,9 +311,9 @@ AYT_Builder_Start
 		ld (Ayt_MusicCnt),a		; Nb of loop for music
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
-if PlayerAccessByJP
-		ld (Ayt_ExitPtr01),hl		; Set Main code return address
-endif
+	if PlayerAccessByJP
+			ld (Ayt_ExitPtr01),hl		; Set Main code return address
+	endif
 		ld a,c
 		ld (Ayt_Prm_AsicState_Out),a	; io page asic state expected at exit point
 		ld a,b				; io page asic state at entry point
@@ -608,14 +608,14 @@ Ayt_DMA_CandidatePtr equ $+1
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_DMAListPtr),l	; Ptr on Dma List from 2nd reg
 		ld (iy+OFS_B1_DMAListPtr+1),h	
-ifnot PlayerAccessByJP				; Player called by call then reload SP
-		ld bc,OFS_B5_Ayt_ReloadSP	; In B1, ptr where SP is stored in B5
-		add ix,bc			; IX=Ptr on B5
-		push ix
-		pop bc
-		ld (iy+OFS_B1_PtrSaveSP),c
-		ld (iy+OFS_B1_PtrSaveSP+1),b
-endif	
+	ifnot PlayerAccessByJP				; Player called by call then reload SP
+			ld bc,OFS_B5_Ayt_ReloadSP	; In B1, ptr where SP is stored in B5
+			add ix,bc			; IX=Ptr on B5
+			push ix
+			pop bc
+			ld (iy+OFS_B1_PtrSaveSP),c
+			ld (iy+OFS_B1_PtrSaveSP+1),b
+	endif	
 		push de
 		;----------------------------------------------------------------------------------------------
 		; Init dma list (ptr on 3rd byte in hl)
@@ -677,10 +677,10 @@ Ayt_Player_B0_End
  
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1_Start
-ifnot PlayerAccessByJP
+	ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 6 nop SP is saved if player is "called"
-endif		
+	endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 Ayt_DmaListPtr	equ $+1
@@ -742,14 +742,14 @@ Ayt_Player_B6_EndA
 Ayt_Player_B6_EndB
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B5_Start
-if PlayerAccessByJP
+	if PlayerAccessByJP
 Ayt_ExitPtr01	equ $+1
 		jp 0 			; 0/3 exit from player >> 23 nops
-else	
+	else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; 3 nop Player was called , SP is restored
 		ret			; 3 and return to main code
-endif
+	endif
 Ayt_MusicEnd				; Player on mute
 					; >>15
 		ex (sp),hl		; 0/0/6/0/0/0
