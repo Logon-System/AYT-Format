@@ -2,101 +2,100 @@
 
 ## Appel de Ayt_Builder sur CPC 464/664/6128
 
-		ld ix,AYT_File		; AYT_File est l'adresse oÃ¹ se trouve le fichier AYT
-		ld de,AYT_Player	; AYT_Player est l'adresse oÃ¹ le player sera construit
-		ld a,2			; A indique combien de fois la musique sera jouÃ©e
+		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
+		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
+		ld a,2			; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
 A la sortie de la fonction *Ayt_Builder* :
-- le registre **DE** contient l'adresse du premier octet libre aprÃ¨s le *player*.
-- le registre **HL** contient le nombre de Âµsecondes (NOPs) consommÃ© par l'appel du *player*.
+- le registre **DE** contient l'adresse du premier octet libre après le *player*.
+- le registre **HL** contient le nombre de µsecondes (NOPs) consommé par l'appel du *player*.
 
-Pour jouer la musique, il faut appeler le *player* Ã  la frÃ©quence requise. 
-La majoritÃ© des musiques nÃ©cessitent que le *player* soit appelÃ© pÃ©riodiquement 50 fois par seconde.
-L'entÃªte du fichier **AYT** indique cette pÃ©riode. 
+Pour jouer la musique, il faut appeler le *player* à la fréquence requise. 
+La majorité des musiques nécessitent que le *player* soit appelé périodiquement 50 fois par seconde.
+L'entête du fichier **AYT** indique cette période. 
 
-Il est trÃ¨s **important de s'assurer qu'aucune interruption ne pourra avoir lieu pendant l'appel du player**. Si vous n'Ãªtes pas familier avec le systÃ¨me des interruptions en **Z80A**, vous pouvez utiliser l'instruction **DI** avant l'appel du *player*.
+Il est très **important de s'assurer qu'aucune interruption ne pourra avoir lieu pendant l'appel du player**. Si vous n'êtes pas familier avec le système des interruptions en **Z80A**, vous pouvez utiliser l'instruction **DI** avant l'appel du *player*.
 
 		call AYT_Player	; Joue la musique
 
 ### Option de compilation
 #### PlayerAcessByJP
-Si l'option **PlayerAcessByJP** vaut 1, il faut Ã©galement dÃ©finir l'adresse de retour du *player*.
+Si l'option **PlayerAcessByJP** vaut 1, il faut également définir l'adresse de retour du *player*.
 
-		ld ix,AYT_File			; AYT_File est l'adresse oÃ¹ se trouve le fichier AYT
-		ld de,AYT_Player		; AYT_Player est l'adresse oÃ¹ le player sera construit
-		ld hl,AYT_Player_Ret		; AYT_Player_Ret est l'adresse Ã  laquelle le player revient
-		ld a,2				; A indique combien de fois la musique sera jouÃ©e
+		ld ix,AYT_File			; AYT_File est l'adresse où se trouve le fichier AYT
+		ld de,AYT_Player		; AYT_Player est l'adresse où le player sera construit
+		ld hl,AYT_Player_Ret		; AYT_Player_Ret est l'adresse à laquelle le player revient
+		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
-On retrouve l'adresse de retour derriÃ¨re l'appel du *player** 
+On retrouve l'adresse de retour derrière l'appel du *player** 
 
 			jp AYT_Player	; Joue la musique
 	AYT_Player_Ret			; Adresse de retour du player
 
-Sauf Ã  vouloir briller en sociÃ©tÃ© en prÃ©tendant avoir Ã©conomisÃ© **11 Âµsecondes**, il est conseillÃ© de laisser cette option Ã  0, ce qui vous Ã©vitera notamment de devoir sauvegarder et restituer le pointeur de pile.
+Sauf à vouloir briller en société en prétendant avoir économisé **11 µsecondes**, il est conseillé de laisser cette option à 0, ce qui vous évitera notamment de devoir sauvegarder et restituer le pointeur de pile.
 
  
-Vous pouvez vous rapporter au tableau des performances en bas du document pour connaitre la Cpu et la taille du *player* gÃ©nÃ©rÃ©.
+Vous pouvez vous rapporter au tableau des performances en bas du document pour connaitre la Cpu et la taille du *player* généré.
 
 ***Remarques :***
-- Le *player* met le circuit sonore en sourdine une fois le nombre de reboucle effectuÃ©.
-- Si des registres nÃ©cessitent une initialisation, cette derniÃ¨re est faite de maniÃ¨re transparente avec le 1er appel.
-- La reboucle a lieu Ã  l'endroit ou elle a Ã©tÃ© prÃ©vue par le fichier **YM**.
-- Que ce soit lors de la reboucle ou lors de la mise en sourdine du *player*, ce dernier respectera Ã  chaque appel une durÃ©e de Cpu constante.
+- Le *player* met le circuit sonore en sourdine une fois le nombre de reboucle effectué.
+- Si des registres nécessitent une initialisation, cette dernière est faite de manière transparente avec le 1er appel.
+- La reboucle a lieu à l'endroit ou elle a été prévue par le fichier **YM**.
+- Que ce soit lors de la reboucle ou lors de la mise en sourdine du *player*, ce dernier respectera à chaque appel une durée de Cpu constante.
 
-### PÃ©riodicitÃ© d'appel de Ayt_Player
-La pÃ©riodicitÃ© d'appel du *player* est gÃ©nÃ©ralement basÃ©e sur la frÃ©quence de l'Ã©cran, qui est de 50 Hertz. 
-Cette information est disponible dans l'entÃªte du fichier AYT (voir la description du format **AYT**).
-Sur CPC 464/664/6128, la frÃ©quence de 50 Hz est induite par le paramÃ©trage du **CRTC 6845**, qui signale son signal de Vsync via le **PPI 8255**.
+### Périodicité d'appel de Ayt_Player
+La périodicité d'appel du *player* est généralement basée sur la fréquence de l'écran, qui est de 50 Hertz. 
+Cette information est disponible dans l'entête du fichier AYT (voir la description du format **AYT**).
+Sur CPC 464/664/6128, la fréquence de 50 Hz est induite par le paramétrage du **CRTC 6845**, qui signale son signal de Vsync via le **PPI 8255**.
 Il est possible de tester le signal de Vsync avec le code suivant :
 
            ld b,#f5        ; port B du PPI 8255
     Wait_Vsync
             rra             ; Test du bit 0 
-            jr nc,Wait_Vsync     ; Attente que le bit 0 passe Ã  1
+            jr nc,Wait_Vsync     ; Attente que le bit 0 passe à 1
 
-Les interruptions sur les CPC offrent aussi la possibilitÃ© de se synchroniser de maniÃ¨re trÃ¨s prÃ©cise.
+Les interruptions sur les CPC offrent aussi la possibilité de se synchroniser de manière très précise.
 
-### PrÃ©-Construction
-Il est tout Ã  fait possible de ***"prÃ© construire"*** le *player*.
+### Pré-Construction
+Il est tout à fait possible de ***"pré construire"*** le *player*.
 
-Vous pouvez utiliser *Ayt_Builder* pour crÃ©er prÃ©alablement le *player* et initialiser le fichier **AYT**.
-Il suffit de sauvegarder le player crÃ©Ã© et le fichier **AYT** mis Ã  jour aprÃ¨s l'appel de la fonction.
+Vous pouvez utiliser *Ayt_Builder* pour créer préalablement le *player* et initialiser le fichier **AYT**.
+Il suffit de sauvegarder le player créé et le fichier **AYT** mis à jour après l'appel de la fonction.
 
-Vous pouvez ensuite intÃ©grer le *player* et le fichier **AYT** en prenant soin de les replacer aux adresses dÃ©finies lors de l'appel Ã  *Ayt_Builder*.
+Vous pouvez ensuite intégrer le *player* et le fichier **AYT** en prenant soin de les replacer aux adresses définies lors de l'appel à *Ayt_Builder*.
 
 ### Performances
 
-Les performances en temps d'exÃ©cution et de place mÃ©moire du Player dÃ©pendent de plusieurs facteurs:
-- Le nombre de registres actifs dÃ©tectÃ©s par le compresseur (au maximum de 14).
-- La *mÃ©thode d'appel* du *player* (**CALL** ou **JP**) sur toutes les plateformes.
-- La configuration de *connexion/dÃ©connexion* de la **page Asic** Ã©voquÃ©e prÃ©cÃ©demment.
+Les performances en temps d'exécution et de place mémoire du Player dépendent de plusieurs facteurs:
+- Le nombre de registres actifs détectés par le compresseur (au maximum de 14).
+- La *méthode d'appel* du *player* (**CALL** ou **JP**) sur toutes les plateformes.
+- La configuration de *connexion/déconnexion* de la **page Asic** évoquée précédemment.
 
-La *mÃ©thode d'appel* correspond Ã  la faÃ§on dont le *player* est appelÃ© en Z80A.
-Cette mÃ©thode est une option de compilation du *builder*.
-- Lorsque la *mÃ©thode d'appel* est de type **CALL**, le programme qui utilise le *player* doit l'appeler avec l'instruction Z80A **"CALL"**
-- Lorsque la *mÃ©thode d'appel* est de type **JP**, le *player* doit Ãªtre appelÃ© avec l'instruction Z80A **"JP"**. Cette mÃ©thode nÃ©cessite toutefois que le programmeur fournisse au *builder* l'adresse de retour du *player*.
+La *méthode d'appel* correspond à la façon dont le *player* est appelé en Z80A.
+Cette méthode est une option de compilation du *builder*.
+- Lorsque la *méthode d'appel* est de type **CALL**, le programme qui utilise le *player* doit l'appeler avec l'instruction Z80A **"CALL"**
+- Lorsque la *méthode d'appel* est de type **JP**, le *player* doit être appelé avec l'instruction Z80A **"JP"**. Cette méthode nécessite toutefois que le programmeur fournisse au *builder* l'adresse de retour du *player*.
   - Le *player* ne sauvegarde alors pas le registre **SP**, ce qui permet de *"gagner"* **11 nops** (sur **CPC**) ou **37 Ts**.
-  - C'est une option intÃ©ressante seulement si le programme qui appelle le player devait de toute maniÃ¨re modifier le registre **SP**.
-  - Dans les autres cas, elle prÃ©sente les problÃ¨mes suivants :
-    - elle impose d'appeler le *builder* Ã  chaque fois que l'adresse de retour change :
-      - cela peut se produire frÃ©quemment en *dÃ©veloppement*, ce qui impose d'avoir le *builder* en ram.
-      - cela peut se produire si il est nÃ©cessaire d'appeler le *player* de plusieurs endroits diffÃ©rents.
-    - elle impose de restaurer le pointeur de pile car le moindre push ou call serait destructeur pour les donnÃ©es **AYT**.
+  - C'est une option intéressante seulement si le programme qui appelle le player devait de toute manière modifier le registre **SP**.
+  - Dans les autres cas, elle présente les problèmes suivants :
+    - elle impose d'appeler le *builder* à chaque fois que l'adresse de retour change :
+      - cela peut se produire fréquemment en *développement*, ce qui impose d'avoir le *builder* en ram.
+      - cela peut se produire si il est nécessaire d'appeler le *player* de plusieurs endroits différents.
+    - elle impose de restaurer le pointeur de pile car le moindre push ou call serait destructeur pour les données **AYT**.
   
-Le tableau ci-dessous dÃ©taille les performances du *player* entre 10 et 14 registres actifs pour les deux *mÃ©thodes d'appel* possibles.
+Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 registres actifs pour les deux *méthodes d'appel* possibles.
 
-| MÃ©thode Appel | Nombre Registres | CPU en Nops | Taille Player en octets | Taille Builder en octets |
+| Méthode Appel | Nombre Registres | CPU en Nops | Taille Player en octets | Taille Builder en octets |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
-| CALL          | 10               | 369         | 252           | 480            |
 | JP            | 10               | 358         | 247           | 466            |
-| CALL          | 11               | 400         | 268           | 480            |
 | JP            | 11               | 389         | 264           | 466            |        
-| CALL          | 12               | 431         | 286           | 480            |
 | JP            | 12               | 320         | 281           | 466            |        
-| CALL          | 13               | 461         | 302           | 480            |
 | JP            | 13               | 450         | 297           | 466            |        
-| CALL          | 14               | 490         | 317           | 480            |
 | JP            | 14               | 479         | 312           | 466            |        
-
+| CALL          | 10               | 369         | 252           | 480            |
+| CALL          | 11               | 400         | 268           | 480            |
+| CALL          | 12               | 431         | 286           | 480            |
+| CALL          | 13               | 461         | 302           | 480            |
+| CALL          | 14               | 490         | 317           | 480            |
