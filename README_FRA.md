@@ -15,7 +15,7 @@ Cette organisation impacte in fine le player, qui est construit en fonction de l
 Le fichier **YM** est découpé en patterns, qui sont agencés via des séquences de patterns.  
 Des optimisations complémentaires comme le retrait des registres inutilisés ou l'ordonnancement des données permettent de réduire la taille des fichiers et/ou le temps **CPU**.
 
-[^1] Le format YM a été créé par Leonard (Arnaud Carré) http://leonard.oxg.free.fr/ymformat.html
+[^1]: Le format YM a été créé par Leonard (Arnaud Carré) http://leonard.oxg.free.fr/ymformat.html
 
 
 # Caractéristiques 
@@ -108,6 +108,7 @@ Nous tenons à remercier les personnes suivantes pour leur enthousiasme et leur 
 - **BdcIron (Amaury Duran)** pour son aide pour les tests du player sur VG5000 et sa connaissance du ZX Spectrum. 
 - **Ced (Cédric Quétier)** pour le fabuleux logo AYT associé à la présentation du *player* sur CPC+
 - **Made (Carlos Pardo)** pour le somptueux logo AYT associé à la présentation du player sur "CPC old".
+
 
 
 
