@@ -93,7 +93,7 @@ Puis ensuite une attente de Vsync :
         jr nc,Wait_Vsync
 
 
-### Pré-Construction
+## Pré-Construction
 Il est tout à fait possible de ***"pré construire"*** le *player*.
 
 Vous pouvez utiliser *Ayt_Builder* pour créer préalablement le *player* et initialiser le fichier **AYT**.
