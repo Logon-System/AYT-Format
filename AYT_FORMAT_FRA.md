@@ -1,31 +1,31 @@
 
 # Description du Format AYT
 
-Un fichier *AYT* est composé :
-- D'un entête.
-- Des données constitutives des patterns.
-- De séquences de pointeurs relatifs à ces patterns.
-- D'une séquence de fin. 
-- De données d'initialisation du circuit sonore.
+Un fichier *AYT* est composÃ© :
+- D'un entÃªte.
+- Des donnÃ©es constitutives des patterns.
+- De sÃ©quences de pointeurs relatifs Ã  ces patterns.
+- D'une sÃ©quence de fin. 
+- De donnÃ©es d'initialisation du circuit sonore.
 
-Toutes les valeurs 16 bits sont ordonnées en mémoire selon le format *"little endian"* (pour rappel, le poids faible de la valeur 16 bits est codé à Adresse et le poids fort de la valeur 16 bits est codé à Adresse+1)
+Toutes les valeurs 16 bits sont ordonnÃ©es en mÃ©moire selon le format *"little endian"* (pour rappel, le poids faible de la valeur 16 bits est codÃ© Ã  Adresse et le poids fort de la valeur 16 bits est codÃ© Ã  Adresse+1)
 
 ## Glossaire
 
-* **registres actifs:** Dans un fichier YM, les registres ne sont pas tous utilisés (par exemple si tous les canaux ne sont pas utilisés.). Il est nécessaire d'envoyer des données vers ces registres à chaque frame car ils peuvent changer.  Le nombre de registres actifs varie de 1 a 14,  le registre 13 étant obligatoirement actif dans cette version pour la gestion du player
-* **registres inactifs**: Ce sont les registres qui ne changent pas au cours d'un morceau. Il n'est pas nécessaire de les envoyer à chaque frame, et de les stocker dans le fichier AYT. Par contre il peut être nécessaire de leur fixer une valeur précise à l’initialisation.
-* **nombre de frames** : C'est une valeur issue du fichier YM qui détermine la durée totale de la musique. A chaque frame des données sont envoyées aux  registres du **AY8910/AY8912/YM2149**.
-* **pattern**: bloc d'octets envoyé à un registre du circuit audio. Tous les patterns ont la même taille dans un même fichier AYT. Cette taille peut être de 1 à 256 octets.
-* **séquence**: Une séquence est une liste de pointeurs vers des patterns. La suite des séquences permet d'agencer les patterns, et in fine de reconstituer l'intégralité du morceau de musique en YM. Chaque séquence contient autant de pointeurs que de registres 'actifs'.
-* **taille des patterns** : Tous les patterns ont la même taille dans un même fichier AYT. Cette taille peut être de 1 a 256 octets, la valeur optimale étant celle qui permet de produire le plus petit fichier AYT possible.
-* **nombre de séquences:** Ce nombre est obtenu en divisant le nombre de frame par la taille des patterns.  
-* **séquence de fin**: C'est une séquence supplémentaire qui pointe vers des valeurs spéciales (en particulier pour R13) qui permet d'indiquer la fin du morceau, et qui permet au player de faire boucler le morceau au début ou sur la séquence définie par le musicien
-* **séquence d'initialisation:** C'est une liste de couples (numéro de registre, valeur) utilisé epour fixer une valeur aux registres avant de démarrer le player. C'est essentiellement pour initialiser les registres inactifs. Cette liste se termine par une valeur dont le bit 7 est à 1. 
-* **séquence de démarrage**: C'est un pointeur dans le fichier AYT vers la séquence correspondant au début du morceau de musique. La plupart du temps, cela correspond à la premiere séquence de la liste des séquences, mais dans certains cas, on peut vouloir commencer plus loin.
-* **séquence de bouclage:** Quand la séquence de fin a été atteinte, le player va sauter à la séquence de bouclage pour continuer à jouer. La plupart du temps, cela correspond à un pointeur vers la premiere séquence de la liste des séquences,  mais on peut vouloir ne pas reboucler au début (passer l'intro par exemple, ou boucler sur une séquence de silence). 
+* **registres actifs:** Dans un fichier YM, les registres ne sont pas tous utilisÃ©s (par exemple si tous les canaux ne sont pas utilisÃ©s.). Il est nÃ©cessaire d'envoyer des donnÃ©es vers ces registres Ã  chaque frame car ils peuvent changer.  Le nombre de registres actifs varie de 1 a 14,  le registre 13 Ã©tant obligatoirement actif dans cette version pour la gestion du player
+* **registres inactifs**: Ce sont les registres qui ne changent pas au cours d'un morceau. Il n'est pas nÃ©cessaire de les envoyer Ã  chaque frame, et de les stocker dans le fichier AYT. Par contre il peut Ãªtre nÃ©cessaire de leur fixer une valeur prÃ©cise Ã  lâ€™initialisation.
+* **nombre de frames** : C'est une valeur issue du fichier YM qui dÃ©termine la durÃ©e totale de la musique. A chaque frame des donnÃ©es sont envoyÃ©es aux  registres du **AY8910/AY8912/YM2149**.
+* **pattern**: bloc d'octets envoyÃ© Ã  un registre du circuit audio. Tous les patterns ont la mÃªme taille dans un mÃªme fichier AYT. Cette taille peut Ãªtre de 1 Ã  256 octets.
+* **sÃ©quence**: Une sÃ©quence est une liste de pointeurs vers des patterns. La suite des sÃ©quences permet d'agencer les patterns, et in fine de reconstituer l'intÃ©gralitÃ© du morceau de musique en YM. Chaque sÃ©quence contient autant de pointeurs que de registres 'actifs'.
+* **taille des patterns** : Tous les patterns ont la mÃªme taille dans un mÃªme fichier AYT. Cette taille peut Ãªtre de 1 a 256 octets, la valeur optimale Ã©tant celle qui permet de produire le plus petit fichier AYT possible.
+* **nombre de sÃ©quences:** Ce nombre est obtenu en divisant le nombre de frame par la taille des patterns.  
+* **sÃ©quence de fin**: C'est une sÃ©quence supplÃ©mentaire qui pointe vers des valeurs spÃ©ciales (en particulier pour R13) qui permet d'indiquer la fin du morceau, et qui permet au player de faire boucler le morceau au dÃ©but ou sur la sÃ©quence dÃ©finie par le musicien
+* **sÃ©quence d'initialisation:** C'est une liste de couples (numÃ©ro de registre, valeur) utilisÃ© epour fixer une valeur aux registres avant de dÃ©marrer le player. C'est essentiellement pour initialiser les registres inactifs. Cette liste se termine par une valeur dont le bit 7 est Ã  1. 
+* **sÃ©quence de dÃ©marrage**: C'est un pointeur dans le fichier AYT vers la sÃ©quence correspondant au dÃ©but du morceau de musique. La plupart du temps, cela correspond Ã  la premiere sÃ©quence de la liste des sÃ©quences, mais dans certains cas, on peut vouloir commencer plus loin.
+* **sÃ©quence de bouclage:** Quand la sÃ©quence de fin a Ã©tÃ© atteinte, le player va sauter Ã  la sÃ©quence de bouclage pour continuer Ã  jouer. La plupart du temps, cela correspond Ã  un pointeur vers la premiere sÃ©quence de la liste des sÃ©quences,  mais on peut vouloir ne pas reboucler au dÃ©but (passer l'intro par exemple, ou boucler sur une sÃ©quence de silence). 
 *
 
-## Définition de l'entête
+## DÃ©finition de l'entÃªte
     Ayt_Start
         struct AYT_Header
         { 
@@ -40,34 +40,34 @@ Toutes les valeurs 16 bits sont ordonnées en mémoire selon le format *"little en
             uint8_t  Ayt_Reserved	; Reserved for future version (=0)
         }
 
-### Ayt_Version, Numéro de version
-**1 octet** : Les 8 bits 7 à 0 sont codifiés ainsi: aaaabbbb pour définir une version a.b
+### Ayt_Version, NumÃ©ro de version
+**1 octet** : Les 8 bits 7 Ã  0 sont codifiÃ©s ainsi: aaaabbbb pour dÃ©finir une version a.b
 
 ### Ayt_ActiveRegs, Registres actifs
-**2 octets** : Les **bits 15 à 2** de cette valeur 16 bits représentent respectivement les **registres 0 à 13** du AY/YM.
+**2 octets** : Les **bits 15 Ã  2** de cette valeur 16 bits reprÃ©sentent respectivement les **registres 0 Ã  13** du AY/YM.
 Si le bit vaut 1, cela signifie que le registre est actif, et 0 qu'il est inactif.
-Les registres inactifs ne disposent pas de pointeurs dans une séquence, mais sont toutefois initialisés.
+Les registres inactifs ne disposent pas de pointeurs dans une sÃ©quence, mais sont toutefois initialisÃ©s.
 
 ### Ayt_PatternSize, Taille d'un pattern_
-**1 octet** : Cette valeur, de **0 à 255**, correspond à la taille d'un pattern (unique pour l'ensemble du fichier)
+**1 octet** : Cette valeur, de **0 Ã  255**, correspond Ã  la taille d'un pattern (unique pour l'ensemble du fichier)
 
-### Ayt_FirstSeqMarker, Première séquence
-**2 octets** : Cette valeur contient l'offset de la première séquence par rapport au début du fichier **AYT**.
-Autrement dit, si le fichier AYT est en #8000, par exemple, et que cette valeur vaut #1000, alors l'adresse de la première séquence sera située en #9000.
-Une séquence représente un ensemble de pointeurs sur les patterns pour les registres actifs.
+### Ayt_FirstSeqMarker, PremiÃ¨re sÃ©quence
+**2 octets** : Cette valeur contient l'offset de la premiÃ¨re sÃ©quence par rapport au dÃ©but du fichier **AYT**.
+Autrement dit, si le fichier AYT est en #8000, par exemple, et que cette valeur vaut #1000, alors l'adresse de la premiÃ¨re sÃ©quence sera situÃ©e en #9000.
+Une sÃ©quence reprÃ©sente un ensemble de pointeurs sur les patterns pour les registres actifs.
 
-### Ayt_FirstSeqMarker, Séquence de rebouclage
-**2 octets** : Cette valeur contient l'offset de la séquence de reboucle par rapport au début du fichier AYT.
-Autrement dit, si le fichier AYT est en #8000, par exemple, et que cette valeur vaut #1000, alors l'adresse de la première séquence sera située en #9000.
-Une séquence représente un ensemble de pointeurs sur les patterns pour les registres actifs.
-La séquence de rebouclage peut être égale à la première séquence si le rebouclage a lieu au début.
+### Ayt_FirstSeqMarker, SÃ©quence de rebouclage
+**2 octets** : Cette valeur contient l'offset de la sÃ©quence de reboucle par rapport au dÃ©but du fichier AYT.
+Autrement dit, si le fichier AYT est en #8000, par exemple, et que cette valeur vaut #1000, alors l'adresse de la premiÃ¨re sÃ©quence sera situÃ©e en #9000.
+Une sÃ©quence reprÃ©sente un ensemble de pointeurs sur les patterns pour les registres actifs.
+La sÃ©quence de rebouclage peut Ãªtre Ã©gale Ã  la premiÃ¨re sÃ©quence si le rebouclage a lieu au dÃ©but.
 
-### Ayt_ListInit, Données d'initialisation
-**2 octets** : Cette valeur contient l'offset de la structure d'initialisation des registres par rapport au début du fichier **AYT**.
-Autrement dit, si le fichier **AYT** est en #8000, par exemple, et que cette valeur vaut #1000, alors l'adresse de la structure d'initialisation sera située en #9000.
-Actuellement, les compresseurs génèrent des données d'initialisation lorsque le nombre de registres actifs est inférieur à 14.
-Chaque registre inactif est alors initialisé car sa valeur a été déterminée constante.
-Le format est cependant ouvert à d'autres initialisation si nécessaires.
+### Ayt_ListInit, DonnÃ©es d'initialisation
+**2 octets** : Cette valeur contient l'offset de la structure d'initialisation des registres par rapport au dÃ©but du fichier **AYT**.
+Autrement dit, si le fichier **AYT** est en #8000, par exemple, et que cette valeur vaut #1000, alors l'adresse de la structure d'initialisation sera situÃ©e en #9000.
+Actuellement, les compresseurs gÃ©nÃ¨rent des donnÃ©es d'initialisation lorsque le nombre de registres actifs est infÃ©rieur Ã  14.
+Chaque registre inactif est alors initialisÃ© car sa valeur a Ã©tÃ© dÃ©terminÃ©e constante.
+Le format est cependant ouvert Ã  d'autres initialisation si nÃ©cessaires.
 La structure de la liste d'initialisation est la suivante :
 
     struct Ay_Init [N register]
@@ -77,19 +77,19 @@ La structure de la liste d'initialisation est la suivante :
     } 
     defb #FF                 ; End of Init List
 
-**Ayt_Reg** est le numéro de registre du circuit, et **Ayt_Val** sa valeur d'initialisation.
+**Ayt_Reg** est le numÃ©ro de registre du circuit, et **Ayt_Val** sa valeur d'initialisation.
 
-Si un fichier **AYT** ne contient pas de registre à initialiser, il contiendra seulement l'octet 0xFF.
+Si un fichier **AYT** ne contient pas de registre Ã  initialiser, il contiendra seulement l'octet 0xFF.
 
 ### Ayt_NbPatternPtr, Nombre de pointeurs Patterns
-**2 octets** : Cette valeur contient le nombre de pointeurs total sur les patterns présents dans le fichier **AYT**, en incluant ceux de la séquence de fin.
-Une séquence est composée de **N pointeurs** sur des patterns, **N** étant le nombre de **registres actifs**.
-Cette valeur contient la valeur **N x Nb total de séquences du fichier**.
-Le nombre de frame correspond à : **(Nb Total de Séquences-1) x Taille des Patterns.**
+**2 octets** : Cette valeur contient le nombre de pointeurs total sur les patterns prÃ©sents dans le fichier **AYT**, en incluant ceux de la sÃ©quence de fin.
+Une sÃ©quence est composÃ©e de **N pointeurs** sur des patterns, **N** Ã©tant le nombre de **registres actifs**.
+Cette valeur contient la valeur **N x Nb total de sÃ©quences du fichier**.
+Le nombre de frame correspond Ã  : **(Nb Total de SÃ©quences-1) x Taille des Patterns.**
 
-### Ayt_PlatformFreq, Plateforme et fréquence
-**1 octet** : les bits **0 à 4** codent un numéro de plateforme sur 5 bits, et les bits **5 à 7** codent un type de fréquence sur 3 bits.
-Le format AYT étant **multi-plateformes**, il est important de conserver cette information afin de pouvoir envisager des transferts **inter-plateformes**.
+### Ayt_PlatformFreq, Plateforme et frÃ©quence
+**1 octet** : les bits **0 Ã  4** codent un numÃ©ro de plateforme sur 5 bits, et les bits **5 Ã  7** codent un type de frÃ©quence sur 3 bits.
+Le format AYT Ã©tant **multi-plateformes**, il est important de conserver cette information afin de pouvoir envisager des transferts **inter-plateformes**.
 
 |Bits 4..0 | Plateforme | Frequence du circuit (Hz) |
 | :-------:| :--------: | :------------------:|
@@ -114,59 +114,60 @@ Le format AYT étant **multi-plateformes**, il est important de conserver cette i
 | 101 | 200 |
 | 111 | UNKNOWN |
 
-### Ayt_Reserved, Réservé
-**1 octet** : Nan, j'dirais pas à quoi ça sert!
+### Ayt_Reserved, RÃ©servÃ©
+**1 octet** : Nan, j'dirais pas Ã  quoi Ã§a sert!
 
-## Définition des patterns
-Situé après l'entête, on trouve des *patterns*.
+## DÃ©finition des patterns
+SituÃ© aprÃ¨s l'entÃªte, on trouve des *patterns*.
 
-Un *pattern* est un lot de N données destinées à être envoyées en N passages au circuit sonore.
-N correspond au nombre de données définie par *Ayt_PatternSize*
+Un *pattern* est un lot de N donnÃ©es destinÃ©es Ã  Ãªtre envoyÃ©es en N passages au circuit sonore.
+N correspond au nombre de donnÃ©es dÃ©finie par *Ayt_PatternSize*
 
-L'adresse de début des *patterns* est égale au début du fichier auquel on ajoute la taille du header.
+L'adresse de dÃ©but des *patterns* est Ã©gale au dÃ©but du fichier auquel on ajoute la taille du header.
 
 Les patterns ne sont pas :
-- spécifiques à un registre AY. Autrement dit un pattern est mutualisé et peut servir à des registres différents.
-- contigus en mémoire car deux lots de N données peuvent constituer plus de 2 patterns. Autrement dit les données des patterns sont mutualisées.
+- spÃ©cifiques Ã  un registre AY. Autrement dit un pattern est mutualisÃ© et peut servir Ã  des registres diffÃ©rents.
+- contigus en mÃ©moire car deux lots de N donnÃ©es peuvent constituer plus de 2 patterns. Autrement dit les donnÃ©es des patterns sont mutualisÃ©es.
 
-## Définition des séquences
-Situées apres les patterns, on trouve les séquences de pointeurs sur *patterns*.
-L'adresse de début des séquences est calculée grâce à *Ayt_FirstSeqMarker*. 
-Une séquence est composée de N (N=nombre registres actifs) pointeurs sur les *patterns*.
+## DÃ©finition des sÃ©quences
+SituÃ©es apres les patterns, on trouve les sÃ©quences de pointeurs sur *patterns*.
+L'adresse de dÃ©but des sÃ©quences est calculÃ©e grÃ¢ce Ã  *Ayt_FirstSeqMarker*. 
+Une sÃ©quence est composÃ©e de N (N=nombre registres actifs) pointeurs sur les *patterns*.
 
-## Définition de la séquence de fin
-Située après la dernière séquence, cette séquence permet d'indiquer la fin de la musique.
-Cette séquence particulière a 2 fonctions :
-- elle indique la fin de la musique via la donnée prévue pour le *registre 13*.
-- elle permet de couper le son, ce qui est utile si le fichier YM a été mal "coupé", par exemple.
+## DÃ©finition de la sÃ©quence de fin
+SituÃ©e aprÃ¨s la derniÃ¨re sÃ©quence, cette sÃ©quence permet d'indiquer la fin de la musique.
+Cette sÃ©quence particuliÃ¨re a 2 fonctions :
+- elle indique la fin de la musique via la donnÃ©e prÃ©vue pour le *registre 13*.
+- elle permet de couper le son, ce qui est utile si le fichier YM a Ã©tÃ© mal "coupÃ©", par exemple.
 
-Le *registre 13* est un registre du circuit sonore particulier dans la mesure ou sa valeur ne doit pas être mise à jour si sa valeur n'a pas changé.
-Toute mise à jour de ce registre "réinitialise" la gestion de l'enveloppe hardware du circuit sonore (cela peut être "voulu", mais en général, ce n'est pas le cas).
+Le *registre 13* est un registre du circuit sonore particulier dans la mesure ou sa valeur ne doit pas Ãªtre mise Ã  jour si sa valeur n'a pas changÃ©.
+Toute mise Ã  jour de ce registre "rÃ©initialise" la gestion de l'enveloppe hardware du circuit sonore (cela peut Ãªtre "voulu", mais en gÃ©nÃ©ral, ce n'est pas le cas).
 
-Cette caractéristique implique de traiter ce registre spécifiquement en lecture.
+Cette caractÃ©ristique implique de traiter ce registre spÃ©cifiquement en lecture.
 
-Les fichiers **YM** prévoient que la valeur **#FF** indique que le registre ne doit pas être remis à jour.
-Les fichiers **AYT** utilisent uniquement les **bit 6 et 7** du *registre 13* pour déterminer cette situation.
-Tant que les bits **6 et 7 de R13 valent 1** (comme c'est le cas avec la valeur **#FF**) la valeur n'est pas renvoyée au circuit.
-Cependant, si le **bit 7 vaut 1 et le bit 6 vaut 0**, alors le player sait qu'il est sur la dernière séquence.
+Les fichiers **YM** prÃ©voient que la valeur **#FF** indique que le registre ne doit pas Ãªtre remis Ã  jour.
+Les fichiers **AYT** utilisent uniquement les **bit 6 et 7** du *registre 13* pour dÃ©terminer cette situation.
+Tant que les bits **6 et 7 de R13 valent 1** (comme c'est le cas avec la valeur **#FF**) la valeur n'est pas renvoyÃ©e au circuit.
+Cependant, si le **bit 7 vaut 1 et le bit 6 vaut 0**, alors le player sait qu'il est sur la derniÃ¨re sÃ©quence.
 
-Les pointeurs de patterns de cette dernière séquence sont **particuliers** car :
-- Les registres **R0 à R6, R8 à 12** pointent sur un **0**.
+Les pointeurs de patterns de cette derniÃ¨re sÃ©quence sont **particuliers** car :
+- Les registres **R0 Ã  R6, R8 Ã  12** pointent sur un **0**.
 - Le registre **R7** pointent sur **#3F** (mute des canaux sonores).
 - Le registre **R12** contient **0x10111111** pour signaler la fin de la musique.
 
 **Remarque :** 
-Selon la version du compresseur, ces 3 octets sont "recherchés" dans les patterns, ou dans le pire des cas, créés après la séquence de fin.
-(*Tronic t'es une feignasse* :-))
+Selon la version du compresseur, ces 3 octets sont "recherchÃ©s" dans les patterns, ou dans le pire des cas, crÃ©Ã©s aprÃ¨s la sÃ©quence de fin.
+(*Tronic t'es une feignasse* ğŸ˜†)
  
-## Définition de la structure d'initalisation 
-Si aucune initialisation de registre ne doit avoir lieu car la musique contient 14 registres actifs, par exemple, alors on trouvera un seul octet avec la valeur de **#FF** à la suite de la séquence de fin.
-Si une initialisation doit être faite, on trouve des couples d'octets qui représentent les registres à initialiser
+## DÃ©finition de la structure d'initalisation 
+Si aucune initialisation de registre ne doit avoir lieu car la musique contient 14 registres actifs, par exemple, alors on trouvera un seul octet avec la valeur de **#FF** Ã  la suite de la sÃ©quence de fin.
+Si une initialisation doit Ãªtre faite, on trouve des couples d'octets qui reprÃ©sentent les registres Ã  initialiser
 
-Voir *Ayt_ListInit* pour le détail de la structure.
+Voir *Ayt_ListInit* pour le dÃ©tail de la structure.
 
-Si par exemple, les registre 3, 10 et 11 doivent être initialisés avec les valeurs 0,1,2, on aura:
+Si par exemple, les registre 3, 10 et 11 doivent Ãªtre initialisÃ©s avec les valeurs 0,1,2, on aura:
 
     defb 3,0,10,1,11,2,0x0FFh
+
 
 
