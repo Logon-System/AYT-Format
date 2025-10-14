@@ -23,9 +23,9 @@ L'un d'eux est un séquenceur qui permet de manipuler un fichier **YM** (sélectio
 https://amstrad.neocities.org/ym-player-sequencer
 ![Image Presentation Web YM Sequencer ](./images/YMSequencerWeb.jpg)
 
-[^1] https://www.julien-nevo.com/arkostracker/
+[^1]: https://www.julien-nevo.com/arkostracker/
 
-[^2] http://bulba.untergrund.net/
+[^2]: http://bulba.untergrund.net/
 
 
 ## Conversion d'un fichier YM5/6 en AYT
