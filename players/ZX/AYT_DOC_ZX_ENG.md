@@ -40,7 +40,7 @@ An initialization function must be called before the player.
 The *Ayt_Builder* function builds an initialization routine that will be called **before** using the *player*.  
 Two possibilities exist when calling the function:
 - If **BC = 0**, *Ayt_Builder* will reserve **16 bytes** after the *player* to create the routine.
-- If **BC ? 0**, it must contain the address of a reserved **16-byte** area (anywhere in RAM).  
+- If **BC ≠ 0**, it must contain the address of a reserved **16-byte** area (anywhere in RAM).  
   This area can then be used by the program after initialization.
 
 After calling *Ayt_Builder*:
