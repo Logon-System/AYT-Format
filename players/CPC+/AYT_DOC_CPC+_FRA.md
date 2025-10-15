@@ -1,3 +1,4 @@
+![Image Presentation CPC+](../../images/AYTPRES1.jpg)
 ## Appel de Ayt_Builder sur CPC 464+/6128+/GX4000 
 
 Sur les machines **"CPC+"** de Amstrad, il y a un paramètre complémentaire lié aux spécificités techniques de ces machines, qui intègrent des **DMA** permettant de mettre à jour les registres **AY** *presque* automatiquement.
