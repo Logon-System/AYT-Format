@@ -2,21 +2,17 @@
 // YmToAyt.cpp
 //
 // For the joint venture Logon System + GPA in 2025!
-//
+
 // Proof of Concept by Tronic/GPA
 // Format definition and improvements by Longshot & Siko
 // C++ Conversion Tool: Siko
-// Ultra optimized Z80 Player Code by Longshot
+// Ultra optimized Z80 Players by Longshot
 
-// build with ; g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq)
-
-// TODO:
-// - Final sequence optimisée
-// - Export Asm prebuildé
-// - Amélioration Export ayt en .asm avec un header comprehensible
-// - la correction des periodes
-// - le bon placement de la sequence de fin selon que ca tombe juste ou pas (en
-// - selectionnant l'optimale parmi les 2 3 possibilités)
+// build with : g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq
+// Under windows (mingw or cygwin) you might add -static option to avoir a missing DLL error:
+// g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq -static
+// And then 
+// strip YmToSeq
 
 #include "ym_to_ayt.h"
 
@@ -319,19 +315,17 @@ static uint32_t analyze_data_buffers(const array<ByteBlock, 16>& rawValues,
     for (size_t i = 0; i < rawValues.size() && i < 14; ++i) {
         const auto& buffer = rawValues[i];
 
-        // Un buffer vide est considéré comme "constant" (trivialement) et n'a pas
-        // de valeur fixe significative
+        // An empty buffer is considered as 'constant', nd has no init value
         if (buffer.empty()) {
-            // Le bit reste à 0 (constant). On ne stocke pas de valeur fixe dans ce
-            // cas.
             continue;
         }
 
         // Check if a buffer is contant
         bool isConstant = true;
-        uint8_t firstValue = buffer[0];
-        if (buffer.size() > 1) {
-            isConstant = all_of(buffer.begin() + 1, buffer.end(),
+        // We skip the very 1st value, as sometimes a register only changes once, at the beginning (0,255, 255, ...)
+        uint8_t firstValue = buffer[1];
+        if (buffer.size() > 2) {
+            isConstant = all_of(buffer.begin() + 2, buffer.end()-1,
                                 [&firstValue](uint8_t val) { return val == firstValue; });
         }
 
@@ -341,7 +335,7 @@ static uint32_t analyze_data_buffers(const array<ByteBlock, 16>& rawValues,
         } else {
             if (i == 13) {
                 if (verbosity > 0) {
-                    cout << "Reg13 is constant, but in AYT format, it cannot considered as fixed"
+                    cout << "Reg13 is constant, but in AYT format V1, it cannot considered as fixed"
                          << endl;
                 }
                 changeMask |= (1u << i);
@@ -1248,3 +1242,12 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+
+// TODO:
+// - Final sequence optimisée
+// - Export Asm prebuildé
+// - Amélioration Export ayt en .asm avec un header comprehensible
+// - la correction des periodes
+// - le bon placement de la sequence de fin selon que ca tombe juste ou pas (en
+// - selectionnant l'optimale parmi les 2 3 possibilités)
