@@ -317,13 +317,10 @@ AYT_Builder_Start
 		ld a,c
 		ld (Ayt_Prm_AsicState_Out),a	; io page asic state expected at exit point
 		ld a,b				; io page asic state at entry point
-		push de				; save ptr on 1st address of player for SP reload update (jp method) or DMA ptr upd
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; In AYT file , relocate sequence list ptr on rxx data. (absolute address)
 		;; In >> ix=Ptr on AYT File
-		;; Out >> de not modified
 		;;-------------------------------------------------------------------------------------------------------------------------------
-		push de				; save ptr for player
 		push ix
 		pop bc				; bc=Ptr on start of AYT file
 		;
@@ -334,7 +331,7 @@ AYT_Builder_Start
 		ld h,(ix+AYT_OFS_ListInit+1)
 		add hl,bc			; Ptr on Ay Init List 
 		ld (Ayt_PtrInitList),hl		; In Block 4 if created
-		push af
+		push af				; save asic config at entry 
 		ld a,(hl)			; Read 1st byte of Init List
 		ld (Ayt_InitCreate),a
 		pop af
@@ -350,7 +347,7 @@ Ayt_TstF_AreaAyt 				; AYT file start or end address >=4000
 		ld a,b				; Is start address >=#8000 ?
 		cp #80				; 
 		jr nc,Ayt_TstF_AreaSafe		; Yes, no in asic io space
-		ld hl,Ayt_Player_B0_End		; Copy code for IoPage Off
+		ld hl,Ayt_Player_B0_Start		; Copy code for IoPage Off
 		push bc				; AYT file is in Asic io space > asic need to be disconnected
 		ld bc,Ayt_Player_B0_End-Ayt_Player_B0_Start
 		ldir 
@@ -360,6 +357,8 @@ Ayt_TstF_AreaSafe
 		sbc a,0				; If asic stay connected (ayt not in io area), AsicIOState=1 (on)
 Ayt_End_AsicInIsOff
 		ld (AsicIOPageConnect),a	; State of Asic io page (0=off, <>0=on)
+		push de				; save ptr on 1st address of player for SP reload update (jp method) or DMA ptr upd
+		push de				; save curr ptr on player code
 		;
 		ld l,(ix+AYT_OFS_LoopSeq)	; Offset of Loop Sequence
 		ld h,(ix+AYT_OFS_LoopSeq+1)
@@ -392,7 +391,7 @@ Ayt_PtrFix_b1
 		ld a,d
 		or e
 		jr nz,Ayt_PtrFix_b1		; loop all sequence
-		pop de
+		pop de				; restore current ptr on player code
 		;
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; Set ptr on var 1st bloc for later updates
@@ -671,7 +670,7 @@ Ayt_InitCreate	equ $+1
 ;===============================================================================================================================================
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B0_Start
-		ld bc,#7f00+AYT_AsicPage_On	; If AYT file is in Asic Io Page AND Asic IO Page is mapped, need to switch off Io Page
+		ld bc,#7f00+AYT_AsicPage_Off	; If AYT file is in Asic Io Page AND Asic IO Page is mapped, need to switch off Io Page
 		out (c),c
 Ayt_Player_B0_End
  
