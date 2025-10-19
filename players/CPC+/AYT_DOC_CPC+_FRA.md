@@ -79,7 +79,7 @@ Si le *player* est appelé à partir d'une configuration unique, ce sont les éq
 Par défaut, ce sont les codes les plus usuels qui sont utilisés, à savoir **#A0** pour la déconnexion et **#B8** pour la connexion.
 Ces valeurs par défaut impliquent que le numéro de la rom basse est 0, et que son mapping soit en #0000 lorsque la **page Asic** est déconnectée.
 
-Les utilisateurs ayant besoin que le player restitue une autre rom que 0 et/ou un mapping ailleurs qu'en #0000 peuvent modifier les équivalences pour ces valeurs en fonction de la table de description **RMR2** ci-après :
+Les utilisateurs ayant besoin que le player restitue une autre rom que 0 et/ou un mapping ailleurs qu'en #0000 peuvent modifier les équivalences pour ces valeurs en fonction de la table de description **RMR2** ci-après:
 
 | Bits 7.6.5 | Bits 4.3 |  Bits 2.1.0 | Valeurs | Page Asic | Rom "basse" |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
@@ -190,3 +190,4 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
