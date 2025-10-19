@@ -81,20 +81,13 @@ Ces valeurs par défaut impliquent que le numéro de la rom basse est 0, et que 
 
 Les utilisateurs ayant besoin que le player restitue une autre rom que 0 et/ou un mapping ailleurs qu'en #0000 peuvent modifier les équivalences pour ces valeurs en fonction de la table de description **RMR2** ci-après:
 
-| Bits 7.6.5 | Bits 4.3 | Bits 2.1.0 | Values | Asic Page | Lower ROM |
+| Bits 7.6.5 | Bits 4.3 | Bits 2.1.0 | Valeurs | Page Asic | ROM basse |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: | :-----------: |
-| 1.0.1  | 0.0   | 0.0.0 to 1.1.1  | **#A0** to #A7  | OFF           | 0 to 7 at #0000 |
-| 1.0.1  | 0.1   | 0.0.0 to 1.1.1  | #A8 to #AF      | OFF           | 0 to 7 at #4000 |
-| 1.0.1  | 1.0   | 0.0.0 to 1.1.1  | #B0 to #B7      | OFF           | 0 to 7 at #8000 |
-| 1.0.1  | 1.1   | 0.0.0 to 1.1.1  | **#B8** to #BF  | ON            | 0 to 7 at #0000 |
+| 1.0.1  | 0.0   | 0.0.0 to 1.1.1  | **#A0** à #A7  | OFF           | 0 à 7 en #0000 |
+| 1.0.1  | 0.1   | 0.0.0 to 1.1.1  | #A8 à #AF      | OFF           | 0 à 7 en #4000 |
+| 1.0.1  | 1.0   | 0.0.0 to 1.1.1  | #B0 à #B7      | OFF           | 0 à 7 en #8000 |
+| 1.0.1  | 1.1   | 0.0.0 to 1.1.1  | **#B8** à #BF  | ON            | 0 à 7 en #0000 |
 
-
-| Bits 7.6.5 | Bits 4.3 |  Bits 2.1.0 | Valeurs | Page Asic | Rom basse |
-| :-----------: | :--------------: | :---------: | :-----------: | :------------: |
-| 1.0.1  | 0.0   | 0.0.0 à 1.1.1  | **#A0** à #A7  | OFF           | 0 à 7 en #0000 |
-| 1.0.1  | 0.1   | 0.0.0 à 1.1.1  | #A8 à #AF  | OFF           | 0 à 7 en #4000 |
-| 1.0.1  | 1.0   | 0.0.0 à 1.1.1  | #B0 à #B7  | OFF           | 0 à 7 en #8000 |
-| 1.0.1  | 1.1   | 0.0.0 à 1.1.1  | **#B8** à #BF  | ON            | 0 à 7 en #0000 |
 
 #### Player en ROM
 Actuellement le **player** est conçu pour une utilisation en **RAM**. 
@@ -198,5 +191,6 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
 
 
