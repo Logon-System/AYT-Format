@@ -81,7 +81,7 @@ Ces valeurs par défaut impliquent que le numéro de la rom basse est 0, et que so
 
 Les utilisateurs ayant besoin que le player restitue une autre rom que 0 et/ou un mapping ailleurs qu'en #0000 peuvent modifier les équivalences pour ces valeurs en fonction de la table de description **RMR2** ci-après :
 
-|Bits 7.6.5 | Bits 4.3 |  Bits 2.1.0 | Valeurs | Page Asic | Rom "basse"
+|Bits 7.6.5 | Bits 4.3 |  Bits 2.1.0 | Valeurs | Page Asic | Rom "basse" |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
 | 1.0.1  | 0.0   | 0.0.0 à 1.1.1  | **#A0** à #A7  | OFF           | 0 à 7 en #0000 |
 | 1.0.1  | 0.1   | 0.0.0 à 1.1.1  | #A8 à #AF  | OFF           | 0 à 7 en #4000 |
