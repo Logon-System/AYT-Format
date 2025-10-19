@@ -32,11 +32,11 @@ Ce qu'il faut retenir, c'est que le player aura besoin :
 
 Chacune de ces actions peut prendre quelques micro-secondes et le contexte est donc important pour que le gain de CPU soit optimal.
 Ainsi, par exemple, on peut avoir les 2 cas opposés suivants :
-- La page Asic est toujours connectée et le fichier **AYT** n'est pas situé entre **0x4000 et 0x7FFF**. Pour indiquer cette situation à *Ayt_Builder*, B et C doivent tous les deux contenir la valeur #01. Le fichier n'étant pas situé dans la page Asic, le *player* ne la déconnectera. Il n'aura pas non plus besoin de la connecter pour configurer le DMA. Enfin, il n'aura pas besoin de connecter l'Asic (puisqu'il l'est déjà). Dans cette configuration, le player évite de consommer 20 Nops et 14 octets de Ram. 
-- La page Asic est connectée en entrée et le fichier **AYT** est situé entre **0x4000 et 0x7FFF**, et la page doit être déconnectée en sortie (à noter qu'il "coute" moins cher de 1 nop/1 octet de le faire via le *Player* qu'à la sortie du *Player*). Pour indiquer cette situation, B doit contenir la valeur #01 et C doit contenir la valeur #00. Le fichier *AYT* se trouvant dans la page Asic, le player devra alors déconnecter l'Asic pour pouvoir accéder aux données. Puis il devra connecter l'Asic pour configurer le DMA. Enfin il devra déconnecter l'Asic avant de rendre la main. Dans cette configuration, le player a consommé 20 nops et 14 octets de Ram en plus que dans la configuration précédente.
+- La page Asic est toujours connectée et le fichier **AYT** n'est pas situé entre **0x4000 et 0x7FFF**. Pour indiquer cette situation à *Ayt_Builder*, B et C doivent tous les deux contenir la valeur #01. Le fichier n'étant pas situé dans la page Asic, le *player* ne la déconnectera. Il n'aura pas non plus besoin de la reconnecter pour configurer le DMA. Enfin, il n'aura pas besoin de connecter l'Asic (puisqu'il l'est déjà). Dans cette configuration, le player est optimal. 
+- La page Asic est connectée en entrée et le fichier **AYT** est situé entre **0x4000 et 0x7FFF**, et la page doit être déconnectée en sortie (à noter qu'il "coûte" moins cher de 1 nop+1 octet de le faire via le *Player* que soi-même à la sortie du *Player*). Pour indiquer cette situation, B doit contenir la valeur #01 et C doit contenir la valeur #00. Le fichier *AYT* se trouvant dans la page Asic, le player devra alors déconnecter l'Asic pour pouvoir accéder aux données. Puis il devra connecter l'Asic pour configurer le DMA. Enfin il devra déconnecter l'Asic avant de rendre la main. Dans cette configuration, le player a consommé 20 nops et 14 octets de Ram en plus que dans la configuration précédente.
 
 Le tableau suivant décrit toutes les configurations possibles.
-Il est donc judicieux d'éviter autant que possible de placer le fichier dans la zone Asic si la page Asic est ouverte en entrée.
+Il est donc judicieux d'éviter autant que possible de placer le fichier dans la zone Asic, surtout si la page Asic est ouverte en entrée.
 
 | Fichier AYT entre 0x4000 et 0x7FFF | Etat Asic Entrée (B) | Etat Asic Sortie (C) | CPU (Nops) | Octet en plus |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
@@ -67,15 +67,37 @@ Il existe deux autres options de compilation pour *Ayt_Builder* spécifiques aux 
   - Ce paramètre doit définir le même canal DMA que celui défini avec **PlayerDMAUsed_SAR**
   - Par défaut le canal dma utilisé est le 0 : **PlayerDMAUsed_DCSRMask	equ AYT_Asic_DCSRM0**
 
-Pour jouer la musique, il faut appeler le *player* à la fréquence requise. 
-La majorité des musiques nécessitent que le *player* soit appelé périodiquement 50 fois par seconde.
-L'entête du fichier **AYT** indique cette période. 
 
-Il est très **important de s'assurer qu'aucune interruption ne pourra avoir lieu pendant l'appel du player**. 
+#### Ayt_AsicPage_On / Ayt_AsicPage_Off
+La connexion de la **page Asic** implique un registre "gate array" nommé **RMR2**.
+Ce registre est multifonction et permet également de sélectionner une des 8 premières rom de la cartouche en rom "basse" à partir de #0000, #4000 ou #8000.
+Les pignoufs chez Amstrad n'ont pas pas jugé utile de permettre la lecture de ce registre.
+Sa mise à jour implique donc de connaitre son état antérieur, qui résulte d'une configuration propre à chaque programme.
+Le *player* ne prévoit actuellement pas de gérer dynamiquement des configurations variantes de roms basses.
+Si le *player* est appelé à partir d'une configuration unique, ce sont les équivalences **Ayt_AsicPage_On** et **Ayt_AsicPage_Off** qui permettent de la définir.
 
-Si vous n'êtes pas familier avec le système des interruptions en Z80A, vous pouvez utiliser l'instruction **DI** avant l'appel du *player*.
+Par défaut, ce sont les codes les plus usuels qui sont utilisés, à savoir **#A0** pour la déconnexion et **#B8** pour la connexion.
+Ces valeurs par défaut impliquent que le numéro de la rom basse est 0, et que son mapping soit en #0000 lorsque la **page Asic** est déconnectée.
 
-		call AYT_Player	; Joue la musique
+Les utilisateurs ayant besoin que le player restitue une autre rom que 0 et/ou un mapping ailleurs qu'en #0000 peuvent modifier les équivalences pour ces valeurs en fonction de la table de description **RMR2** ci-après :
+
+|Bits 7.6.5 | Bits 4.3 |  Bits 2.1.0 | Valeurs | Page Asic | Rom "basse"
+| :-----------: | :--------------: | :---------: | :-----------: | :------------: |
+| 1.0.1  | 0.0   | 0.0.0 à 1.1.1  | **#A0** à #A7  | OFF           | 0 à 7 en #0000 |
+| 1.0.1  | 0.1   | 0.0.0 à 1.1.1  | #A8 à #AF  | OFF           | 0 à 7 en #4000 |
+| 1.0.1  | 1.0   | 0.0.0 à 1.1.1  | #B0 à #B7  | OFF           | 0 à 7 en #8000 |
+| 1.0.1  | 1.1   | 0.0.0 à 1.1.1  | **#B8** à #BF  | ON            | 0 à 7 en #0000 |
+
+#### Player en ROM
+Actuellement le **player** est conçu pour une utilisation en **RAM**. 
+Il utilise le principe d'auto modification de son propre code objet pour gérer ses variables.
+C'est le cas pour la mise à jour du *pointeur de séquences* et du *compteur de pattern*, mais aussi du registre Z80A **SP** lorsque le *player* est appelé avec la méthode "CALL" (voir option **PlayerAccessByJP**).
+
+Si vous projetez d'utiliser le player généré dans une **ROM**, la mise à jour du *builder* n'est pas trop complexe à réaliser.
+
+Une version ROM sera néanmions publiée si il existe une demande pour ça. 
+Il faut cependant noter que cette version perdra 6 à 9 nops de CPU (selon l'option **PlayerAccessByJP equ 0**) et qu'il faudra réserver 3 à 5 octets en ram pour y loger les variables.
+
 
 ### Initialisation
 Si le compresseur identifie des registres dit *inactifs*, ils sont exclus des données **AYT** mais nécessitent néanmoins une initialisation préalable.
@@ -108,6 +130,17 @@ Voici le traitement à mettre en place pour appeler une routine d'initialisation
 		call 0			; Après la mise à jour, CALL sera sur la routine d'initialisation
  
 ### Périodicité d'appel de Ayt_Player
+
+Pour jouer la musique, il faut appeler le *player* à la fréquence requise. 
+La majorité des musiques nécessitent que le *player* soit appelé périodiquement 50 fois par seconde.
+L'entête du fichier **AYT** indique cette période. 
+
+Il est très **important de s'assurer qu'aucune interruption ne pourra avoir lieu pendant l'appel du player**. 
+
+Si vous n'êtes pas familier avec le système des interruptions en Z80A, vous pouvez utiliser l'instruction **DI** avant l'appel du *player*.
+
+		call AYT_Player	; Joue la musique
+
 La périodicité d'appel du *player* est généralement basée sur la fréquence de l'écran, qui est de 50 Hertz. 
 Cette information est disponible dans l'entête du fichier **AYT** (voir la description du format **AYT**)
 .
