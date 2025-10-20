@@ -388,7 +388,6 @@
       }
 
       start() {
-        console.log("start()");
         if (!this.audio) {
           this.audio = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this.sampleRate });
           console.log("AudioContext sr =", this.audio.sampleRate);
@@ -415,10 +414,8 @@
       }
 
       applyFrame(frameIdx) {
-        console.log("applyFrame", frameIdx);
         for (let r = 0; r <= 13; r++) {
           const v = this.regs[r][frameIdx] | 0;
-          console.log("  reg[" + r + "] =", v);
           if (!(r === 13 && v === 0xFF)) {
             this.ay.writeReg(r, v);
           }
@@ -443,9 +440,9 @@
             this.ay.tick();
           }
           const [Lf, Rf] = this.ay.mixSample();
-          if (i === 0) {
-            console.log("ticks:", ticks, "mix:", Lf.toFixed(6), Rf.toFixed(6));
-          }
+//          if (i === 0) {
+//            console.log("ticks:", ticks, "mix:", Lf.toFixed(6), Rf.toFixed(6));
+//          }
           const [Ld, Rd] = this.hp.process(Lf, Rf);
           outL[i] = Ld;
           outR[i] = Rd;
@@ -529,10 +526,10 @@
         parser = new AYT_Parser(buf);
         parser.parse();
         const { regs, frames, loopFrame } = parser.expandToRegisters();
-        console.log("expandToRegisters:", { frames, loopFrame });
-        for (let r = 0; r < regs.length; r++) {
-          console.log(`regs[${r}].length =`, regs[r].length);
-        }
+        //console.log("expandToRegisters:", { frames, loopFrame });
+        //for (let r = 0; r < regs.length; r++) {
+        //  console.log(`regs[${r}].length =`, regs[r].length);
+        //}
         $play.disabled = false;
         $stop.disabled = true;
         $exportYM.disabled = false;
