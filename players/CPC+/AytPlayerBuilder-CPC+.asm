@@ -150,13 +150,6 @@
 ;; i.e. this sequence points to these values (with Nbregs= 14) : 0,0,0,0,0,0,0,3F,0,0,0,0,0,BF
 ;;============================================================================================================================================
 ;;
-;; winape assembler dont know out (c),0 (or ff on nmos)
-;; others assembler knows out (c),0 
-;;
-macro 	outc0
-		db #ed,#71
-mend
-;;
 ;;============================================================================================================================================
 ;; https://www.youtube.com/watch?v=iRDXYyK-alM&list=RDRTYigVy7BME&index=7
 ;;============================================================================================================================================
@@ -212,7 +205,7 @@ mend
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
-PlayerAccessByJP	equ 0		; If set to 1, requires you to take into account that SP has been wildly modified
+PlayerAccessByJP	equ 1		; If set to 1, requires you to take into account that SP has been wildly modified
 ;;
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -803,7 +796,7 @@ Ayt_InitReg_Loop
 		inc hl			; no ptr on data
 		out (c),c 		; Port A, select No Reg AY
 		ld b,a			; Port C (F6)
-		outc0			; Valid
+		db #ed,#71		; out (c),0 / valid
 		dec b			; F5>>F4 (port A) via OUTI
 		outi			; Send to Data Ay 
 		exx
