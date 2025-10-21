@@ -82,19 +82,19 @@ Une documentation existe au niveau du source pour chaque plateforme, afin de dé
 
 Ces documentations intègrent également les performances en temps (NOPS ou TStates) et la taille occupée par le *player* généré par le *builder*.
 
-Les players sont tous en temps constant. A noter toutefois que pour certaines plateformes, le temps fixe est garanti lorsque le player est utilisé hors de la période d'affichage car la CPU est alors partagée pour permettre au circuit vidéo d'accéer à la ram.
+Les players sont tous en temps constant. A noter toutefois que pour certaines plateformes, le temps fixe est garanti lorsque le player est utilisé hors de la période d'affichage car la CPU est alors partagée pour permettre au circuit vidéo d'accéder à la ram.
 
 Pour chaque plateforme, il existe deux fichiers source en **Z80A**.
 
-A noter que ces sources ont été créé avec l'assembleur intégré de l'émulateur *CPC Winape*, qui respecte la syntaxe **MAXAM**.
+A noter que ces sources ont été créés avec l'assembleur intégré de l'émulateur *CPC Winape*, qui respecte la syntaxe **MAXAM**.
 Aucune *"fake instruction"* (ou autre directive hérétique de cette nature) n'est utilisé dans ces sources.
 Ils sont facilement transposables sur d'autres assembleurs.
 
 Ces sources existent actuellement pour 5 plateformes : **"CPC"**, **"CPC+"**, **"ZX"**, **"MSX"**, **"VG5000"**
 
-Le premier source contient la fonction *Ayt_Builder*, qui sert à construire le *player*.
+Le premier contient la fonction *Ayt_Builder*, qui sert à construire le *player*.
 
-Le source est nommé **AytPlayerBuilder-[Plateforme].asm** 
+Il est nommé **AytPlayerBuilder-[Plateforme].asm** 
 
 Ainsi pour la plateforme **MSX**, le fichier s'appelle **AytPlayerBuilder-MSX.asm**
 
@@ -122,4 +122,5 @@ Il est conseillé de laisser cette option par défaut à 0 afin d'éviter de dev
 
 
 A noter que dans le source du *builder* de la plateforme CPC+, il existe d'autres options de compilation spécifiques aux méthodes d'accès au circuit sonore.
+
 
