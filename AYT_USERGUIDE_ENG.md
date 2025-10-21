@@ -63,7 +63,7 @@ A picture is worth a thousand words:
 #### Listening to an AYT File
 To check the result of your conversion, several applications allow you to listen to an **AYT** file.
 
-![Image Player AYT Windows](./images/JukeBox.PNG)
+![Image Player AYT Windows](./images/Jukebox.PNG)
 
 There is also a web portal that does this:  
 https://amstrad.neocities.org/aytwebplayer  
