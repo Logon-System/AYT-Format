@@ -1,53 +1,153 @@
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AYT Web Player</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root { --bg:#0b0c10; --panel:#12131b; --txt:#e8ebf3; --muted:#9aa1b4; --line:#232533; --btn:#1a1c27; --btnh:#232739; --ok:#34d399; }
-    *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{max-width:880px;margin:26px auto;padding:0 16px}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 10px 24px rgba(0,0,0,.22)}
-    h1{font-size:18px;margin:0 0 8px}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .drop{border:2px dashed #2b3143;border-radius:12px;padding:16px;text-align:center;background:#0f121a;cursor:pointer}
-    .drop.hover{background:#111626;border-color:#4f8cff}
-    input[type=file]{display:none}
-    button{background:var(--btn);border:1px solid #2a2d3d;color:var(--txt);border-radius:10px;padding:8px 14px;cursor:pointer}
-    button:hover{background:var(--btnh)}
-    label {margin-right:4px;}
-    select {background:var(--btn); color:var(--txt); border:1px solid var(--line); border-radius:4px; padding:4px;}
-    .meta{white-space:pre-wrap;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--muted);background:#0f111a;border:1px dashed var(--line);border-radius:10px;padding:10px}
+    :root {
+      --bg: #0b0c10;
+      --panel: #12131b;
+      --txt: #e8ebf3;
+      --muted: #9aa1b4;
+      --line: #232533;
+      --btn: #1a1c27;
+      --btnh: #232739;
+      --ok: #34d399;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--txt);
+      font: 14px/1.45 system-ui, Segoe UI, Roboto, Arial, sans-serif
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 26px auto;
+      padding: 0 16px
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, .22)
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 8px
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .drop {
+      border: 2px dashed #2b3143;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      background: #0f121a;
+      cursor: pointer
+    }
+
+    .drop.hover {
+      background: #111626;
+      border-color: #4f8cff
+    }
+
+    input[type=file] {
+      display: none
+    }
+
+    button {
+      background: var(--btn);
+      border: 1px solid #2a2d3d;
+      color: var(--txt);
+      border-radius: 10px;
+      padding: 8px 14px;
+      cursor: pointer
+    }
+
+    button:hover {
+      background: var(--btnh)
+    }
+
+    label {
+      margin-right: 4px;
+    }
+
+    select {
+      background: var(--btn);
+      color: var(--txt);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 4px;
+    }
+
+    .meta {
+      white-space: pre-wrap;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--muted);
+      background: #0f111a;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <h1>AYT Web Player</h1>
     <div class="card">
+
       <div id="drop" class="drop">Drag and drop a <b>.ayt</b> file or click to load one</div>
       <input id="file" type="file" accept=".ayt" />
-      <div class="row" style="margin-top:10px; gap:8px;">
-        <label for="clockSel">AY Master Clock :</label>
+      
+      <div class="row" style="margin-top:10px; gap:8px; margin-top: 10px; font-size: 12px;"">
+        <label for="clockSel">Master Clock :</label>
         <select id="clockSel" title="Fréquence du chip sonore (Master Clock)">
-          <option value="1000000" selected>1 000 000 Hz (default)</option>
+          <option value="1000000" selected>1 000 000 Hz</option>
           <option value="1750000">1 750 000 Hz</option>
-	  <option value="1764000">1 764 000 Hz</option>
+          <option value="1764000">1 764 000 Hz</option>
           <option value="1773400">1 773 400 Hz</option>
-	  <option value="1789772">1 789 772 Hz</option>
+          <option value="1789772">1 789 772 Hz</option>
           <option value="2000000">2 000 000 Hz</option>
         </select>
         <button id="play" disabled>Play</button>
         <button id="stop" disabled>Stop</button>
+
+        <label style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
+          Volume : <span id="$volume-value">60%</span>
+          <input type="range" id="$global-volume" min="0" max="100" value="60" step="1" title="Contrôle l'amplification du mixage final (0% à 100%)" style="width: 120px;">
+        </label>
+
         <button id="$exportYM" disabled title="Exporter les données YM reconstruites">💾 Export YM</button>
+        
       </div>
+
       <div id="meta" class="meta" style="margin-top:10px;">No AYT loaded.</div>
     </div>
   </div>
 
   <script>
+    let globalVolumeFactor = 0.6;
+
     // ========== Utils ========== 
     function readU16LE(view, off) {
       return view.getUint8(off) | (view.getUint8(off + 1) << 8);
@@ -256,7 +356,7 @@
           if (this.EnvLevel > 0) this.EnvLevel--;
         }
         if (((this.EnvAtk) && (this.EnvLevel === 31)) ||
-            ((!this.EnvAtk) && (this.EnvLevel === 0))) {
+          ((!this.EnvAtk) && (this.EnvLevel === 0))) {
           if (!this.EnvCont) {
             if (this.EnvAtk) this.EnvLevel = 31;
             else this.EnvLevel = 0;
@@ -336,8 +436,8 @@
             mixR += c;
           }
         }
-        mixL = Math.max(-1, Math.min(1, mixL * 0.6));
-        mixR = Math.max(-1, Math.min(1, mixR * 0.6));
+        mixL = Math.max(-1, Math.min(1, mixL * globalVolumeFactor));
+        mixR = Math.max(-1, Math.min(1, mixR * globalVolumeFactor));
         return [mixL, mixR];
       }
     }
@@ -440,9 +540,9 @@
             this.ay.tick();
           }
           const [Lf, Rf] = this.ay.mixSample();
-//          if (i === 0) {
-//            console.log("ticks:", ticks, "mix:", Lf.toFixed(6), Rf.toFixed(6));
-//          }
+          //          if (i === 0) {
+          //            console.log("ticks:", ticks, "mix:", Lf.toFixed(6), Rf.toFixed(6));
+          //          }
           const [Ld, Rd] = this.hp.process(Lf, Rf);
           outL[i] = Ld;
           outR[i] = Rd;
@@ -581,6 +681,18 @@
       saveFile(buf, original + ".ym");
       showMeta(`Exported ${original}.ym — ${buf.byteLength} bytes`);
     });
+
+    const $globalVolume = document.getElementById('$global-volume');
+    const $volumeValue = document.getElementById('$volume-value');
+
+    $globalVolume.addEventListener('input', (e) => {
+      const volumePercent = e.target.value;
+      // Conversion de la valeur 0-100 en facteur 0.0-1.0
+      globalVolumeFactor = volumePercent / 100;
+      $volumeValue.textContent = `${volumePercent}%`;
+      showMeta(`Volume global ajusté à ${volumePercent}%`);
+    });
   </script>
 </body>
+
 </html>
