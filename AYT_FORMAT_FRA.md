@@ -140,18 +140,18 @@ Cette séquence particulière a 2 fonctions :
 - elle indique la fin de la musique via la donnée prévue pour le *registre 13*.
 - elle permet de couper le son, ce qui est utile si le fichier YM a été mal "coupé", par exemple.
 
-Le *registre 13* est un registre du circuit sonore particulier dans la mesure ou sa valeur ne doit pas être mise à jour si sa valeur n'a pas changé.
+Le *registre 13* est un registre du circuit sonore particulier dans la mesure où sa valeur ne doit pas être mise à jour si sa valeur n'a pas changé.
 Toute mise à jour de ce registre "réinitialise" la gestion de l'enveloppe hardware du circuit sonore (cela peut être "voulu", mais en général, ce n'est pas le cas).
 
 Cette caractéristique implique de traiter ce registre spécifiquement en lecture.
 
 Les fichiers **YM** prévoient que la valeur **#FF** indique que le registre ne doit pas être remis à jour.
-Les fichiers **AYT** utilisent uniquement les **bit 6 et 7** du *registre 13* pour déterminer cette situation.
+Les fichiers **AYT** utilisent uniquement les **bits 6 et 7** du *registre 13* pour déterminer cette situation.
 Tant que les bits **6 et 7 de R13 valent 1** (comme c'est le cas avec la valeur **#FF**) la valeur n'est pas renvoyée au circuit.
 Cependant, si le **bit 7 vaut 1 et le bit 6 vaut 0**, alors le player sait qu'il est sur la dernière séquence.
 
 Les pointeurs de patterns de cette dernière séquence sont **particuliers** car :
-- Les registres **R0 à R6, R8 à 12** pointent sur un **0**.
+- Les registres **R0 à R6 ainsi que R8 à 12** pointent sur un **0**.
 - Le registre **R7** pointent sur **#3F** (mute des canaux sonores).
 - Le registre **R12** contient **0x10111111** pour signaler la fin de la musique.
 
@@ -159,15 +159,16 @@ Les pointeurs de patterns de cette dernière séquence sont **particuliers** car
 Selon la version du compresseur, ces 3 octets sont "recherchés" dans les patterns, ou dans le pire des cas, créés après la séquence de fin.
 (*Tronic t'es une feignasse* 😆)
  
-## Définition de la structure d'initalisation 
+## Définition de la structure d'initialisation 
 Si aucune initialisation de registre ne doit avoir lieu car la musique contient 14 registres actifs, par exemple, alors on trouvera un seul octet avec la valeur de **#FF** à la suite de la séquence de fin.
 Si une initialisation doit être faite, on trouve des couples d'octets qui représentent les registres à initialiser
 
 Voir *Ayt_ListInit* pour le détail de la structure.
 
-Si par exemple, les registre 3, 10 et 11 doivent être initialisés avec les valeurs 0,1,2, on aura:
+Si par exemple, les registres 3, 10 et 11 doivent être initialisés avec les valeurs 0,1,2, on aura:
 
-    defb 3,0,10,1,11,2,0x0FFh
+    defb 3,0,10,1,11,2,#FF
+
 
 
 

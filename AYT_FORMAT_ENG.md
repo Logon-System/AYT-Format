@@ -3,7 +3,7 @@
 An *AYT* file is composed of:
 - A header.
 - The data making up the patterns.
-- Sequences of pointers referring to these patterns.
+- Sequences of pointers referring to these patterns. 
 - An end sequence.
 - Initialization data for the sound chip.
 
@@ -144,7 +144,7 @@ AYT files instead use only bits **6 and 7** of *register 13* to determine this:
 - If bit 7 = 1 and bit 6 = 0, the player knows it’s on the final sequence.
 
 Pattern pointers of the last sequence are special:  
-- Registers **R0–R6, R8–R12** point to **0**.  
+- Registers **R0–R6 and R8–R12** point to **0**.  
 - Register **R7** points to **#3F** (mute sound channels).  
 - Register **R12** contains **0x10111111**, signaling end of song.
 
@@ -160,5 +160,5 @@ See *Ayt_ListInit* for details.
 Example: if registers 3, 10, and 11 must be initialized with values 0, 1, and 2, we’ll have:
 
 ```
-defb 3,0,10,1,11,2,0x0FFh
+defb 3,0,10,1,11,2,#FF
 ```
