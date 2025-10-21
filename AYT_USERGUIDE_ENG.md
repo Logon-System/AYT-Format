@@ -18,7 +18,7 @@ It is therefore preferable to use a tracker to produce a **YM** file, as this av
 
 As part of the **AYT Project**, online tools have been developed.
 
-One of them is a sequencer that allows manipulation of a **YM** file (range selection, deletion, merging, export, etc.)
+One of them is a sequencer that allows manipulation of a **YM** file (range selection, deletion, export, etc.)
 
 https://amstrad.neocities.org/ym-player-sequencer  
 ![Image Presentation Web YM Sequencer](./images/YMSequencerWeb.jpg)
@@ -63,10 +63,10 @@ A picture is worth a thousand words:
 #### Listening to an AYT File
 To check the result of your conversion, several applications allow you to listen to an **AYT** file.
 
-![Image Player AYT Windows](./images/PlayerAytWindows.jpg)
+![Image Player AYT Windows](./images/JukeBox.PNG)
 
 There is also a web portal that does this:  
-https://amstrad.neocities.org/ayt-web-player  
+https://amstrad.neocities.org/aytwebplayer  
 ![Image Presentation Web Ayt Player](./images/AYTPlayerWeb.jpg)
 
 ---
@@ -94,7 +94,7 @@ They can be easily adapted for other assemblers.
 Currently, sources exist for 5 platforms: **"CPC"**, **"CPC+"**, **"ZX"**, **"MSX"**, **"VG5000"**.
 
 The first source contains the *Ayt_Builder* function, which is responsible for building the *player*.  
-The source file is named **AytPlayerBuilder-[Platform].asm**  
+It is named **AytPlayerBuilder-[Platform].asm**  
 
 For example, for the **MSX** platform, the file is named **AytPlayerBuilder-MSX.asm**.
 
