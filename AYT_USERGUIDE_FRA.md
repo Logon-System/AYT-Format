@@ -51,7 +51,7 @@ Cet outil peut être téléchargé pour être utilisé en local.
 ![Image Presentation Web Ym2Ayt ](./images/YM2AYTWeb.jpg)
 
 #### Application windows tout en un
-Il s'agit d'un outil windows écrit en delphi, qui est assez adapté pour aux environnement de cross-dev.
+Il s'agit d'un outil windows écrit en delphi, qui est assez bien adapté aux environnement de cross-dev.
 
 Une image valant mille mots
 
@@ -122,5 +122,6 @@ Il est conseillé de laisser cette option par défaut à 0 afin d'éviter de dev
 
 
 A noter que dans le source du *builder* de la plateforme CPC+, il existe d'autres options de compilation spécifiques aux méthodes d'accès au circuit sonore.
+
 
 
