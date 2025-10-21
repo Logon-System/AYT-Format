@@ -62,7 +62,7 @@ Une image valant mille mots
 
 Afin de contrôler le résultat de la conversion réalisée, plusieurs applications permettent d'écouter un fichier **AYT**.
 
-![Image Player AYT Windows](./images/PlayerAytWindows.jpg)
+![Image Jukebox AYT Windows](./images/Jukebox.PNG)
 
 Il existe également un portail qui le permet :
 
@@ -122,3 +122,4 @@ Il est conseillé de laisser cette option par défaut à 0 afin d'éviter de dev
 
 
 A noter que dans le source du *builder* de la plateforme CPC+, il existe d'autres options de compilation spécifiques aux méthodes d'accès au circuit sonore.
+
