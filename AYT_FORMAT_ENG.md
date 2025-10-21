@@ -3,7 +3,7 @@
 An *AYT* file is composed of:
 - A header.
 - The data making up the patterns.
-- Sequences of pointers referring to these patterns.
+- Sequences of pointers referring to these patterns. 
 - An end sequence.
 - Initialization data for the sound chip.
 
