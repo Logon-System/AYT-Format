@@ -1,3 +1,5 @@
+![Image Presentation CPC](../../images/MSXPRES.jpg)
+
 ## Calling Ayt_Builder on MSX
 
 		ld ix,AYT_File		; Address of the AYT file
@@ -131,3 +133,4 @@ Performance table for 10–14 active registers and both calling methods:
 | CALL          | 12               | 778            | 153         | 370           |
 | CALL          | 13               | 827            | 160         | 370           |
 | CALL          | 14               | 876            | 166         | 370           |
+
