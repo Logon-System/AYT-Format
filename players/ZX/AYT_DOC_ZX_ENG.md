@@ -1,3 +1,5 @@
+![Image Presentation CPC](../../images/ZX128PRES.jpg)
+
 ## Calling Ayt_Builder on ZX SPECTRUM 128/+2/+3
 
 		ld ix,AYT_File		; Address of the AYT file
@@ -145,3 +147,4 @@ Performance table for 10–14 active registers and both calling methods:
 | CALL          | 12               | 828            | 167         | 353           |
 | CALL          | 13               | 881            | 174         | 353           |
 | CALL          | 14               | 934            | 181         | 353           |
+
