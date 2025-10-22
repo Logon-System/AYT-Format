@@ -50,6 +50,7 @@ struct TAYTHeader {
     uint8_t Magic = 0, B0 = 0, B1 = 0, N = 0;
     TWord PtrFirst = 0, PtrLoop = 0, PtrInit = 0, T2 = 0;
     uint8_t PF = 0;
+    double masterClock = 1000000.0f;
     int FrameCount = 0;
     int LoopFrame = 0;
     std::vector<int> PresentRegs;
@@ -63,7 +64,6 @@ struct TConstInit {
 
 class TAYTParser {
     std::ifstream F;
-    TAYTHeader H;
     
     // Contenu binaire du fichier pour faciliter le parsing
     std::vector<uint8_t> FileData;
@@ -74,6 +74,8 @@ class TAYTParser {
     }
 
 public:
+    TAYTHeader header;
+
     void LoadFromFile(const std::string& path) {
         // 1. Charger tout le fichier
         F = std::ifstream(path, std::ios::binary | std::ios::ate);
@@ -87,49 +89,69 @@ public:
         if (fileSize < 14) throw std::runtime_error("Fichier AYT trop court");
 
         // 2. Parser le header (index 0 à 13)
-        H.Magic    = FileData[0];
-        H.B0       = FileData[1];
-        H.B1       = FileData[2];
-        H.N        = FileData[3];
-        H.PtrFirst = ReadU16LE(4);
-        H.PtrLoop  = ReadU16LE(6);
-        H.PtrInit  = ReadU16LE(8);
-        H.T2       = ReadU16LE(10);
-        H.PF       = FileData[12];
-        
+        header.Magic    = FileData[0];
+        header.B0       = FileData[1];
+        header.B1       = FileData[2];
+        header.N        = FileData[3];
+        header.PtrFirst = ReadU16LE(4);
+        header.PtrLoop  = ReadU16LE(6);
+        header.PtrInit  = ReadU16LE(8);
+        header.T2       = ReadU16LE(10);
+        header.PF       = FileData[12]; // Freq + Plateform
+
+        struct platformDev {
+            std::string name;
+            double masterClock;
+        };
+
+        const platformDev platformFrequencies[9] = {
+            {"CPC", 1000000.0},         {"ORIC", 1000000.0},
+            {"ZXUNO", 1750000.0},       {"PENTAGON", 1750000.0},
+            {"TIMEXTS2068", 1764000.0}, {"ZX128", 1773400.0},
+            {"MSX", 1789772.5},         {"ATARI", 2000000.0},
+            {"VG5000", 1000000.0}};
+
+        const int pf = header.PF & 31;
+
+        if (pf<9) {
+            header.masterClock = platformFrequencies[pf].masterClock;
+        }
+
+
+
         const size_t pattDeb = 14;
         
         // 3. Déterminer les registres présents
         std::array<bool, 14> present{};
-        for (int r = 0; r <= 7; r++) if (H.B1 & (1 << (7 - r))) present[r] = true;
-        for (int r = 8; r <= 13; r++) if (H.B0 & (1 << (7 - (r - 8)))) present[r] = true;
+        for (int r = 0; r <= 7; r++) if (header.B1 & (1 << (7 - r))) present[r] = true;
+        for (int r = 8; r <= 13; r++) if (header.B0 & (1 << (7 - (r - 8)))) present[r] = true;
         
         int presentCount = 0;
         for (int r=0; r<14; ++r) {
             if (present[r]) {
-                H.PresentRegs.push_back(r);
+                header.PresentRegs.push_back(r);
                 presentCount++;
             }
         }
         
-        if (presentCount == 0) throw std::runtime_error("Aucun registre présent dans AYT");
+        if (presentCount == 0) throw std::runtime_error("Invalid register count");
         
         // 4. Extraire les blocs de données (Pattern) et de séquences (Sequence)
-        const size_t pattLen = size_t(H.PtrFirst) - pattDeb;
-        if (H.PtrFirst < pattDeb || size_t(H.PtrFirst) > fileSize) 
-            throw std::runtime_error("PattDeb/PtrFirst invalide");
+        const size_t pattLen = size_t(header.PtrFirst) - pattDeb;
+        if (header.PtrFirst < pattDeb || size_t(header.PtrFirst) > fileSize) 
+            throw std::runtime_error("Invalid PattStart/PtrFirst values");
             
         if (pattDeb + pattLen > fileSize)
-            throw std::runtime_error("Pattern déborde du fichier");
+            throw std::runtime_error("Invalid fileSize");
             
         const uint8_t* patt = FileData.data() + pattDeb;
         
-        const int seqWords = int(H.T2) - presentCount;
+        const int seqWords = int(header.T2) - presentCount;
         const size_t seqLen = size_t(seqWords) * 2;
-        const size_t seqStart = size_t(H.PtrFirst);
+        const size_t seqStart = size_t(header.PtrFirst);
         
         if (seqStart + seqLen > fileSize)
-            throw std::runtime_error("Sequence déborde du fichier");
+            throw std::runtime_error("Invalid fileSize");
             
         const uint8_t* seq = FileData.data() + seqStart;
         
@@ -149,73 +171,77 @@ public:
             constMap[a & 0xFF] = b & 0xFF;
         }
         
-        // 6. Décompression/Expansion des données dans H.Regs
-        const int N = H.N | 0;
+        // 6. Décompression/Expansion des données dans header.Regs
+        const int N = header.N | 0;
         const int P = presentCount;
         const int blocks = seqWords / P;
-        H.FrameCount = blocks * N;
+        header.FrameCount = blocks * N;
 
-        if (H.FrameCount <= 0) 
-            throw std::runtime_error("Nombre de frames invalide après expansion");
+        if (header.FrameCount <= 0) 
+            throw std::runtime_error("Invalid frame count");
 
         // Initialisation des 14 registres (R0 à R13)
         for (int r = 0; r <= 12; r++) {
             const int c = constMap.count(r) ? constMap.at(r) : 0;
-            H.Regs[r].assign(H.FrameCount, c);
+            header.Regs[r].assign(header.FrameCount, c);
         }
         const int c13 = constMap.count(13) ? constMap.at(13) : 0xFF;
-        H.Regs[13].assign(H.FrameCount, c13);
+        header.Regs[13].assign(header.FrameCount, c13);
         
         // Les registres 14 et 15 ne sont pas utilisés dans AYT/YM
-        H.Regs[14].assign(H.FrameCount, 0);
-        H.Regs[15].assign(H.FrameCount, 0);
+        header.Regs[14].assign(header.FrameCount, 0);
+        header.Regs[15].assign(header.FrameCount, 0);
 
 
         size_t sp = 0; // Pointeur dans le buffer de séquence
         for (int b = 0; b < blocks; b++) {
             for (int idx = 0; idx < P; idx++) {
-                const int r = H.PresentRegs[idx];
+                const int r = header.PresentRegs[idx];
                 const size_t off = uint16_t(seq[sp]) | (uint16_t(seq[sp + 1]) << 8); // ReadU16LE
                 sp += 2;
                 
                 if (off + N > pattLen) {
-                    throw std::runtime_error("Pointeur de pattern hors limites");
+                    throw std::runtime_error("Pattern Pointer overflow");
                 }
                 
                 // Copier N octets (slice) du Pattern vers le tableau de registres
                 for (int n = 0; n < N; n++) {
-                    H.Regs[r][b * N + n] = patt[off + n];
+                    header.Regs[r][b * N + n] = patt[off + n];
                 }
             }
         }
         
         // 7. Calcul du LoopFrame
-        H.LoopFrame = 0;
-        if (H.PtrLoop >= H.PtrFirst) {
-            const size_t bytesFromFirst = size_t(H.PtrLoop) - size_t(H.PtrFirst);
+        header.LoopFrame = 0;
+        if (header.PtrLoop >= header.PtrFirst) {
+            const size_t bytesFromFirst = size_t(header.PtrLoop) - size_t(header.PtrFirst);
             const size_t blockIdx = std::lround(double(bytesFromFirst) / double(P * 2));
             if (blockIdx * size_t(P * 2) == bytesFromFirst) {
-                H.LoopFrame = int(blockIdx * N);
+                header.LoopFrame = int(blockIdx * N);
             }
         }
-        H.LoopFrame = clampv(H.LoopFrame, 0, H.FrameCount);
+        header.LoopFrame = clampv(header.LoopFrame, 0, header.FrameCount);
+
+        
+
     }
     
     // Méthodes pour l'interface Player
-    int Frames() const { return H.FrameCount; }
-    uint8_t GetRegFrame(int reg, int frame) const { return H.Regs[size_t(reg)][size_t(frame)]; }
-    int LoopFrame() const { return H.LoopFrame; }
+    int Frames() const { return header.FrameCount; }
+    uint8_t GetRegFrame(int reg, int frame) const { return header.Regs[size_t(reg)][size_t(frame)]; }
+    int LoopFrame() const { return header.LoopFrame; }
     
     void PrintHeader() const {
-        std::cout << "AYT Loaded (Version " << (int)H.Magic << ")\n";
-        std::cout << "Frame N (chunk size): " << (int)H.N << "\n";
-        std::cout << "Blocks/Sequence words: " << (H.T2 - H.PresentRegs.size()) / 2 << " (x" << H.PresentRegs.size() << " regs)\n";
-        std::cout << "Total Frames: " << H.FrameCount << "\n";
-        std::cout << "Loop Frame: " << H.LoopFrame << "\n";
+        std::cout << "AYT Loaded (Version " << (int)header.Magic << ")"<<std::endl;
+        std::cout << "Frame N (chunk size): " << (int)header.N << ""<<std::endl;
+        std::cout << "Blocks/Sequence words: " << (header.T2 - header.PresentRegs.size()) / 2 << " (x" << header.PresentRegs.size() << " regs)"<<std::endl;
+        std::cout << "Total Frames: " << header.FrameCount << ""<<std::endl;
+        std::cout << "Loop Frame: " << header.LoopFrame << ""<<std::endl;
         std::cout << "Present Registers (R): ";
-        for(int r : H.PresentRegs) std::cout << r << " ";
-        std::cout << "\n";
-        std::cout << "MasterClock (défaut): 1773400 Hz\n";
+        for(int r : header.PresentRegs) std::cout << r << " ";
+        std::cout << ""<<std::endl;
+
+        std::cout << "MasterClock : " << std::fixed << header.masterClock<<" Hz"<<std::endl;
     }
 };
 
@@ -402,7 +428,7 @@ class TAYTPlayer {
     const TAYTParser* P{nullptr};
     TAYChip AY;
     int FFrameRate{50}; // Le format AYT ne stocke pas le frame rate, on prend 50Hz par défaut
-    int FMasterClock{1773400};
+    int FMasterClock{1000000};
     int FFrameCount{0};
     int FLoopFrame{0};
 
@@ -420,13 +446,13 @@ class TAYTPlayer {
 public:
     // Le constructeur reçoit le TAYTParser au lieu du TYMParser
     TAYTPlayer(const TAYTParser* Parser, int SampleRate, int OverrideClock, bool UseYMDAC)
-        : P(Parser), AY(UseYMDAC, OverrideClock>0 ? OverrideClock : 1773400) // AYT n'a pas de MasterClock dans le fichier
+        : P(Parser), AY(UseYMDAC, OverrideClock>0 ? OverrideClock : 1000000) 
     {
         // Pas de FrameRate dans AYT, on force 50Hz (Standard pour de nombreux systèmes AY)
         FFrameRate = 50; 
 
         if (OverrideClock > 0) FMasterClock = OverrideClock;
-        else FMasterClock = 1773400; // MasterClock par défaut
+        else FMasterClock = 1000000; // MasterClock par défaut
 
         FFrameCount = Parser->Frames();
         FLoopFrame  = Parser->LoopFrame();
@@ -537,7 +563,6 @@ static void PlayViaSDL(TAYTPlayer& Player, int SampleRate) {
     
     SDL_PauseAudioDevice(dev, 0);
 
-    std::cout << "Lecture en cours... (Appuyez sur Entrée pour arrêter)\n";
     std::cin.get();
     
     Player.Stop();
@@ -548,10 +573,7 @@ static void PlayViaSDL(TAYTPlayer& Player, int SampleRate) {
 }
 
 
-// ========================
-// CLI helpers - Identique
-// ========================
-static std::string GetArgValue(int argc, char** argv, const std::string& name, const std::string& defVal) {
+static std::string getArgValue(int argc, char** argv, const std::string& name, const std::string& defVal) {
     std::string key = "-" + name + "=";
     for (int i=1;i<argc;++i) {
         const char* s = argv[i];
@@ -569,20 +591,33 @@ static std::string GetArgValue(int argc, char** argv, const std::string& name, c
     return defVal;
 }
 
+static int getArg(int argc, char** argv, const std::string& name) {
+    std::string key = "-" + name;
+    int cnt =0;
+    for (int i=1;i<argc;++i) {
+        if (key==argv[i])  cnt++;
+    }
+    return cnt;
+}
+
+
 
 // ========================
 // Main
 // ========================
 int main(int argc, char** argv) {
+    
+    int verbosity=1;
+
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        std::cerr << "Erreur: SDL_Init failed: " << SDL_GetError() << std::endl;
+        std::cerr << "Error: SDL_Init failed: " << SDL_GetError() << std::endl;
         return 2;
     }
     
     try {
         if (argc < 2) {
-            std::cout << "Usage: " << (argc>0 ? argv[0] : "aytconsoleplayer")
-                      << " <fichier.ayt> [-rate=48000] [-dac=ym|ay] [-clock=1773400]\n";
+            std::cout << "Usage: " << (argc>0 ? argv[0] : "ayt-player")
+                      << " <fichier.ayt> [-rate=48000] [-dac=ym|ay] [-clock=1773400] [-quiet]"<<std::endl;
             SDL_Quit();
             return 1;
         }
@@ -590,36 +625,43 @@ int main(int argc, char** argv) {
         std::string fileName = argv[1];
         {
             std::ifstream f(fileName, std::ios::binary);
-            if (!f) throw std::runtime_error("Fichier introuvable: " + fileName);
+            if (!f) throw std::runtime_error("Unable to find file : " + fileName);
         }
 
-        std::string rateStr  = GetArgValue(argc, argv, "rate", "48000");
+        std::string rateStr  = getArgValue(argc, argv, "rate", "48000");
         int rate = clampv(std::atoi(rateStr.c_str()), 8000, 192000);
 
-        std::string dacStr = GetArgValue(argc, argv, "dac", "ym");
+        std::string dacStr = getArgValue(argc, argv, "dac", "ym");
         std::string dacLOW = dacStr; std::transform(dacLOW.begin(), dacLOW.end(), dacLOW.begin(), ::tolower);
         bool UseYMDAC = (dacLOW != "ay"); 
 
-        std::string clockStr = GetArgValue(argc, argv, "clock", "");
+        std::string clockStr = getArgValue(argc, argv, "clock", "");
         int ForceClk = clampv(std::atoi(clockStr.c_str()), 0, 10000000);
+
+        if (getArg(argc,argv,"quiet")>0) verbosity = 0;
+        //if (getArg(argc,argv,"v")>0) verbosity = 0;
+
 
         // Remplacement de TYMParser par TAYTParser
         TAYTParser parser;
         parser.LoadFromFile(fileName);
-        parser.PrintHeader(); // Affiche les infos AYT
 
-        int EffClock = (ForceClk > 0) ? ForceClk : 1773400;
+        if (verbosity>0)
+            parser.PrintHeader(); // Affiche les infos AYT
+
+        int EffClock = (ForceClk > 0) ? ForceClk : parser.header.masterClock;
 
         // Remplacement de TYMPlayer par TAYTPlayer
-        TAYTPlayer player(&parser, rate, ForceClk, UseYMDAC);
-        
+        TAYTPlayer player(&parser, rate, EffClock, UseYMDAC);
+
+        if (verbosity>0)
+            std::cout << "Currently Playing... (CTRL+C or Return to stop)"<<std::endl;
         PlayViaSDL(player, rate);
 
-        std::cout << "Termine." << std::endl;
         SDL_Quit();
         return 0;
     } catch (const std::exception& e) {
-        std::cerr << "Erreur: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         SDL_Quit();
         return 2;
     }
