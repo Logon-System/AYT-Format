@@ -1,4 +1,4 @@
-![Image Presentation CPC](../../images/ZXPRES.jpg)
+![Image Presentation CPC](../../images/ZX128PRES.jpg)
 
 ## Appel de Ayt_Builder sur ZX SPECTRUM 128/+2/+3
 
@@ -150,5 +150,6 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 | CALL          | 12               | 828         | 167           | 353            |
 | CALL          | 13               | 881         | 174           | 353            |
 | CALL          | 14               | 934         | 181           | 353            |
+
 
 
