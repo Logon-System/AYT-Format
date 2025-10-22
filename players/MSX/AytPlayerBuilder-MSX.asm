@@ -48,7 +48,7 @@
 ;; Delphi original AYT SeqMarker   
 ;; Web YM to AYT converter       : Tronic (GPA)
 ;; C Unix/Windows AYT converter  : Siko (Logon System) (Stephane Sikora @ https://www.sikorama.fr)
-;; VG5000 AYT Z80A player/Builder: Longshot (Logon System) (Serge Querne @ logon.system@free.fr)
+;; MSX AYT Z80A player/Builder   : Longshot (Logon System) (Serge Querne @ logon.system@free.fr)
 ;;
 ;;============================================================================================================================================
 ;; Performances
@@ -544,4 +544,5 @@ Ayt_Player_B4_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Builder_End
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
