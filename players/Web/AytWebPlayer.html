@@ -108,6 +108,12 @@
       border-radius: 10px;
       padding: 10px
     }
+
+    .volume_value {
+      display: inline-block;
+      width: 50px;
+      text-align: right;
+    }
   </style>
 </head>
 
@@ -118,8 +124,8 @@
 
       <div id="drop" class="drop">Drag and drop a <b>.ayt</b> file or click to load one</div>
       <input id="file" type="file" accept=".ayt" />
-      
-      <div class="row" style="margin-top:10px; gap:8px; margin-top: 10px; font-size: 12px;"">
+
+      <div class="row" style="margin-top:10px; gap:8px; margin-top: 10px; font-size: 12px;">
         <label for="clockSel">Master Clock :</label>
         <select id="clockSel" title="Fréquence du chip sonore (Master Clock)">
           <option value="1000000" selected>1 000 000 Hz</option>
@@ -133,12 +139,13 @@
         <button id="stop" disabled>Stop</button>
 
         <label style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
-          Volume : <span id="$volume-value">60%</span>
-          <input type="range" id="$global-volume" min="0" max="100" value="60" step="1" title="Contrôle l'amplification du mixage final (0% à 100%)" style="width: 120px;">
+          Volume : <span id="$volume-value" class="volume_value">60%</span>
+          <input type="range" id="$global-volume" min="0" max="100" value="60" step="1"
+            title="Contrôle l'amplification du mixage final (0% à 100%)" style="width: 120px;">
         </label>
 
         <button id="$exportYM" disabled title="Exporter les données YM reconstruites">💾 Export YM</button>
-        
+
       </div>
 
       <div id="meta" class="meta" style="margin-top:10px;">No AYT loaded.</div>
@@ -241,7 +248,7 @@
             const r = this.presentRegs[idx];
             const off = this.seq[sp++] | (this.seq[sp++] << 8);
             if (off + N > this.patt.length) {
-              console.warn("slice hors limites: r=", r, "off=", off, "N=", N);
+              console.warn("Out of bound: r=", r, "off=", off, "N=", N);
             }
             const slice = this.patt.subarray(off, off + N);
             regs[r].set(slice, b * N);
