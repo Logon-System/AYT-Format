@@ -633,6 +633,29 @@
         parser = new AYT_Parser(buf);
         parser.parse();
         const { regs, frames, loopFrame } = parser.expandToRegisters();
+        
+        const platformId = parser.header.pf & 31;
+        let platform = {name: "Unknown", masterclock: 1000000.0};
+        
+        const platformFrequencies = [
+          {name: "CPC", masterClock: 1000000.0},
+          {name: "ORIC", masterClock: 1000000.0},
+          {name: "ZXUNO", masterClock: 1750000.0},
+          {name: "PENTAGON", masterClock: 1750000.0}, 
+          {name: "TIMEXTS2068", masterClock: 1764000.0}, 
+          {name: "ZX128", masterClock: 1773400.0},
+          {name: "MSX", masterClock: 1789772.5},      
+          {name: "ATARI", masterClock: 2000000.0},       
+          {name: "VG5000", masterClock: 1000000.0},
+        ]
+
+        //console.log('platform id = ', platformId);
+        if (platformId<platformFrequencies.length) {
+          platform = platformFrequencies[platformId];
+        }
+        //console.log('platform', platform);        
+        $clockSel.value = platform.masterClock;
+        
         //console.log("expandToRegisters:", { frames, loopFrame });
         //for (let r = 0; r < regs.length; r++) {
         //  console.log(`regs[${r}].length =`, regs[r].length);
@@ -664,6 +687,7 @@
     $play.addEventListener('click', () => {
       if (!parser) return;
       const { regs, frames, loopFrame } = parser.expandToRegisters();
+
       const mc = parseInt($clockSel.value, 10) || 1000000;
       player = new AYT_YM_Player({ regs, frames, loopFrame, masterClock: mc });
       player.start();
