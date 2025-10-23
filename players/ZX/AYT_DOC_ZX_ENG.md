@@ -119,7 +119,6 @@ You can then integrate both at the predefined addresses used during the *Ayt_Bui
 Execution time and memory usage of the *player* depend on several factors:
 - Number of active registers detected by the compressor (up to 14)
 - *Calling method* (**CALL** or **JP**) across all platforms
-- Configuration of the **Asic page** connection/disconnection
 
 The *calling method* defines how the *player* is invoked in Z80A.  
 It is a compilation option for the *builder*:
@@ -147,4 +146,5 @@ Performance table for 10–14 active registers and both calling methods:
 | CALL          | 12               | 828            | 167         | 353           |
 | CALL          | 13               | 881            | 174         | 353           |
 | CALL          | 14               | 934            | 181         | 353           |
+
 
