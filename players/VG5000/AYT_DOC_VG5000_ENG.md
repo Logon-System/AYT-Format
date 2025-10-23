@@ -126,7 +126,6 @@ Then integrate them at the predefined addresses used during *Ayt_Builder*.
 Execution time and memory usage of the *player* depend on:
 - Number of active registers detected (max 14)
 - *Calling method* (**CALL** or **JP**) across all platforms
-- Configuration of **Asic page** connection/disconnection
 
 Calling method defines how the *player* is invoked in Z80A:
 - **CALL**: use Z80A **CALL**
@@ -153,3 +152,4 @@ Performance table for 10–14 active registers and both calling methods:
 | CALL          | 12               | 778            | 153         | 370           |
 | CALL          | 13               | 827            | 160         | 370           |
 | CALL          | 14               | 876            | 166         | 370           |
+
