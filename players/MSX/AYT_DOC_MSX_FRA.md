@@ -108,7 +108,6 @@ Vous pouvez ensuite intégrer le *player* et le fichier **AYT** en prenant soin 
 Les performances en temps d'exécution et de place mémoire du Player dépendent de plusieurs facteurs:
 - Le nombre de registres actifs détectés par le compresseur (au maximum de 14).
 - La *méthode d'appel* du *player* (**CALL** ou **JP**) sur toutes les plateformes.
-- La configuration de *connexion/déconnexion* de la **page Asic** évoquée précédemment.
 
 La *méthode d'appel* correspond à la façon dont le *player* est appelé en Z80A.
 Cette méthode est une option de compilation du *builder*.
@@ -137,5 +136,6 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 | CALL          | 12               | 778         | 153           | 370            |
 | CALL          | 13               | 827         | 160           | 370            |
 | CALL          | 14               | 876         | 166           | 370            |
+
 
 
