@@ -6,6 +6,9 @@
 ;; MSX BASIC VERSION 2.0 
 ;; CREATE VIRTUAL DISK ON A FILE DISK
 ;; UNDER BASIC : BLOAD "MSXAYT.BIN",R
+;; ALTERNATIVE
+;; DISK MSXDSK.DSK ON https://webmsx.org/ THEN LOAD "PLAY" + RUN
+;; SETTINGS QUICK OPTION DISPLAY PAL (50 HZ) BETTER FOR MUSIC SPEED
 ;;
 ;;**********************************************************************************************************************************************
 PlayerAccessByJP	equ 0
@@ -91,4 +94,5 @@ AYT_File
 ;		incbin "logon.ayt"		; 3 registres en moins 3, 11, 12
 		incbin "../../ayt-files/still_scrolling.ayt"
 AYT_Player	
+
 save "MSXAYT.BIN",MyProgram,Ayt_Player+166+16-MyProgram
