@@ -11,7 +11,7 @@
 ;; SETTINGS QUICK OPTION DISPLAY PAL (50 HZ) BETTER FOR MUSIC SPEED
 ;;
 ;;**********************************************************************************************************************************************
-PlayerAccessByJP	equ 0
+PlayerAccessByJPBuilder	equ 0
 ;;----------------------------
 MyProgram	equ #8000-7
 ;;----------------------------
@@ -32,14 +32,14 @@ RunMsx
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Adress where Player is built
 		ld a,255		; Nb of loop for the music
-    if PlayerAccessByJP
+    if PlayerAccessByJPBuilder
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
     endif
 		call AYT_Builder	; Build the player at #<d>00 for file pointed by <ix> for <a> loop
 		ld (InitRegAy),hl
 InitRegAy	equ $+1
 		call 0
-    if PlayerAccessByJP
+    if PlayerAccessByJPBuilder
 		ld (AYT_Player_Ret+1),sp ; Save Stack Pointer 
     endif
 		;==================================================================================================================
@@ -68,7 +68,7 @@ WaitLoop:
 		ld a,#80+7	; 4
 		out (#99),a	; 11
 
-    if PlayerAccessByJP
+    if PlayerAccessByJPBuilder
 		jp AYT_Player		; jump to the player			
 AYT_Player_Ret	ld sp,0			; address return of the player
 
@@ -94,4 +94,4 @@ AYT_File
 		incbin "../../ayt-files/still_scrolling.ayt"
 AYT_Player	
 
-save "MSXAYT.BIN",MyProgram,Ayt_Player+166+16-MyProgram
+save "bin/MSXAYT.BIN",MyProgram,Ayt_Player+166+16-MyProgram
