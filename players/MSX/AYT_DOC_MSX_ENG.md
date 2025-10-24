@@ -4,7 +4,6 @@
 
 		ld ix,AYT_File		; Address of the AYT file
 		ld de,AYT_Player	; Address where the player will be generated
-		ld bc,AYT_Init		; Address for the init routine if <> 0
         ld a,2			; Number of loops for the music
 		call AYT_Builder	; Build the player at DE for file pointed by IX for "A" loop
 
@@ -26,7 +25,6 @@ If the **PlayerAccessByJP** option is set to 1, you must also provide the return
 
 		ld ix,AYT_File		; Address of the AYT file
 		ld de,AYT_Player	; Address where the player will be generated
-		ld bc,AYT_Init		; Address for the init routine if <> 0
 		ld hl,AYT_Player_Ret	; Address where the player returns
 		ld a,2			; Number of times the music should play
 		call Ayt_Builder
@@ -43,23 +41,18 @@ An initialization function must be called before the player.
 
 The *Ayt_Builder* function constructs an initialization routine that must be called **before** using the *player*.  
 
-Two options exist when calling the function:
-- If **BC = 0**, *Ayt_Builder* will reserve **16 bytes** after the *player* for the routine.
-- If **BC ≠ 0**, it must contain the address of a reserved **16-byte** area (anywhere in RAM) that can be recovered after initialization.
-
 After calling *Ayt_Builder*:
-- **HL** contains the address of the init routine (equal to BC if BC was non-zero)
+- **HL** contains the address of the init routine 
 - **DE** points to the first free byte after the *player* (or after the init routine)
 
 **Note:**  
 If the file contains no inactive registers, the init routine is unnecessary.  
-In this case, the init function points to a **RET**, and the routine occupies 1 byte instead of 34.
+In this case, the init function points to a **RET**, and the routine occupies 1 byte instead of 16.
 
 To call an initialization routine, use:
 
 		ld ix,AYT_File		; Address of the AYT file
 		ld de,AYT_Player	; Address where the player will be generated
-		ld bc,AYT_Init		; Address for the init routine if <> 0
         ld a,2			; Number of loops for the music
 		call AYT_Builder	; Build the player at DE for file pointed by IX for "A" loop
 
@@ -122,15 +115,16 @@ Performance table for 10–14 active registers and both calling methods:
 
 | Calling Method | Active Registers | CPU (T-states) | Player Size | Builder Size |
 | :-----------: | :--------------: | :------------: | :---------: | :-----------: |
-| JP            | 10               | 643            | 136         | 355           |
-| JP            | 11               | 692            | 142         | 355           |    
-| JP            | 12               | 741            | 148         | 355           |        
-| JP            | 13               | 790            | 155         | 355           |        
-| JP            | 14               | 839            | 161         | 355           |  
-| CALL          | 10               | 680            | 141         | 370           |
-| CALL          | 11               | 729            | 147         | 370           |
-| CALL          | 12               | 778            | 153         | 370           |
-| CALL          | 13               | 827            | 160         | 370           |
-| CALL          | 14               | 876            | 166         | 370           |
+| JP            | 10               | 643            | 136         | 348           |
+| JP            | 11               | 692            | 142         | 348           |    
+| JP            | 12               | 741            | 148         | 348           |        
+| JP            | 13               | 790            | 155         | 348           |        
+| JP            | 14               | 839            | 161         | 348           |  
+| CALL          | 10               | 680            | 141         | 363           |
+| CALL          | 11               | 729            | 147         | 363           |
+| CALL          | 12               | 778            | 153         | 363           |
+| CALL          | 13               | 827            | 160         | 363           |
+| CALL          | 14               | 876            | 166         | 363           |
+
 
 
