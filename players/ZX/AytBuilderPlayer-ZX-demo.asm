@@ -50,7 +50,6 @@ MAIN
 		;
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Adress where Player is built
-		ld bc,0			; Ptr on 19 bytes for init (if 0, Builder create the init after the player)
 		ld a,1			; Nb of loop for the music
 		call AYT_Builder	; Build the player at &<d>00 for file pointed by <ix> for <a> loop
 		ld (InitRegAy),hl
@@ -155,8 +154,8 @@ AYT_Builder
 ;; 30th October 2025
 ;; Credits 
 ;; Delphi original AYT SeqMarker   
-;; Web YM to AUT converter       : Tronic (GPA)
-;; C Unix/Windows AYT SeqMarker  : Siko (Logon System) (Stephane Sikora @ https://www.sikorama.fr)
+;; Web YM to AYT converter       : Tronic (GPA)
+;; C Unix/Windows AYT converter  : Siko (Logon System) (Stephane Sikora @ https://www.sikorama.fr)
 ;; ZX AYT Z80A player/Builder    : Longshot (Logon System) (Serge Querne @ logon.system@free.fr)
 ;;
 ;;============================================================================================================================================
@@ -178,13 +177,13 @@ AYT_Builder
 ;;     Size of Ayt_Builder : 338 bytes
 ;; -------------
 ;; (*) With less than 13 registers, performance could vary by a few Ts & bytes depending on the position of the constant registers.
+;; (*) Size of player If no ay reg to set then +1 byte else +16 bytes
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;; Init AY Reg routine(only when register number < 14)
 ;;----------------------------------------------------
-;; Size of routine : 19 bytes
+;; Size of routine : 16 bytes
 ;; The AY register initialization routine is created if constant registers require prior initialization. 
-;; User can define whether to specify a 19-bytes area for this single-use initialization, or whether to let the builder define the address after the player. 
-;; In all cases, builder returns the address where the initialization routine was created. 
+;; Builder returns the address where the initialization routine was created. 
 ;; Note that if the initialization routine is not necessary, it will contain a single ret.
 ;;--------------------------------------------------------------------------
 ;; Notes :
@@ -292,8 +291,10 @@ AYT_OFS_PlatformFreq	equ 12  ;; Platform & Freq of play (see table)
 AYT_OFS_Reserved	equ 13	;; Rhaaaaaaa
 AYT_SIZE_HEADER		equ 14	;; Header size to find first pattern
 
-OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
-OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
+    ifnot PlayerAccessByJP
+	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1_Start
+	OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
+    endif
 OFS_B1_FirstSeq		equ Ayt_FirstSeq-Ayt_Player_B1_Start 
 OFS_B1_to_PatIdx	equ Ayt_PatternIdx-Ayt_FirstSeq
 OFS_B1_to_B2_Start	equ Ayt_Player_B2_Start-Ayt_PatternIdx
@@ -316,11 +317,10 @@ _AYT_BUILDER_SIZE	equ AYT_Builder_End-AYT_Builder_Start
 ;;
 ;;	in :	ix=address AYT file
 ;;		de=msb address Player
-;;		bc=address with 16 bytes where InitAyReg is created (if bc=0, then Init routine is created after the end of player )
 ;;		a=nbloop expected
 ;;		hl (optional)=return address of player (only if Builder is compiled with PlayerAccessByJP equ 1)
 ;;	out : 
-;;              hl=ptr on the init routine to call 1 time before to use player address.(=bc if bc<>0)
+;;              hl=ptr on the init routine to call 1 time before to use player address.)
 ;;		de=ptr on the first free byte after the player
 ;;
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -329,8 +329,11 @@ AYT_Builder_Start
 		ld (Ayt_MusicCnt),a		; Nb of loop for music
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
-		push bc				; Save Ptr for Init routine
+    if PlayerAccessByJP
+		ld (Ayt_ExitPtr01),hl		; Set Main code return address
+    else
 		push de				; save ptr on first bloc for SP reload
+    endif	
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; In AYT file , relocate sequence list ptr on rxx data. (absolute address)
 		;; In >> ix=Ptr on AYT File
@@ -344,9 +347,8 @@ AYT_Builder_Start
 		ld h,(ix+AYT_OFS_ListInit+1)
 		add hl,bc			; Ptr on Ay Init List 
 		ld (Ayt_PtrInitList),hl		; In Block 4 if created
-		ld a,(hl)			; Read 1st byte of Init List
+		ld a,(hl)			; If empty list, RET as init code
 		ld (Ayt_InitCreate),a
-
 		;
 		ld l,(ix+AYT_OFS_LoopSeq)	; Offset of Loop Sequence
 		ld h,(ix+AYT_OFS_LoopSeq+1)
@@ -398,12 +400,12 @@ Ayt_PtrFix_b1
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		ld l,(ix+AYT_OFS_ActiveRegs)
 		ld h,(ix+AYT_OFS_ActiveRegs+1)	; bit 15, 14, 13, ... of HL are active ay reg 0, 1, 2, 3... if 1
-		ld a,&f0			; ay num 1st reg
+		ld a,#f0			; ay num 1st reg
 Ayt_SearchActiveReg
 		add hl,hl			; seek 1st non constant reg
 		jr c,Ayt_ActiveReg_Found	; Active reg found				; 
 		inc a				; not found , next reg
-		cp &f0+13
+		cp #f0+13
 		jr nz,Ayt_SearchActiveReg
 		jr $				; error in Ayt file >> no active reg in file check ayt file
 Ayt_ActiveReg_Found
@@ -433,7 +435,7 @@ Ayt_CreateActiveReg
 		add hl,hl			; seek next active reg
 		jr c,Ayt_NextActReg		; next reg (+1) is active 
 Ayt_SearchNextActReg				; current ay reg is not active
-		cp &f0+12				; is it the last one before r13?
+		cp #f0+12				; is it the last one before r13?
 		jr z,Ayt_Active_Reg		; yes, set 'ld a,12'
 		inc a				; searching next active reg
 		add hl,hl			; 
@@ -441,7 +443,7 @@ Ayt_SearchNextActReg				; current ay reg is not active
 Ayt_Active_Reg
 		ex de,hl			; ay reg active found and not consecutive
 		dec hl				; roll back last byte copied
-		ld (hl),&3e			; coding [ld a,<regA>] instead of [inc a]
+		ld (hl),#3e			; coding [ld a,<regA>] instead of [inc a]
 		inc hl
 		ld (hl),a
 		inc hl
@@ -449,7 +451,7 @@ Ayt_Active_Reg
                 jr nz,Ayt_CreateActiveReg	; not last register
 		jr Ayt_LastReg
 Ayt_NextActReg
-		cp &f0+13
+		cp #f0+13
 		jr nz,Ayt_CreateActiveReg	; Create next "send ay bloc"
 		dec de				; Last reg before r13 was r12, then inc a deleted (r13 manage "a" )
 Ayt_LastReg
@@ -480,52 +482,51 @@ Ayt_LastReg
 		ld (iy+OFS_B3_SeqPatPtr_Upd),l	; HL=ptr on sequence ptr 
 		ld (iy+OFS_B3_SeqPatPtr_Upd+1),h
 		;
+    ifnot PlayerAccessByJP				; Player called by call then reload SP
 		ld hl,OFS_B3_Ayt_ReloadSP
 		add hl,bc
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_PtrSaveSP),l
 		ld (iy+OFS_B1_PtrSaveSP+1),h
+    endif	
 		;----------------------------------------------------------------
 		; Last block for init routine
 		;----------------------------------------------------------------
-		pop hl				; Ptr for init routine in parameters
-		ld a,h
-		or l				; Selected by user or builder ?
-		jr z,Ayt_InitDefByBuilder	; If HL=0 then DE is ok
-		ld e,l				; else DE is the User Defined Ptr 
-		ld d,h
+		ex de,hl
+		ld (hl),#c9			; Ret if no ay reg to set
 Ayt_InitDefByBuilder
-		ld (hl),&c9			; Init routine default off
 Ayt_InitCreate	equ $+1
-		ld a,0				; Ay Reg to init ?
-		inc a				; Empty init list if 0xFF
+		ld a,0				; Ay Reg to init ? (0xFF=Empty list)
+		inc a
 		ret z				; No (14 register or non available) & give ptr
+		ex de,hl
+		push de
 		ld hl,Ayt_Player_B4_Start
 		ld bc,AYT_B4_SIZE		; block 4 created
-		push de
 		ldir		
 		pop hl				; Give ptr to user
 		ret	
-		ret	
-		
+
 ;===============================================================================================================================================
 ; Raw code template for the constructor
 ;===============================================================================================================================================
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1_Start
+    ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 20 ts SP is saved if player is "called"
+    endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 Ayt_FirstAyReg	equ $+1
-		ld a,&f0		; Ay Idx Select & i/o Port (bit 14=1)
-		ld bc,&c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
+		ld a,#f0		; Ay Idx Select & i/o Port (bit 14=1)
+		ld bc,#c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
 Ayt_PatternIdx	equ $+1
 		ld de,0
 Ayt_Player_B1_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B2_Start	
-		out (&fd),a 		; Select Ay Idx Acc and %1111
+		out (#fd),a 		; Select Ay Idx Acc and %1111
 		pop hl			; Get Pattern Ptr
 		add hl,de		; + offset in Pattern
 		outi			; Send to Ay 
@@ -565,7 +566,7 @@ Ayt_NotLastSeq				;
 		;------------------------
 Ayt_SendAY_r13				; <<<
 		inc a			; 04/00/00/00/04/00 
-		out (&fd),a		; 11/00/00/00/11/00 Select R13 AY reg
+		out (#fd),a		; 11/00/00/00/11/00 Select R13 AY reg
 	        outi        		; 16/00/00/00/16/00 SendAY Data
 Ayt_Player_r13end			; <<<
 					;------------------
@@ -588,29 +589,35 @@ Ayt_SeqPat
 Ayt_PatCountPtr2 equ $+1		; 
 		ld (0),a		; 13/13/00/13/13/13 update offset on patterns (4th=116Ts)(1th=116Ts)(2th=116Ts)
 Ayt_PlayerExit
+    if PlayerAccessByJP
+Ayt_ExitPtr01	equ $+1
+		jp 0 			; exit from player via JP 
+    else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; Player was called , SP is restored
 		ret			; and return to main code
+    endif
 Ayt_Player_B3_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 ; Init of not active AY reg
 ; 
 Ayt_Player_B4_Start
-		ld bc,&c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
+		ld bc,#c0fd		; Ay Data Select (bit 14=1) +1 (outi pre decr B)
 Ayt_PtrInitList	equ $+1
 		ld hl,0
 Ayt_InitReg_Loop
 		ld a,(hl)		; get register
 		bit 7,a			; End list of init ay reg
 		ret nz			; yes
-		or &f0			; Ay Idx Select & i/o Port (bit 14=1)
+		or #f0			; Ay Idx Select & i/o Port (bit 14=1)
 		inc hl			; no ptr on data
-		out (&fd),a 		; Select Ay Idx 
+		out (#fd),a 		; Select Ay Idx 
 		outi			; Send to Ay 
 		jr Ayt_InitReg_Loop	; next reg
 Ayt_Player_B4_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Builder_End
+;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ;;**********************************************************************************************************************************************
 ;; FILE AYT LOGON PHOENIX 13 REGISTRES
@@ -618,6 +625,6 @@ Ayt_Builder_End
 AYT_File
 ;;		incbin "kenotron.ayt"		; 14 registers 0..13
 ;;		incbin "logon.ayt"		; 11 registers (- 3, 11, 12)
-		incbin "../../ayt-files/still_scrolling.ayt"
+		incbin "../../ayt-files/still_scrolling_final_zx.ayt"
 End_Example
 save "bin/EXE8000.BIN",Start_Example,End_Example-Start_Example

@@ -69,13 +69,13 @@
 ;;     Size of Ayt_Builder : 338 bytes
 ;; -------------
 ;; (*) With less than 13 registers, performance could vary by a few Ts & bytes depending on the position of the constant registers.
+;; (*) Size of player If no ay reg to set then +1 byte else +16 bytes
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;; Init AY Reg routine(only when register number < 14)
 ;;----------------------------------------------------
-;; Size of routine : 19 bytes
+;; Size of routine : 16 bytes
 ;; The AY register initialization routine is created if constant registers require prior initialization. 
-;; User can define whether to specify a 19-bytes area for this single-use initialization, or whether to let the builder define the address after the player. 
-;; In all cases, builder returns the address where the initialization routine was created. 
+;; Builder returns the address where the initialization routine was created. 
 ;; Note that if the initialization routine is not necessary, it will contain a single ret.
 ;;--------------------------------------------------------------------------
 ;; Notes :
@@ -209,11 +209,10 @@ _AYT_BUILDER_SIZE	equ AYT_Builder_End-AYT_Builder_Start
 ;;
 ;;	in :	ix=address AYT file
 ;;		de=msb address Player
-;;		bc=address with 16 bytes where InitAyReg is created (if bc=0, then Init routine is created after the end of player )
 ;;		a=nbloop expected
 ;;		hl (optional)=return address of player (only if Builder is compiled with PlayerAccessByJP equ 1)
 ;;	out : 
-;;              hl=ptr on the init routine to call 1 time before to use player address.(=bc if bc<>0)
+;;              hl=ptr on the init routine to call 1 time before to use player address.)
 ;;		de=ptr on the first free byte after the player
 ;;
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -222,7 +221,6 @@ AYT_Builder_Start
 		ld (Ayt_MusicCnt),a		; Nb of loop for music
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
-		push bc				; Save Ptr for Init routine
     if PlayerAccessByJP
 		ld (Ayt_ExitPtr01),hl		; Set Main code return address
     else
@@ -386,26 +384,21 @@ Ayt_LastReg
 		;----------------------------------------------------------------
 		; Last block for init routine
 		;----------------------------------------------------------------
-		pop hl				; Ptr for init routine in parameters
-		ld a,h
-		or l				; Selected by user or builder ?
-		jr z,Ayt_InitDefByBuilder	; If HL=0 then DE is ok
-		ld e,l				; else DE is the User Defined Ptr 
-		ld d,h
+		ex de,hl
+		ld (hl),#c9			; Ret if no ay reg to set
 Ayt_InitDefByBuilder
-		ld (hl),#c9			; Init routine default off
 Ayt_InitCreate	equ $+1
-		ld a,0				; Ay Reg to init ?
-		inc a				; Empty init list if 0xff
+		ld a,0				; Ay Reg to init ? (0xFF=Empty list)
+		inc a
 		ret z				; No (14 register or non available) & give ptr
+		ex de,hl
+		push de
 		ld hl,Ayt_Player_B4_Start
 		ld bc,AYT_B4_SIZE		; block 4 created
-		push de
 		ldir		
 		pop hl				; Give ptr to user
 		ret	
-		ret	
-		
+
 ;===============================================================================================================================================
 ; Raw code template for the constructor
 ;===============================================================================================================================================
