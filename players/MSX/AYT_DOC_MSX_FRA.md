@@ -24,7 +24,6 @@ Si l'option PlayerAcessByJP vaut 1, il faut également définir l'adresse de ret
 
 		ld ix,AYT_File			; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player		; AYT_Player est l'adresse où le player sera construit
-		ld bc,AYT_Init			; AYT_Init est l'adresse ou est créée la fonction d'initialisation si <>de 0
 		ld hl,AYT_Player_Ret		; AYT_Player_Ret est l'adresse à laquelle le player revient
 		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
@@ -130,6 +129,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 | CALL          | 12               | 778         | 153           | 363            |
 | CALL          | 13               | 827         | 160           | 363            |
 | CALL          | 14               | 876         | 166           | 363            |
+
 
 
 
