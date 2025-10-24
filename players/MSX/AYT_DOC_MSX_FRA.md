@@ -4,7 +4,6 @@
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-		ld bc,AYT_Init			; AYT_Init est l'adresse ou est créée la fonction d'initialisation si <>de 0
             ld a,2	; Nb of loop for the music
 		call AYT_Builder	; Build the player @DE for file pointed by @IX for "A" loop
 
@@ -42,24 +41,19 @@ Il est nécessaire d'appeler une fonction d'initialisation avant d'appeler le *p
 
 La fonction *Ayt_Builder* construit une routine d'initialisation qui doit être appelée **avant** l'utilisation du *player*.
 
-Deux alternatives se présentent en entrée de la fonction:
-- Si le registre **BC vaut 0**, alors la fonction *AYT_Builder* va réserver **16 octets** après le *player* pour créer cette routine.
-- Si le registre **BC est différent de 0**, il doit alors contenir l'adresse d'une zone réservée de **16 octets** (qui peut se situer n'importe ou en ram) et qui pourra être récupérée une fois l'initialisation réalisée.
-
 A la sortie de la fonction *Ayt_Builder*:
-- le registre **HL** contient l'adresse de la routine d'initialisation (il vaut donc BC (en entrée) si ce dernier était non nul).
+- le registre **HL** contient l'adresse de la routine d'initialisation.
 - le registre **DE** contient le pointeur sur le premier octet libre après le *player* (ou la routine d'initialisation).
 
 **Remarque :**
 
 Si le fichier ne contient aucun registre inactif, la routine d'initialisation devient inutile.
-Dans ce cas, la fonction d'initialisation pointera sur un RET (et la routine d'initialisation occupera alors 1 octet au lieu de 34).
+Dans ce cas, la fonction d'initialisation pointera sur un RET (et la routine d'initialisation occupera alors 1 octet au lieu de 16 dans le player).
 
 Voici le traitement à mettre en place pour appeler une routine d'initialisation 
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-		ld bc,AYT_Init			; AYT_Init est l'adresse ou est créée la fonction d'initialisation si <>de 0
             ld a,2	; Nb of loop for the music
 		call AYT_Builder	; Build the player @DE for file pointed by @IX for "A" loop
 
@@ -126,16 +120,17 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 | Méthode Appel | Nombre Registres | CPU en Tstates | Taille Player | Taille Builder |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
-| JP            | 10               | 643         | 136           | 355            |
-| JP            | 11               | 692         | 142           | 355            |    
-| JP            | 12               | 741         | 148           | 355            |        
-| JP            | 13               | 790         | 155           | 355            |        
-| JP            | 14               | 839         | 161           | 355            |  
-| CALL          | 10               | 680         | 141           | 370            |
-| CALL          | 11               | 729         | 147           | 370            |
-| CALL          | 12               | 778         | 153           | 370            |
-| CALL          | 13               | 827         | 160           | 370            |
-| CALL          | 14               | 876         | 166           | 370            |
+| JP            | 10               | 643         | 136           | 348            |
+| JP            | 11               | 692         | 142           | 348            |    
+| JP            | 12               | 741         | 148           | 348            |        
+| JP            | 13               | 790         | 155           | 348            |        
+| JP            | 14               | 839         | 161           | 348            |  
+| CALL          | 10               | 680         | 141           | 363            |
+| CALL          | 11               | 729         | 147           | 363            |
+| CALL          | 12               | 778         | 153           | 363            |
+| CALL          | 13               | 827         | 160           | 363            |
+| CALL          | 14               | 876         | 166           | 363            |
+
 
 
 
