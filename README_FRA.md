@@ -1,6 +1,6 @@
 # LE FORMAT AYT
 ***Tronic*** (du groupe *GPA*), ***Longshot*** & ***Siko*** (du groupe *Logon System*) sont fiers de présenter un nouveau format de fichier audio appelé ***AYT***.
-C'est un format compact associé utilisable simplement par tout programme nécessitant une haute performance **CPU** et un fonctionnement en **durée constante au cycle près**. 
+C'est un format compact utilisable simplement par tout programme nécessitant une haute performance **CPU** et un fonctionnement en **durée constante au cycle près**. 
 
 Ce format est prévu pour toutes les plateformes utilisant un processeur sonore ***AY-3-8910/AY-3-8912*** (General Instrument) ou compatible (***YM-2149*** de Yamaha). 
 Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC-***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (+ carte son  VG5210)*** 
@@ -8,7 +8,7 @@ Plusieurs outils de création et des players ont été réalisés et testés pou
 ![Image Presentation CPC+](./images/AYTPRES1.jpg)
 # Principe 
 
-A partir d'un fichier audio **YM5/YM6** [^1], un fichier au format ***AYT*** est généré grâce à un convertisseur. 
+À partir d'un fichier audio **YM5/YM6** [^1], un fichier au format ***AYT*** est généré grâce à un convertisseur. 
 Ce fichier ***AYT*** peut ensuite être lu par un player optimisé sur plusieurs plateformes. 
 Le compresseur exploite la nature séquentielle des musiques pour optimiser l'organisation en mémoire.
 Cette organisation impacte in fine le player, qui est construit en fonction de la musique. 
@@ -20,19 +20,19 @@ Des optimisations complémentaires comme le retrait des registres inutilisés ou
 # Caractéristiques 
 
 - Plusieurs outils de compression sont disponibles pour créer des fichiers au format **AYT**
-  - en ligne de commande quelque soit la plateforme.
+  - en ligne de commande quelle que soit la plateforme.
   - directement sur le web.
-- les fichiers **AYT** se compressent très bien avec ZX0 car les données ne sont pas déja compressées avec un algorithme de compression.
+- les fichiers **AYT** se compressent très bien avec ZX0 car les données ne sont pas déjà compressées avec un algorithme de compression.
 - un système de *builder* permet de créer un *player* à une adresse spécifiée et offre plusieurs avantages. 
-  - il n'est plus nécessaire une fois le *player* créé et peut donc être totalement absent du programme dans lequel le *player* est utilisé.
+  - il n'est plus nécessaire une fois que le *player* a été créé et peut donc être totalement absent du programme dans lequel le *player* est utilisé.
   - il est de taille modeste.
-  - il génère la routine d'initialisation des registres inacrtifs (cette routine étant transparente pour les utilisateurs de CPC "old").
+  - il génère la routine d'initialisation des registres inactifs (cette routine étant transparente pour les utilisateurs de CPC "old").
   - il n'est pas nécessaire d'appeler le *builder* si la musique reboucle sur elle-même ou pour initialiser les registres. 
 - le *player* est construit par le *builder* en fonction de la musique qu'il devra jouer
   - il est très performant en **CPU** (*voir tableaux de performances*).
   - il occupe peu de place en mémoire. 
-  - il ne nécessite aucun buffer de décompression et permet ainsi de réduire l'empreinte mémoire du *player* en Ram.
-  - il gère un nombre paramétrable de bouclage des musiques tel qu'il est défini dans le fichier **YM** (le rebouclage n'a pas forcément lieu au début).
+  - il ne nécessite aucun buffer de décompression et permet ainsi de réduire l'empreinte mémoire du *player* en RAM.
+  - il gère un nombre paramétrable de bouclage des musiques en accord avec ce qui est défini dans le fichier **YM** (le rebouclage n'a pas forcément lieu au début).
   - il gère l'arrêt du son à l'issue des rebouclages (Les fichiers **YM** ne le font pas tous).
   - il fonctionne en temps constant dans toutes les circonstances (rebouclage, mute du player une fois la musique finie).
   - il permet de jouer des musiques de toutes tailles, et seulement limitées par l'espace adressable du processeur ou les capacités mémoire de la machine.
@@ -41,21 +41,21 @@ Des optimisations complémentaires comme le retrait des registres inutilisés ou
 ## Objectifs
 ### Création d'un format compact et performant
 
-Un des **objectifs initiaux** de ce projet était **la création d'un nouveau format de fichier son conciliant un player très efficace en terme CPU, tout en restant raisonnable sur la taille des données en Ram**.
+Un des **objectifs initiaux** de ce projet était **la création d'un nouveau format de fichier son conciliant un player très efficace en terme CPU, tout en restant raisonnable sur la taille des données en RAM**.
 
 Il s'agissait de sortir du paradigme classique impliquant des compresseurs généralistes impliquant des buffers gourmands et ayant atteint leurs limites.
 Une autre approche consistait à réfléchir préalablement à la nature des données pour pouvoir mieux les factoriser. Autrement dit, ne pas essayer de compacter les données comme un bourrin.
 
 Le principe utilisé ne *"compresse"* donc pas les données brutalement mais s'appuie sur la logique particulière de compositions des chiptunes.
-Cette particularité permet ensuite de compresser un fichier **AYT** avec un compacteur de type **ZX0** ou **Shrinker** de manière plus performante que si la compression avait été réalisée directement sur le fichier brut. Des statistiques sur le conversion **AYT** de **10 000 fichiers** l'ont démontré.
-Cela permet ainsi de stocker un fichier **AYT** sur disque ou en ram avant usage de manière plus compacte que de nombreuses solutions existantes.
+Cette particularité permet ensuite de compresser un fichier **AYT** avec un compacteur de type **ZX0** ou **Shrinker** de manière plus performante que si la compression avait été réalisée directement sur le fichier brut. Des statistiques sur la conversion **AYT** de **10 000 fichiers** l'ont démontré.
+Cela permet ainsi de stocker un fichier **AYT** sur disque ou en RAM avant usage de manière plus compacte que de nombreuses solutions existantes.
 
  
 Comme souvent lorsqu'on tend vers les limites d'architecture, la vitesse s'oppose à la place occupée en mémoire (*There is no free lunch*).
-Le compromis **Cpu versus Taille** du format **AYT** nous semble correcte.
+Le compromis **CPU versus Taille** du format **AYT** nous semble correct.
 
 Des réflexions pour réduire la taille des fichiers **AYT** sont à l'étude, car ce format le permet facilement.
-En effet, les *patterns* n'étant pas compressés, il est facilement envisageable de les compresser de manière plus *"légères"* qu'avec des poids lourds de la compression.
+En effet, les *patterns* n'étant pas compressés, il est facilement envisageable de les compresser de manière plus *"légère"* qu'avec des poids lourds de la compression.
 Il devrait ainsi conserver des atouts pour rester très performant au niveau **CPU**. :-)
 
 #### Simplification de la compression
@@ -67,18 +67,18 @@ Une conversion à partir du format **YM** suppose également de tenir compte des
 La plupart du temps ces projets sont construits en mode *"mono plateforme"*.
 
 Si ce type d'option reste possible avec les outils créés pour **AYT**, le processus a été grandement simplifié grâce à une **codification des plateformes** (voir format du **AYT**) et le souci d'en demander le moins possible à l'utilisateur lorsque le programme peut faire le job tout seul.
-Il suffit par exemple d'indiquer au compresseur quelle est *la plateforme cible* et il se charge seul de la conversion en tenant compte de la fréquence de base du circuit de la plateforme source et celle d'arrivée, tout en calculant les meilleurs compromis en terme de taille. 
+Il suffit par exemple d'indiquer au compresseur quelle est *la plateforme cible* et il se charge seul de la conversion en tenant compte de la fréquence de base du circuit de la plateforme source et celle d'arrivée, tout en calculant les meilleurs compromis en termes de taille. 
 En effet, des conversions de fréquence peuvent rendre certains registres inactifs et réduire ainsi notablement la taille du fichier **AYT**.
 
 
-Le format **AYT contient dans son header l'information de la plateforme et la fréquence d'appel du player**, ce qui permet de convertir des fichiers **AYT** prévus pour une *plateforme A*vers une *plateforme B*.
+Le format **AYT contient dans son header l'information de la plateforme et la fréquence d'appel du player**, ce qui permet de convertir des fichiers **AYT** prévus pour une *plateforme A* vers une *plateforme B*.
 
 Le compresseur existe sous différents formats et il est également accessible via une **interface web** très simple à utiliser, puisqu'il suffit de poser un YM en Drag'N'Drop pour le convertir.
 L'algorithme cherchera la meilleure compression possible sans qu'il soit nécessaire de refaire des essais.
 
-Enfin, et parce que le format **YM** est parfois taillé à la hâche (fichiers mal "terminés" qui embarquent le début d'un rebouclage), une autre interface web a été conçue autour de ce projet et **permet de séquencer (écouter, couper, manipuler des fichiers YM)**.
+Enfin, et parce que le format **YM** est parfois taillé à la hache (fichiers mal "terminés" qui embarquent le début d'un rebouclage), une autre interface web a été conçue autour de ce projet et **permet de séquencer (écouter, couper, manipuler des fichiers YM)**.
 
-De quoi réaliser de beaux **medley AY**...
+De quoi réaliser de beaux **medleys AY**...
 
 #### Simplification du player
 Au niveau de l'utilisation d'un fichier **AYT**, le processus a été simplifié à l'extrême. 
@@ -106,6 +106,7 @@ Nous tenons à remercier les personnes suivantes pour leur enthousiasme et leur 
 - **BdcIron (Amaury Duran)** pour les tests du player pour le *VG5000* et sa connaissance du ZX Spectrum. 
 - **Ced (Cédric Quétier)** pour le fabuleux logo AYT associé à la présentation des *players* pour les *CPC+*, *MSX* et *ZX SPECTRUM*.
 - **Made (Carlos Pardo)** pour le somptueux logo AYT associé à la présentation du player pour le *CPC old*.
+
 
 
 
