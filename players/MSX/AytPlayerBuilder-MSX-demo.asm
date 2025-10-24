@@ -31,7 +31,6 @@ RunMsx
 		;
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Adress where Player is built
-		ld bc,0			; Ptr on 16 bytes for init (if 0, Builder create the init after the player)
 		ld a,255		; Nb of loop for the music
     if PlayerAccessByJP
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram

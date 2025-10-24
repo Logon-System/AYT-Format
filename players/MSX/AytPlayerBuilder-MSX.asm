@@ -48,7 +48,7 @@
 ;; Delphi original AYT SeqMarker   
 ;; Web YM to AYT converter       : Tronic (GPA)
 ;; C Unix/Windows AYT converter  : Siko (Logon System) (Stephane Sikora @ https://www.sikorama.fr)
-;; MSX AYT Z80A player/Builder   : Longshot (Logon System) (Serge Querne @ logon.system@free.fr)
+;; MSX AYT Z80A player/Builder: Longshot (Logon System) (Serge Querne @ logon.system@free.fr)
 ;;
 ;;============================================================================================================================================
 ;; Performances
@@ -69,6 +69,7 @@
 ;;     Size of Ayt_Builder : 355 bytes
 ;; -------------
 ;; (*) With less than 13 registers, performance could vary by a few Ts & bytes depending on the position of the constant registers.
+;; (*) Size of player If no ay reg to set then +1 byte else +16 bytes
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 ;; Init AY Reg routine(only when register number < 14)
 ;;----------------------------------------------------
@@ -167,9 +168,9 @@
 ;; In development, if the return address is a label that varies, this forces the presence of the Ayt_Builder in memory at each compilation.
 ;;
 ;;
-    ifndef PlayerAccessByJP
-PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
-	endif
+ifndef
+;;PlayerAccessByJP	equ 0		; If 1, requires you to take into account that SP has been wildly modified
+endif
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
 
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,10 +185,10 @@ AYT_OFS_PlatformFreq	equ 12  ;; Platform & Freq of play (see table)
 AYT_OFS_Reserved	equ 13	;; Rhaaaaaaa
 AYT_SIZE_HEADER		equ 14	;; Header size to find first pattern
 
-    ifnot PlayerAccessByJP
+ifnot PlayerAccessByJP
 	OFS_B1_PtrSaveSP	equ Ayt_PtrSaveSP-Ayt_Player_B1a_Start
 	OFS_B3_Ayt_ReloadSP	equ Ayt_ReloadSP-Ayt_Player_B3_Start	
-    endif
+endif
 OFS_B1a_FirstSeq	equ Ayt_FirstSeq-Ayt_Player_B1a_Start 
 OFS_B1b_PatternIdx	equ Ayt_PatternIdx-Ayt_Player_B1b_Start
  
@@ -209,11 +210,10 @@ _AYT_BUILDER_SIZE	equ AYT_Builder_End-AYT_Builder_Start
 ;;
 ;;	in :	ix=address AYT file
 ;;		de=msb address Player
-;;		bc=address with 16 bytes where InitAyReg is created (if bc=0, then Init routine is created after the end of player )
 ;;		a=nbloop expected
 ;;		hl (optional)=return address of player (only if Builder is compiled with PlayerAccessByJP equ 1)
 ;;	out : 
-;;              hl=ptr on the init routine to call 1 time before to use player address.(=bc if bc<>0)
+;;              hl=ptr on the init routine to call 1 time before to use player address.
 ;;		de=ptr on the first free byte after the player
 ;;
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -222,12 +222,11 @@ AYT_Builder_Start
 		ld (Ayt_MusicCnt),a		; Nb of loop for music
 		ld a,(ix+AYT_OFS_PatternSize)
 		ld (Ayt_PatternSize),a		; Set Pattern Size
-		push bc				; Save Ptr for Init routine
-    if PlayerAccessByJP
+if PlayerAccessByJP
 		ld (Ayt_ExitPtr01),hl		; Set Main code return address
-    else
+else
 		push de				; save ptr on first bloc for SP reload
-    endif	
+endif	
 		;;-------------------------------------------------------------------------------------------------------------------------------
 		;; In AYT file , relocate sequence list ptr on rxx data. (absolute address)
 		;; In >> ix=Ptr on AYT File
@@ -403,31 +402,27 @@ Ayt_PatternidxPtr equ $+1
 		ld (iy+OFS_B3_SeqPatPtr_Upd),l	; HL=ptr on sequence ptr 
 		ld (iy+OFS_B3_SeqPatPtr_Upd+1),h
 		;
-    ifnot PlayerAccessByJP				; Player called by call then reload SP
+ifnot PlayerAccessByJP				; Player called by call then reload SP
 		ld hl,OFS_B3_Ayt_ReloadSP
 		add hl,bc
 		pop iy				; rec struct B1
 		ld (iy+OFS_B1_PtrSaveSP),l
 		ld (iy+OFS_B1_PtrSaveSP+1),h
-    endif	
+endif	
 		;----------------------------------------------------------------
 		; Last block for init routine
 		;----------------------------------------------------------------
-		pop hl				; Ptr for init routine in parameters
-		ld a,h
-		or l				; Selected by user or builder ?
-		jr z,Ayt_InitDefByBuilder	; If HL=0 then DE is ok
-		ld e,l				; else DE is the User Defined Ptr 
-		ld d,h
+		ex de,hl
+		ld (hl),#c9			; Ret if no ay reg to set
 Ayt_InitDefByBuilder
-		ld (hl),#c9			; Init routine default off
 Ayt_InitCreate	equ $+1
 		ld a,0				; Ay Reg to init ? (0xFF=Empty list)
 		inc a
 		ret z				; No (14 register or non available) & give ptr
+		ex de,hl
+		push de
 		ld hl,Ayt_Player_B4_Start
 		ld bc,AYT_B4_SIZE		; block 4 created
-		push de
 		ldir		
 		pop hl				; Give ptr to user
 		ret	
@@ -437,10 +432,10 @@ Ayt_InitCreate	equ $+1
 ;===============================================================================================================================================
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Player_B1a_Start
-    ifnot PlayerAccessByJP
+ifnot PlayerAccessByJP
 Ayt_PtrSaveSP	equ $+2
 		ld (0),sp		; 20 ts SP is saved if player is "called"
-    endif		
+endif		
 Ayt_FirstSeq	equ $+1
 		ld sp,0
 Ayt_Player_B1a_End
@@ -516,14 +511,14 @@ Ayt_SeqPat
 Ayt_PatCountPtr2 equ $+1		; 
 		ld (0),a		; 13/13/00/13/13/13 update offset on patterns (4th=116Ts)(1th=116Ts)(2th=116Ts)
 Ayt_PlayerExit
-    if PlayerAccessByJP
+if PlayerAccessByJP
 Ayt_ExitPtr01	equ $+1
 		jp 0 			; exit from player via JP 
-    else	
+else	
 Ayt_ReloadSP	equ $+1
 		ld sp,0			; Player was called , SP is restored
 		ret			; and return to main code
-    endif
+endif
 Ayt_Player_B3_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 ; Init of not active AY reg
@@ -544,5 +539,4 @@ Ayt_Player_B4_End
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 Ayt_Builder_End
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 
