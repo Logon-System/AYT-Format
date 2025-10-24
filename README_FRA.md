@@ -27,7 +27,7 @@ Des optimisations complémentaires comme le retrait des registres inutilisés ou
 - un système de *builder* permet de créer un *player* à une adresse spécifiée et offre plusieurs avantages. 
   - il n'est plus nécessaire une fois le *player* créé et peut donc être totalement absent du programme dans lequel le *player* est utilisé.
   - il est de taille modeste.
-  - il génère la routine d'initialisation des registres inacrtifs (cette routine étant transparente pour les utilisateurs de CPC "old")
+  - il génère la routine d'initialisation des registres inactifs (cette routine étant transparente pour les utilisateurs de CPC "old")
   - il n'est pas nécessaire d'appeler le *builder* si la musique reboucle sur elle-même ou pour initialiser les registres. 
 - le *player* est construit par le *builder* en fonction de la musique qu'il devra jouer
   - il est très performant en **CPU** (*voir tableaux de performances*).
@@ -107,6 +107,7 @@ Nous tenons à remercier les personnes suivantes pour leur enthousiasme et leur 
 - **BdcIron (Amaury Duran)** pour les tests du player sur *VG5000* et son apport d'informations sur le *ZX Spectrum*. 
 - **Ced (Cédric Quétier)** pour le fabuleux logo AYT associé à la présentation du *player* sur *CPC+*.
 - **Made (Carlos Pardo)** pour le somptueux logo AYT associé à la présentation du player sur *CPC old*.
+
 
 
 
