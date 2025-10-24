@@ -103,5 +103,5 @@ We would like to thank the following people for their enthusiasm, support, advic
 - **Fred Crazy (Frédéric Floch)**, **Ker (Florian Bricogne)**, **Overflow (Olivier Goût)**, **DManu78 (David Manuel)**, **Cheshirecat (Claire Dupas)**, **Shap (Olivier Antoine)**  
   for their insightful technical and musical advice, and for their encouragement.  
 - **BdcIron (Amaury Duran)** for his help testing the player on the VG5000 and his expertise on the ZX Spectrum.  
-- **Ced (Cédric Quétier)** for the fantastic AYT logo used in the CPC+ player presentation.  
+- **Ced (Cédric Quétier)** for the fantastic AYT logo used in the CPC+, MSX and ZX SPECTRUM player presentation.  
 - **Made (Carlos Pardo)** for the gorgeous AYT logo used in the “CPC old” player presentation.  
