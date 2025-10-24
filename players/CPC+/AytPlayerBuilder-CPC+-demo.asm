@@ -37,7 +37,7 @@ StartExample
 		;
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Address where Player is built
-		ld bc,#0100		; Asic io connected at entry, connected at exit of player
+		ld bc,#0101		; Asic io connected at entry, connected at exit of player
 		ld a,2			; Nb of loop for the music
     if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
@@ -134,3 +134,4 @@ Asic_Tab_Prbs
 ;;**********************************************************************************************************************************************
 		org AYT_File
 		incbin "../../ayt-files/still_scrolling.ayt"
+
