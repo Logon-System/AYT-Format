@@ -4,8 +4,7 @@
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-		ld bc,AYT_Init			; AYT_Init est l'adresse ou est créée la fonction d'initialisation si <>de 0
-            ld a,1	; Nb of loop for the music
+        ld a,1	; Nb of loop for the music
 		call AYT_Builder	; Build the player @DE for file pointed by @IX for "A" loop
 
 Pour jouer la musique, il faut appeler le *player* à la fréquence requise. 
@@ -23,7 +22,6 @@ Si l'option PlayerAcessByJP vaut 1, il faut également définir l'adresse de ret
 
 		ld ix,AYT_File			; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player		; AYT_Player est l'adresse où le player sera construit
-		ld bc,AYT_Init			; AYT_Init est l'adresse ou est créée la fonction d'initialisation si <>de 0
 		ld hl,AYT_Player_Ret		; AYT_Player_Ret est l'adresse à laquelle le player revient
 		ld a,2				; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
@@ -39,12 +37,9 @@ Si le compresseur identifie des registres *inactifs*, ils sont exclus des donné
 Il est nécessaire d'appeler une fonction d'initialisation avant d'appeler le player.
 
 La fonction *Ayt_Builder* construit une routine d'initialisation qui sera appelée **avant** l'utilisation du *player*.
-Deux alternatives se présentent en entrée de la fonction:
-- Si le registre **BC vaut 0**, alors la fonction *AYT_Builder* va réserver **16 octets** après le *player* pour créer cette routine.
-- Si le registre **BC est différent de 0**, il doit alors contenir l'adresse d'une zone réservée de **16 octets** (qui peut se situer n'importe ou en ram). Cette zone peut être récupérée par le programme après initialisation.
 
 A la sortie de la fonction *Ayt_Builder*:
-- le registre **HL** contient l'adresse de la routine d'initialisation (il vaut donc BC (en entrée) si ce dernier était non nul).
+- le registre **HL** contient l'adresse de la routine d'initialisation.
 - le registre **DE** contient le pointeur sur le premier octet libre après le *player* (ou la routine d'initialisation).
 
 **Remarque :**
@@ -56,8 +51,7 @@ Voici le traitement à mettre en place pour appeler une routine d'initialisation
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-		ld bc,AYT_Init			; AYT_Init est l'adresse ou est créée la fonction d'initialisation si <>de 0
-            ld a,2	; Nb of loop for the music
+        ld a,2	; Nb of loop for the music
 		call AYT_Builder	; Build the player @DE for file pointed by @IX for "A" loop
 
 		ld (InitPlayer),hl	; Mise a jour de la routine d'initialisation
@@ -139,16 +133,17 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 | Méthode Appel | Nombre Registres | CPU en Tstates | Taille Player | Taille Builder |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
-| JP            | 10               | 685         | 148           | 338            |
-| JP            | 11               | 738         | 155           | 338            |    
-| JP            | 12               | 791         | 162           | 338            |        
-| JP            | 13               | 844         | 169           | 338            |        
-| JP            | 14               | 897         | 176           | 338            |  
-| CALL          | 10               | 722         | 153           | 353            |
-| CALL          | 11               | 775         | 160           | 353            |
-| CALL          | 12               | 828         | 167           | 353            |
-| CALL          | 13               | 881         | 174           | 353            |
-| CALL          | 14               | 934         | 181           | 353            |
+| JP            | 10               | 685         | 148           | 330            |
+| JP            | 11               | 738         | 155           | 330            |    
+| JP            | 12               | 791         | 162           | 330            |        
+| JP            | 13               | 844         | 169           | 330            |        
+| JP            | 14               | 897         | 176           | 330            |  
+| CALL          | 10               | 722         | 153           | 345            |
+| CALL          | 11               | 775         | 160           | 345            |
+| CALL          | 12               | 828         | 167           | 345            |
+| CALL          | 13               | 881         | 174           | 345            |
+| CALL          | 14               | 934         | 181           | 345            |
+
 
 
 
