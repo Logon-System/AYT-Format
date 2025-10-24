@@ -83,14 +83,14 @@ De quoi réaliser de beaux **medley AY**...
 #### Simplification du player
 Au niveau de l'utilisation d'un fichier **AYT**, le processus a été simplifié à l'extrême. 
 
-La notion de *"builder"* a été adoptée. Il s'agit d'une fonction qui crée ex-nihilo le code du *player* en fonction de l'adresse souhaitée pour ce dernier et l'adresse du fichier musical.
+La notion de *"builder"* a été adoptée. Il s'agit d'une fonction qui crée ex nihilo le code du *player* en fonction de l'adresse souhaitée pour ce dernier et l'adresse du fichier musical.
 Cela permet de disposer d'un *player* dont le code est parfaitement adapté à la musique qu'il doit jouer.
 
 Cette notion permet de pré-initialiser le *player* et la musique sans que le *builder* soit nécessaire dans le code final. Afin d'être complet, le *builder* génère donc également une méthode pour initialiser les registres inactifs selon la plateforme utilisée.
 
 Sur un **CPC 464/664/6128** par exemple, le programme indique au *builder* l'adresse où le *player* doit être créé, l'adresse où la musique se trouve et le nombre de fois qu'elle sera jouée.
 
-Le *builder* renvoie au programme **l'adresse du premier octet libre après le player**, ainsi que **le nombre de Nops (µsecondes) qu'occupera le player avec le CALL**.
+Le *builder* renvoie au programme **l'adresse du premier octet libre après le player**, ainsi que **le nombre de µsecondes qu'occupera le player avec le CALL**.
 (cette information peut être utile pour les programmes gérant des processus en temps constant).
 
 Lorsque le *player* est appelé la **première fois**, il initialise les registres *inactifs*. 
@@ -101,12 +101,12 @@ Ce processus est réalisé  avec **la même durée CPU que pour les appels suiva
 # Remerciements
 Nous tenons à remercier les personnes suivantes pour leur enthousiasme et leur support, ainsi que leurs conseils et leurs idées, tout au long du processus de maturation de ce nouveau format.
 
-- **Candy (Sébastien Broudin)** qui cogitait depuis déjà un moment sur la "re patternisation" des **YM** avec quelques essais probants et qui a particulièrement suivi nos progrès sur le sujet.
-- **Fred Crazy (Frédéric Floch)**, **Ker (Florian Bricogne)**, **Overflow (Olivier Goût)**, **DManu78 (David Manuel)**, **Cheshirecat (Claire Dupas)**, **Shap (Olivier Antoine)**
- pour leurs conseils avisés autant techniques que musicaux et pour leurs encouragements.
+- **Candy (Sébastien Broudin)** qui cogitait depuis déjà un moment sur la *patternisation* des **YM** avec quelques essais probants et qui a particulièrement suivi nos progrès sur le sujet.
+- **Fred Crazy (Frédéric Floch)**, **Ker (Florian Bricogne)**, **Overflow (Olivier Goût)**, **DManu78 (David Manuel)**, **Cheshirecat (Claire Dupas)**, **Shap (Olivier Antoine)** pour leurs conseils avisés autant techniques que musicaux et pour leurs encouragements.
 - **BdcIron (Amaury Duran)** pour son aide pour les tests du player sur VG5000 et sa connaissance du ZX Spectrum. 
 - **Ced (Cédric Quétier)** pour le fabuleux logo AYT associé à la présentation du *player* sur CPC+
 - **Made (Carlos Pardo)** pour le somptueux logo AYT associé à la présentation du player sur "CPC old".
+
 
 
 
