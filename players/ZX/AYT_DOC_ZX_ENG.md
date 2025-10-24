@@ -4,7 +4,6 @@
 
 		ld ix,AYT_File		; Address of the AYT file
 		ld de,AYT_Player	; Address where the player will be generated
-		ld bc,AYT_Init		; Address for the init routine if <> 0
         ld a,1			; Number of loops for the music
 		call AYT_Builder	; Build the player at DE for file pointed by IX for "A" loop
 
@@ -24,7 +23,6 @@ If the **PlayerAccessByJP** option is set to 1, you must also provide the return
 
 		ld ix,AYT_File		; Address of the AYT file
 		ld de,AYT_Player	; Address where the player will be generated
-		ld bc,AYT_Init		; Address for the init routine if <> 0
 		ld hl,AYT_Player_Ret	; Address where the player returns
 		ld a,2			; Number of times the music should play
 		call Ayt_Builder
@@ -40,24 +38,19 @@ If the compressor identifies *inactive* registers, they are excluded from the **
 An initialization function must be called before the player.
 
 The *Ayt_Builder* function builds an initialization routine that will be called **before** using the *player*.  
-Two possibilities exist when calling the function:
-- If **BC = 0**, *Ayt_Builder* will reserve **16 bytes** after the *player* to create the routine.
-- If **BC ≠ 0**, it must contain the address of a reserved **16-byte** area (anywhere in RAM).  
-  This area can then be used by the program after initialization.
 
 After calling *Ayt_Builder*:
-- **HL** contains the address of the init routine (equal to BC if BC was non-zero).
+- **HL** contains the address of the init routine.
 - **DE** points to the first free byte after the *player* (or the init routine).
 
 **Note:**  
 If the file has no inactive registers, the init routine is unnecessary.  
-In this case, the init function points to a **RET**, and the routine occupies only 1 byte instead of 34.
+In this case, the init function points to a **RET**, and the routine occupies only 1 byte instead of 16.
 
 To call an initialization routine, use:
 
 		ld ix,AYT_File		; Address of the AYT file
 		ld de,AYT_Player	; Address where the player will be generated
-		ld bc,AYT_Init		; Address for the init routine if <> 0
         ld a,2			; Number of loops for the music
 		call AYT_Builder	; Build the player at DE for file pointed by IX
 
@@ -136,15 +129,16 @@ Performance table for 10–14 active registers and both calling methods:
 
 | Calling Method | Active Registers | CPU (T-states) | Player Size | Builder Size |
 | :-----------: | :--------------: | :------------: | :---------: | :-----------: |
-| JP            | 10               | 685            | 148         | 338           |
-| JP            | 11               | 738            | 155         | 338           |    
-| JP            | 12               | 791            | 162         | 338           |        
-| JP            | 13               | 844            | 169         | 338           |        
-| JP            | 14               | 897            | 176         | 338           |  
-| CALL          | 10               | 722            | 153         | 353           |
-| CALL          | 11               | 775            | 160         | 353           |
-| CALL          | 12               | 828            | 167         | 353           |
-| CALL          | 13               | 881            | 174         | 353           |
-| CALL          | 14               | 934            | 181         | 353           |
+| JP            | 10               | 685            | 148         | 330           |
+| JP            | 11               | 738            | 155         | 330           |    
+| JP            | 12               | 791            | 162         | 330           |        
+| JP            | 13               | 844            | 169         | 330           |        
+| JP            | 14               | 897            | 176         | 330           |  
+| CALL          | 10               | 722            | 153         | 345           |
+| CALL          | 11               | 775            | 160         | 345           |
+| CALL          | 12               | 828            | 167         | 345           |
+| CALL          | 13               | 881            | 174         | 345           |
+| CALL          | 14               | 934            | 181         | 345           |
+
 
 
