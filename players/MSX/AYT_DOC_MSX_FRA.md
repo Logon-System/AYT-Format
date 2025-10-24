@@ -53,7 +53,7 @@ Voici le traitement à mettre en place pour appeler une routine d'initialisation
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-            ld a,2	; Nb of loop for the music
+        ld a,2	; Nb of loop for the music
 		call AYT_Builder	; Build the player @DE for file pointed by @IX for "A" loop
 
 		ld (InitPlayer),hl	; Mise a jour de la routine d'initialisation
@@ -129,6 +129,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 | CALL          | 12               | 778         | 153           | 363            |
 | CALL          | 13               | 827         | 160           | 363            |
 | CALL          | 14               | 876         | 166           | 363            |
+
 
 
 
