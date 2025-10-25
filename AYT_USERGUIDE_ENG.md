@@ -71,6 +71,8 @@ https://amstrad.neocities.org/aytwebplayer
 
 We are currently experimenting with a web-based jukebox that will be able to support the 100,000 existing AYT files.
 
+http://aytproject.free.fr/
+![Image Presentation Web Ayt Jukebox ](./images/JukeboxWeb.jpg)
 
 ---
 
