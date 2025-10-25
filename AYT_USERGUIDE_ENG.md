@@ -69,6 +69,9 @@ There is also a web portal that does this:
 https://amstrad.neocities.org/aytwebplayer  
 ![Image Presentation Web Ayt Player](./images/AYTPlayerWeb.jpg)
 
+We are currently experimenting with a web-based jukebox that will be able to support the 100,000 existing AYT files.
+
+
 ---
 
 ## Using an AYT File on Your Platform
