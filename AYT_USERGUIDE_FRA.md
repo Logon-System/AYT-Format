@@ -69,6 +69,10 @@ Il existe également un portail qui le permet :
 https://amstrad.neocities.org/aytwebplayer
 ![Image Presentation Web Ayt Player ](./images/AYTPlayerWeb.jpg)
 
+En expérimentation, un jukebox web qui pourra supporter les 100 000 fichiers AYT déjà existants.
+
+http://aytproject.free.fr/
+![Image Presentation Web Ayt Jukebox ](./images/JukeboxWeb.jpg)
 
 
 ## Utiliser un fichier AYT sur sa plateforme.
@@ -122,6 +126,7 @@ Il est conseillé de laisser cette option par défaut à 0 afin d'éviter de dev
 
 
 A noter que dans le source du *builder* de la plateforme CPC+, il existe d'autres options de compilation spécifiques aux méthodes d'accès au circuit sonore.
+
 
 
 
