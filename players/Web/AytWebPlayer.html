@@ -30,6 +30,7 @@
       font: 14px/1.45 system-ui, Segoe UI, Roboto, Arial, sans-serif
     }
 
+
     .wrap {
       max-width: 880px;
       margin: 26px auto;
@@ -45,7 +46,7 @@
     }
 
     h1 {
-      font-size: 18px;
+      font-size: 24px;
       margin: 0 0 8px
     }
 
@@ -120,6 +121,9 @@
 <body>
   <div class="wrap">
     <h1>AYT Web Player</h1>
+    by GPA & Logon System
+    <hr>
+
     <div class="card">
 
       <div id="drop" class="drop">Drag and drop a <b>.ayt</b> file or click to load one</div>
@@ -153,6 +157,8 @@
   </div>
 
   <script>
+
+
     let globalVolumeFactor = 0.6;
 
     // ========== Utils ========== 
@@ -264,7 +270,31 @@
           }
         }
 
-        return { regs, frames, loopFrame };
+
+        const platformId = this.header.pf & 31;
+        let platform = { name: "Unknown", masterclock: 1000000.0 };
+
+        const platformFrequencies = [
+          { name: "CPC", masterClock: 1000000.0 },
+          { name: "ORIC", masterClock: 1000000.0 },
+          { name: "ZXUNO", masterClock: 1750000.0 },
+          { name: "PENTAGON", masterClock: 1750000.0 },
+          { name: "TIMEXTS2068", masterClock: 1764000.0 },
+          { name: "ZX128", masterClock: 1773400.0 },
+          { name: "MSX", masterClock: 1789772.5 },
+          { name: "ATARI", masterClock: 2000000.0 },
+          { name: "VG5000", masterClock: 1000000.0 },
+        ]
+
+        if (platformId < platformFrequencies.length) {
+          platform = platformFrequencies[platformId];
+        }
+
+        const frameRateID = (this.header.pf >> 5) & 7;
+        const songFrameRates = [50, 25, 60, 30, 100, 200, 300, 0];
+        const frameRate = songFrameRates[frameRateID];
+
+        return { regs, frames, loopFrame, frameRate, masterClock: platform.masterClock };
       }
     }
 
@@ -358,9 +388,11 @@
       }
       envStep() {
         if (this.EnvAtk) {
-          if (this.EnvLevel < 31) this.EnvLevel++;
+          if (this.EnvLevel < 31) this.EnvLevel += 1;
+          if (this.EnvLevel < 31) this.EnvLevel += 1;
         } else {
-          if (this.EnvLevel > 0) this.EnvLevel--;
+          if (this.EnvLevel > 0) this.EnvLevel -= 1;
+          if (this.EnvLevel > 0) this.EnvLevel -= 1;
         }
         if (((this.EnvAtk) && (this.EnvLevel === 31)) ||
           ((!this.EnvAtk) && (this.EnvLevel === 0))) {
@@ -472,12 +504,10 @@
         this.totalFrames = expanded.frames | 0;
         this.loopFrame = expanded.loopFrame | 0;
         this.masterClock = expanded.masterClock || 1000000;
-        console.log("Player init:", { frames: this.totalFrames, loopFrame: this.loopFrame, mc: this.masterClock });
-        this.ay = new AYChip(true, this.masterClock);
+        //        console.log("Player init:", { frames: this.totalFrames, loopFrame: this.loopFrame, masterClock: this.masterClock });
+        this.ay = new AYChip(false, this.masterClock);
         this.hp = null;
-        this.sampleRate = 48000;
-        this.frameRate = 50;
-        this.smpPerFrame = this.sampleRate / this.frameRate;
+        this.setSampleRate(48000, expanded.frameRate || 50);
         this.curFrame = 0;
         this.sampleInFrame = 0;
         this.applyRegs = true;
@@ -486,18 +516,23 @@
         this.isPlaying = false;
       }
 
+      setSampleRate(sampleRate, frameRate) {
+        this.sampleRate = sampleRate;
+        this.frameRate = frameRate || 50;
+        this.smpPerFrame = this.sampleRate / this.frameRate;
+      }
+
       initAudioNode() {
         this.proc = this.audio.createScriptProcessor(1024, 0, 2);
         this.proc.onaudioprocess = (e) => this.onAudio(e);
         this.proc.connect(this.audio.destination);
         this.hp = new HighPass(this.sampleRate, 20.0);
-        console.log("initAudioNode");
       }
 
       start() {
         if (!this.audio) {
           this.audio = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: this.sampleRate });
-          console.log("AudioContext sr =", this.audio.sampleRate);
+          this.setSampleRate(this.audio.sampleRate, this.frameRate);
         }
         if (this.proc) {
           this.proc.disconnect();
@@ -507,12 +542,12 @@
         this.sampleInFrame = 0;
         this.applyRegs = true;
         this.isPlaying = true;
+        this.ticksFrac = 0;
         this.ay.reset();
         this.initAudioNode();
       }
 
       stop() {
-        console.log("stop()");
         this.isPlaying = false;
         if (this.proc) {
           this.proc.disconnect();
@@ -521,11 +556,14 @@
       }
 
       applyFrame(frameIdx) {
-        for (let r = 0; r <= 13; r++) {
+        for (let r = 0; r <= 12; r++) {
           const v = this.regs[r][frameIdx] | 0;
-          if (!(r === 13 && v === 0xFF)) {
-            this.ay.writeReg(r, v);
-          }
+          this.ay.writeReg(r, v);
+        }
+        const v13 = this.regs[13][frameIdx] | 0;
+
+        if (v13 !== 0xFF) {
+          this.ay.writeReg(13, v13);
         }
       }
 
@@ -534,7 +572,7 @@
         const outL = evt.outputBuffer.getChannelData(0);
         const outR = evt.outputBuffer.getChannelData(1);
         const N = outL.length;
-        const ticks = Math.max(1, Math.round((this.ay.master_clock / 8) / this.sampleRate));
+        const ticks = Math.max(1, (this.ay.master_clock / 8) / this.sampleRate);
         for (let i = 0; i < N; i++) {
           if (this.applyRegs) {
             if (this.curFrame >= this.totalFrames) {
@@ -543,13 +581,13 @@
             this.applyFrame(this.curFrame);
             this.applyRegs = false;
           }
-          for (let t = 0; t < ticks; t++) {
+          this.ticksFrac += ticks;
+          while (this.ticksFrac > 1.0) {
             this.ay.tick();
+            this.ticksFrac--;
           }
+
           const [Lf, Rf] = this.ay.mixSample();
-          //          if (i === 0) {
-          //            console.log("ticks:", ticks, "mix:", Lf.toFixed(6), Rf.toFixed(6));
-          //          }
           const [Ld, Rd] = this.hp.process(Lf, Rf);
           outL[i] = Ld;
           outR[i] = Rd;
@@ -632,34 +670,9 @@
       f.arrayBuffer().then(buf => {
         parser = new AYT_Parser(buf);
         parser.parse();
-        const { regs, frames, loopFrame } = parser.expandToRegisters();
-        
-        const platformId = parser.header.pf & 31;
-        let platform = {name: "Unknown", masterclock: 1000000.0};
-        
-        const platformFrequencies = [
-          {name: "CPC", masterClock: 1000000.0},
-          {name: "ORIC", masterClock: 1000000.0},
-          {name: "ZXUNO", masterClock: 1750000.0},
-          {name: "PENTAGON", masterClock: 1750000.0}, 
-          {name: "TIMEXTS2068", masterClock: 1764000.0}, 
-          {name: "ZX128", masterClock: 1773400.0},
-          {name: "MSX", masterClock: 1789772.5},      
-          {name: "ATARI", masterClock: 2000000.0},       
-          {name: "VG5000", masterClock: 1000000.0},
-        ]
+        const { regs, frames, loopFrame, frameRate, masterClock } = parser.expandToRegisters();
+        $clockSel.value = masterClock;
 
-        //console.log('platform id = ', platformId);
-        if (platformId<platformFrequencies.length) {
-          platform = platformFrequencies[platformId];
-        }
-        //console.log('platform', platform);        
-        $clockSel.value = platform.masterClock;
-        
-        //console.log("expandToRegisters:", { frames, loopFrame });
-        //for (let r = 0; r < regs.length; r++) {
-        //  console.log(`regs[${r}].length =`, regs[r].length);
-        //}
         $play.disabled = false;
         $stop.disabled = true;
         $exportYM.disabled = false;
@@ -686,10 +699,10 @@
 
     $play.addEventListener('click', () => {
       if (!parser) return;
-      const { regs, frames, loopFrame } = parser.expandToRegisters();
+      const { regs, frames, loopFrame, frameRate, masterClock } = parser.expandToRegisters();
 
-      const mc = parseInt($clockSel.value, 10) || 1000000;
-      player = new AYT_YM_Player({ regs, frames, loopFrame, masterClock: mc });
+      const mc = parseInt($clockSel.value, 10) || masterClock;
+      player = new AYT_YM_Player({ regs, frames, loopFrame, frameRate, masterClock: mc });
       player.start();
       $play.disabled = true;
       $stop.disabled = false;
@@ -723,6 +736,8 @@
       $volumeValue.textContent = `${volumePercent}%`;
       showMeta(`Volume global ajusté à ${volumePercent}%`);
     });
+    try {console.log('AYT WEB PLAYER by\n┏┓┏┓┏┓   ╻   ┓ ┏┓┏┓┏┓┳┓  ┏┓┓┏┏┓┏┳┓┏┓┳┳┓\n┃┓┃┃┣┫  ━╋━  ┃ ┃┃┃┓┃┃┃┃  ┗┓┗┫┗┓ ┃ ┣ ┃┃┃\n┗┛┣┛┛┗   ╹   ┗┛┗┛┗┛┗┛┛┗  ┗┛┗┛┗┛ ┻ ┗┛┛ ┗');}catch (e) { }
+
   </script>
 </body>
 
