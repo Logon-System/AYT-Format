@@ -74,6 +74,11 @@ We are currently experimenting with a web-based jukebox that will be able to sup
 http://aytproject.free.fr/
 ![Image Presentation Web Ayt Jukebox ](./images/JukeboxWeb.jpg)
 
+Finally, several web tools are accessible via a single menu.
+
+https://amstrad.neocities.org/menuayt
+![Image Presentation Web Ayt Jukebox ](./images/WebAYTTools.jpg)
+
 ---
 
 ## Using an AYT File on Your Platform
