@@ -74,6 +74,10 @@ En expérimentation, un jukebox web qui pourra supporter les 100 000 fichiers AY
 http://aytproject.free.fr/
 ![Image Presentation Web Ayt Jukebox ](./images/JukeboxWeb.jpg)
 
+Enfin, quelques outils web sont accessiblles via un menu unique.
+
+https://amstrad.neocities.org/menuayt
+![Image Presentation Web Ayt Jukebox ](./images/WebAYTTools.jpg)
 
 ## Utiliser un fichier AYT sur sa plateforme.
 
@@ -126,6 +130,7 @@ Il est conseillé de laisser cette option par défaut à 0 afin d'éviter de dev
 
 
 A noter que dans le source du *builder* de la plateforme CPC+, il existe d'autres options de compilation spécifiques aux méthodes d'accès au circuit sonore.
+
 
 
 
