@@ -5,7 +5,7 @@ Sur les machines **"CPC+"** de Amstrad, il y a un paramètre complémentaire li�
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-            ld bc,#0101         ; Etat de la page asic en entree (B) et en sortie (C) (0=off/1=on)
+        ld bc,#0101         ; Etat de la page asic en entree (B) et en sortie (C) (0=off/1=on)
 		ld a,2			; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
@@ -191,6 +191,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
 
 
 
