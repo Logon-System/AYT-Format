@@ -3,7 +3,7 @@
 C'est un format compact utilisable simplement par tout programme nécessitant une haute performance **CPU** et un fonctionnement en **durée constante au cycle près**. 
 
 Ce format est prévu pour toutes les plateformes utilisant un processeur sonore ***AY-3-8910/AY-3-8912*** (General Instrument) ou compatible (***YM-2149*** de Yamaha). 
-Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC-***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (+ carte son  VG5210)*** 
+Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (+ carte son  VG5210)*** 
 
 ![Image Presentation CPC+](./images/AYTPRES1.jpg)
 # Principe 
@@ -46,7 +46,7 @@ Un des **objectifs initiaux** de ce projet était **la création d'un nouveau fo
 Il s'agissait de sortir du paradigme classique impliquant des compresseurs généralistes impliquant des buffers gourmands et ayant atteint leurs limites.
 Une autre approche consistait à réfléchir préalablement à la nature des données pour pouvoir mieux les factoriser. Autrement dit, ne pas essayer de compacter les données comme un bourrin.
 
-Le principe utilisé ne *"compresse"* donc pas les données brutalement mais s'appuie sur la logique particulière de compositions des chiptunes.
+Le principe utilisé ne *"compresse"* donc pas les données brutalement mais s'appuie sur la logique particulière de composition des chiptunes.
 Cette particularité permet ensuite de compresser un fichier **AYT** avec un compacteur de type **ZX0** ou **Shrinker** de manière plus performante que si la compression avait été réalisée directement sur le fichier brut. Des statistiques sur la conversion **AYT** de **10 000 fichiers** l'ont démontré.
 Cela permet ainsi de stocker un fichier **AYT** sur disque ou en RAM avant usage de manière plus compacte que de nombreuses solutions existantes.
 
@@ -106,6 +106,8 @@ Nous tenons à remercier les personnes suivantes pour leur enthousiasme et leur 
 - **BdcIron (Amaury Duran)** pour les tests du player pour le *VG5000* et sa connaissance du ZX Spectrum. 
 - **Ced (Cédric Quétier)** pour le fabuleux logo AYT associé à la présentation des *players* pour les *CPC+*, *MSX* et *ZX SPECTRUM*.
 - **Made (Carlos Pardo)** pour le somptueux logo AYT associé à la présentation du player pour le *CPC old*.
+
+
 
 
 

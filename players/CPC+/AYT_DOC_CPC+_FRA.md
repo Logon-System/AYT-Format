@@ -5,7 +5,7 @@ Sur les machines **"CPC+"** de Amstrad, il y a un paramètre complémentaire li�
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
-            ld bc,#0101         ; Etat de la page asic en entree (B) et en sortie (C) (0=off/1=on)
+        ld bc,#0101         ; Etat de la page asic en entree (B) et en sortie (C) (0=off/1=on)
 		ld a,2			; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
 
@@ -28,7 +28,7 @@ On peut, par exemple:
 Ce qu'il faut retenir, c'est que le player aura besoin :
 - de déconnecter la page Asic si cette dernière est connectée en entrée ET que le fichier **AYT** déborde dans la zone occupée par cette page.
 - de connecter la page Asic pour mettre à jour les registres de contrôle du DMA.
-- de connecter ou déconnecter la page Asic selon ce qui est souhaité.
+- de connecter ou déconnecter la page Asic selon ce qui est souhaité par l'utilisateur.
 
 Chacune de ces actions peut prendre quelques micro-secondes et le contexte est donc important pour que le gain de CPU soit optimal.
 Ainsi, par exemple, on peut avoir les 2 cas opposés suivants :
@@ -122,7 +122,7 @@ Voici le traitement à mettre en place pour appeler une routine d'initialisation
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
 		ld a,2			; A indique combien de fois la musique sera jouée
-		ld bc,#aabb	; Configuration de la page Asic en entrée et en sortie
+		ld bc,#xxyy	; Configuration de la page Asic en entrée (xx) et en sortie (yy) (00:off/01:on)
 		call Ayt_Builder
 		ld (InitPlayer),hl	; Mise a jour de la routine d'initialisation
 		...
@@ -191,6 +191,9 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
+
+
 
 
 

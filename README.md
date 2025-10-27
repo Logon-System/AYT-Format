@@ -3,7 +3,7 @@
 It is a compact and simple format usable by any program requiring high **CPU** performance and **cycle-accurate constant-time** operation.
 
 This format is intended for all platforms using an ***AY-3-8910/AY-3-8912*** (General Instrument) sound processor or a compatible chip (***YM-2149*** from Yamaha). 
-Several authoring tools and players have been developed and tested for the following platforms: ***CPC-***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (VG5210)***.
+Several authoring tools and players have been developed and tested for the following platforms: ***CPC***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (VG5210)***.
 
 ![Image Presentation CPC+](./images/AYTPRES1.jpg)
 
