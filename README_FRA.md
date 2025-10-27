@@ -3,7 +3,7 @@
 C'est un format compact utilisable simplement par tout programme nécessitant une haute performance **CPU** et un fonctionnement en **durée constante au cycle près**. 
 
 Ce format est prévu pour toutes les plateformes utilisant un processeur sonore ***AY-3-8910/AY-3-8912*** (General Instrument) ou compatible (***YM-2149*** de Yamaha). 
-Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC-***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (+ carte son  VG5210)*** 
+Plusieurs outils de création et des players ont été réalisés et testés pour les plateformes suivantes : ***CPC***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (+ carte son  VG5210)*** 
 
 ![Image Presentation CPC+](./images/AYTPRES1.jpg)
 # Principe 
@@ -106,6 +106,7 @@ Nous tenons à remercier les personnes suivantes pour leur enthousiasme et leur 
 - **BdcIron (Amaury Duran)** pour les tests du player pour le *VG5000* et sa connaissance du ZX Spectrum. 
 - **Ced (Cédric Quétier)** pour le fabuleux logo AYT associé à la présentation des *players* pour les *CPC+*, *MSX* et *ZX SPECTRUM*.
 - **Made (Carlos Pardo)** pour le somptueux logo AYT associé à la présentation du player pour le *CPC old*.
+
 
 
 
