@@ -1,4 +1,5 @@
 #include <algorithm> // Pour all_of
+#include <array>
 #include <cmath>
 #include <cmath> // Pour fabs
 #include <cstdint>
@@ -7,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <list>
 #include <map>
 #include <numeric> // Pour accumulate (dans certains cas, bien que non utilisé directement ici)
 #include <random>
@@ -16,13 +18,10 @@
 #include <unordered_map>
 #include <utility> // Pour pair
 #include <vector>
-#include <array>
 
 using namespace std;
 using ByteBlock = vector<uint8_t>;
-using RegisterValues = array<ByteBlock,16>;
-
-
+using RegisterValues = array<ByteBlock, 16>;
 
 // Header
 class YmHeader {
@@ -50,11 +49,46 @@ struct TRegisterInfo {
     uint32_t numberOfChanges = 0;
 };
 
+// Votre structure Options
+struct Options {
+    bool saveFiles = false;
+    double periodCoef = -1.0;   // Disabled by default
+    double envCoef = -1.0;      // Disabled by default
+    double noiseCoef = -1.0;    // Disabled by default
+    double targetClock = -1.0f; // Disabled by default
+    uint8_t targetId = 0;
+    uint8_t targetClockId = 0;
+
+    int patternSizeMin = 4;
+    int patternSizeMax = 64;
+    int patternSizeStep = 4;
+
+    bool addFinalSequence= true;
+
+    int optimizationLevel = 1;
+    string optimizationMethod = "gluttony";
+    string outputPath = "";
+
+    string sizeParam = "4:64/4";
+    string targetParam = "cpc";
+    bool onlyDivisible = false;
+    bool exportCsv = false;
+
+    // Options for Genetic Algorithm Optimization
+    size_t GA_MU = 100;             // Taille de la population de parents (μ)
+    size_t GA_LAMBDA = 300;         // Nombre d'enfants générés (λ)
+    double GA_MUTATION_RATE = 0.02; // chance de mutation par enfant
+    double GA_CROSSOVER_RATE = 0.8; // chance d'utiliser le croisement
+    int GA_NUM_GENERATION_MIN = 2000;
+    int GA_NUM_GENERATION_MAX = 100000;
+    int GA_ADDITIONAL_GENERATIONS = 1000;
+};
+
 class YMData {
   public:
     YmHeader header;
     string fileName;
-    
+
     uint32_t readHeader(ifstream& in);
     void readFrames(ifstream& in);
 
@@ -66,7 +100,7 @@ class YMData {
     void scalePeriods(int regLo, int regHi, double coeff);
     void scaleEnvelope(double coeff);
     void scaleNoise(double coeff);
-    
+
     RegisterValues rawRegisters{};
 };
 
@@ -91,27 +125,35 @@ const string CTRLSTR = "LeOnArD!";
 
 constexpr double FREQ_NOT_FOUND = -1;
 
-// Définition de la marge de tolérance (epsilon) pour la comparaison des doubles
-constexpr double EPSILON = 0.5;
+// Définition de la marge de tolérance (epsilon) pour la comparaison des frequences
+constexpr double EPSILON = 100;
 
-// Structure pour le résultat de l'optimisation
-struct OptimizedResult {
-    ByteBlock optimized_heap;              // Le tableau contigu minimal
-    map<int, int> optimized_pointers;      // Map: Index Bloc Original -> Index dans le Heap
-    vector<int> optimized_ByteBlock_order; // Ordre des blocs dans le Heap
-};
+constexpr uint8_t final_sequence_values[3] = {0x00, 0x3F, 0xC0};
+constexpr uint8_t final_sequence[16] = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0};
 
 // Définition de la structure pour associer le nom de la plateforme à sa fréquence
 struct PlatformFreq {
     string name;
     double freq;
+    uint8_t id;
 };
 
 // Tableau des fréquences associées aux plateformes
 const vector<PlatformFreq> platformFrequencies = {
-    {"CPC", 1000000.0f},      {"ORIC", 1000000.0f},        {"ZXUNO", 1750000.0f},
-    {"PENTAGON", 1750000.0f}, {"TIMEXTS2068", 1764000.0f}, {"ZX128", 1773450.0f},
-    {"MSX", 1789772.5f},      {"ATARI", 2000000.0f},       {"VG5000", 1000000.0f}};
+    {"Unknown", -1, 15},       {"CPC", 1000000.0f, 0},      {"ORIC", 1000000.0f, 1},
+    {"ZXUNO", 1750000.0f, 2},  {"PENTAGON", 1750000.0f, 3}, {"TIMEXTS2068", 1764000.0f, 4},
+    {"ZX128", 1773400.0f, 5},  {"MSX", 1789772.5f, 6},      {"ATARI", 2000000.0f, 7},
+    {"VG5000", 1000000.0f, 8},
+};
+
+const vector<int> songFrequencies = {50, 25, 60, 30, 100, 200, 300, 0};
+
+// Structure pour le résultat de l'optimisation
+struct OptimizedResult {
+    ByteBlock optimized_heap;          // Le tableau contigu minimal
+    map<int, int> optimized_pointers;  // Map: Index Bloc Original -> Index dans le Heap
+    vector<int> optimized_block_order; // Ordre des blocs dans le Heap
+};
 
 // result buffers
 class ResultSequences {
@@ -119,7 +161,8 @@ class ResultSequences {
     // Sequences (pointers to patterns)
     vector<ByteBlock> sequenced;
     // patterns are data blocs to be sent to a register
-    ByteBlock patterns;
+    map<int, ByteBlock> patternMap;   // Initial map of patterns
+    OptimizedResult optimizedOverlap; // Optimized by gluttony algorithm
 };
 
 // Structure containing result of converter
