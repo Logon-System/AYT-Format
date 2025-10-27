@@ -63,7 +63,8 @@ struct Options {
     int patternSizeMax = 64;
     int patternSizeStep = 4;
 
-    bool addFinalSequence= true;
+    // Add an extra sequence in case frames are divided evenly
+    bool extraFinalSequence= false;
 
     int optimizationLevel = 1;
     string optimizationMethod = "gluttony";
@@ -75,13 +76,13 @@ struct Options {
     bool exportCsv = false;
 
     // Options for Genetic Algorithm Optimization
-    size_t GA_MU = 100;             // Taille de la population de parents (μ)
-    size_t GA_LAMBDA = 300;         // Nombre d'enfants générés (λ)
+    size_t GA_MU = 10;             // Taille de la population de parents (μ)
+    size_t GA_LAMBDA = 40;         // Nombre d'enfants générés (λ)
     double GA_MUTATION_RATE = 0.02; // chance de mutation par enfant
     double GA_CROSSOVER_RATE = 0.8; // chance d'utiliser le croisement
-    int GA_NUM_GENERATION_MIN = 2000;
+    int GA_NUM_GENERATION_MIN = 50000;
     int GA_NUM_GENERATION_MAX = 100000;
-    int GA_ADDITIONAL_GENERATIONS = 1000;
+    int GA_ADDITIONAL_GENERATIONS = 10000;
 };
 
 class YMData {

@@ -825,9 +825,9 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
                 max_generations = min(max_generations, options.GA_NUM_GENERATION_MAX);
 
             if (verbosity > 0)
-                cout << "GA Optimizer: Gen #" << gen << ": Fitness Range = " << population[0].second
-                     << "-" << population[options.GA_MU - 1].second
-                     << " Max Gen=" << max_generations << "\n";
+                cout << "GA Optimizer: Gen #" << gen << "/" << max_generations
+                     << ": Fitness Range = " << population[0].second << "-"
+                     << population[options.GA_MU - 1].second << endl;
             bestCostLog = BestCost0;
         }
     }
@@ -912,7 +912,7 @@ static ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_
 
                 if (options.optimizationLevel == 0) {
                     no_opt_result.optimized_heap.insert(no_opt_result.optimized_heap.end(),
-                                                         pat.begin(), pat.end());
+                                                        pat.begin(), pat.end());
                 }
             }
 
@@ -1352,7 +1352,7 @@ OptimizedResult refine_order_with_ils(const OptimizedResult& glouton_result,
     vector<int> best_order = current_order;
     double best_cost = current_cost;
 
-    cout << "--- Recherche Locale Itérée (ILS) ---\n";
+    cout << "--- Iterative Local Search ---\n";
     cout << "Coût initial (Glouton): " << best_cost << " octets.\n";
 
     for (int iter = 0; iter < max_iterations && optimization_running; ++iter) {
@@ -1420,10 +1420,10 @@ static void printUsage(const char* prog) {
             "sa, ifs)"
          << "  -P, --output-path PATH       Folder where to store results" << endl
          << "  -c, --csv                    Export stats in CSV format" << endl
-         << "  --GA-pop-size M L            Size of population Mu and Lambda" << endl
-         << "  --GA-pop-min-generation N    Minimum number of generations" << endl
-         << "  --GA-pop-max-generation N    Maximum number of generations" << endl
-         << "  --GA-pop-ext-generation N    When finding a new solution, extends number of "
+         << "  --ga-pop-size M L            Size of population Mu and Lambda" << endl
+         << "  --ga-gen-min N               Minimum number of generations" << endl
+         << "  --ga-gen-max N               Maximum number of generations" << endl
+         << "  --ga-gen-ext N               When finding a new solution, extends number of "
             "generation, for further search"
          << endl;
 }
@@ -1577,20 +1577,30 @@ int main(int argc, char** argv) {
         if (arg == "-h" || arg == "--help") {
             printUsage(argv[0]);
             return 0;
-        } else if (arg == "-v" || arg == "--verbose") {
+        }
+        if (arg == "-v" || arg == "--verbose") {
             ++verbosity;
             continue;
-        } else if (arg == "-q" || arg == "--quiet") {
+        }
+        if (arg == "-q" || arg == "--quiet") {
             verbosity = 0;
             continue;
-        } else if (arg == "-s" || arg == "--save") {
+        }
+        if (arg == "-s" || arg == "--save") {
             options.saveFiles = true;
             continue;
-        } else if (arg == "-l" || arg == "--only-evenly-looping") {
+        }
+        if (arg == "-l" || arg == "--only-evenly-looping") {
             options.onlyDivisible = true;
             continue;
-        } else if (arg == "-c" || arg == "--csv") {
+        }
+        if (arg == "-c" || arg == "--csv") {
             options.exportCsv = true;
+            continue;
+        }
+
+        if (arg == "-x" || arg == "--extraFinalSequence") {
+            options.extraFinalSequence = true;
             continue;
         }
 
@@ -1690,7 +1700,7 @@ int main(int argc, char** argv) {
         }
 
         /* Options GA */
-        if (arg == "--GA-pop-size") {
+        if (arg == "--ga-pop-size") {
             if (i + 2 >= argc) {
                 cerr << "Option " << arg << " requires two arguments: Mu and Lambda" << endl;
                 return 1;
@@ -1709,19 +1719,19 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        if (parseOptionArgument({"--GA-min-generation"}, &Options::GA_NUM_GENERATION_MIN, options,
-                                argv, i, argc, &parseInt)) {
+        if (parseOptionArgument({"--ga-gen-min"}, &Options::GA_NUM_GENERATION_MIN, options, argv, i,
+                                argc, &parseInt)) {
             cout << "**** min gen" << options.GA_NUM_GENERATION_MIN << endl;
             continue;
         }
 
-        if (parseOptionArgument({"--GA-max-generation"}, &Options::GA_NUM_GENERATION_MAX, options,
-                                argv, i, argc, &parseInt)) {
+        if (parseOptionArgument({"--ga-gen-max"}, &Options::GA_NUM_GENERATION_MAX, options, argv, i,
+                                argc, &parseInt)) {
             continue;
         }
 
-        if (parseOptionArgument({"--GA-ext-generation"}, &Options::GA_ADDITIONAL_GENERATIONS,
-                                options, argv, i, argc, &parseInt)) {
+        if (parseOptionArgument({"--ga-gen-ext"}, &Options::GA_ADDITIONAL_GENERATIONS, options,
+                                argv, i, argc, &parseInt)) {
             continue;
         }
 
@@ -1729,6 +1739,7 @@ int main(int argc, char** argv) {
             inputPaths.push_back(arg);
         } else {
             cerr << "Unknown option: " << arg << endl;
+            printUsage(argv[0]);
             return 1;
         }
     }
@@ -1811,7 +1822,6 @@ int main(int argc, char** argv) {
                 YMScaleEnvelope(ymdata.rawRegisters, options.envCoef);
             }
 
-
             // Determine number of registers and fixed values
             converter.activeRegs =
                 analyze_data_buffers(ymdata.rawRegisters, converter.initRegValues);
@@ -1825,48 +1835,49 @@ int main(int argc, char** argv) {
                 }
             }
 
-
-
             // If not dividing evenly, we add final sequence to rawRegisters
             auto rawRegistersWithEndSequence = ymdata.rawRegisters;
-            for (int i=0; i<16; i++) {
+            for (int i = 0; i < 16; i++) {
                 rawRegistersWithEndSequence[i].push_back(final_sequence_values[final_sequence[i]]);
-
             }
 
-
-
-            // If dividing evenly, we can create an additional sequence, or replace last values with special sequence
-            // Depending on options.addFinalSequence
-            if (!options.addFinalSequence) {
-                for (int i=0; i<16; i++) {
+            // If dividing evenly, we can create an additional sequence, or replace last values with
+            // special sequence Depending on options.addFinalSequence
+            if (!options.extraFinalSequence) {
+                cout << "Changing End of raw registers, by putting final sequnce values" << endl;
+                for (int i = 0; i < 16; i++) {
                     uint8_t v = final_sequence_values[final_sequence[i]];
                     size_t s = ymdata.rawRegisters[i].size();
-                    //if (v!=0) {
-                        ymdata.rawRegisters[i][s-1] = v;
-                    //}
+                    if (v != 0) {
+                        ymdata.rawRegisters[i][s - 1] = v;
+                    }
                 }
             }
 
-            cout << "rawRegistersWithEndSequence size = "<<rawRegistersWithEndSequence[0].size()<<endl;
-            cout << "rawRegisters                size = "<<ymdata.rawRegisters[0].size();
-
+            cout << "rawRegistersWithEndSequence size = " << rawRegistersWithEndSequence[0].size()
+                 << endl;
+            cout << "rawRegisters                size = " << ymdata.rawRegisters[0].size();
 
             // Save Raw register patterns
             if (options.saveFiles) {
+
                 for (size_t r = 0; r < ymdata.rawRegisters.size(); ++r) {
                     saveRawData(baseName, ymdata.rawRegisters[r],
                                 string("_Raw_R") + (r < 10 ? "0" : "") + to_string(r));
                 }
-            }
 
+                for (size_t r = 0; r < rawRegistersWithEndSequence.size(); ++r) {
+                    saveRawData(baseName, rawRegistersWithEndSequence[r],
+                                string("_XRaw_R") + (r < 10 ? "0" : "") + to_string(r));
+                }
+
+            }
 
             size_t bestTotal = static_cast<size_t>(-1);
             int bestSize = -1;
 
             for (int s = options.patternSizeMax; s >= options.patternSizeMin;
                  s -= options.patternSizeStep)
-            // Utilisez une nouvelle portée pour garantir la destruction immédiate
             {
                 size_t currentTotal = 0;
                 //          vector<AYTConverter> currentBuffers(numActiveRegs);
@@ -1975,7 +1986,7 @@ int main(int argc, char** argv) {
             bool isLoopingEvenly = (ymdata.header.loopFrame % patternSize) == 0;
 
             if (verbosity > 0) {
-                cout << " Active Regs: " << numRegs << "0x" << hex << converter.activeRegs << dec
+                cout << " Active Regs: " << numRegs << " Flags=0x" << hex << converter.activeRegs << dec
                      << endl;
                 cout << " Pattern Length: " << patternSize << endl;
 
@@ -2011,8 +2022,13 @@ int main(int argc, char** argv) {
                 offset_sequences + (ymdata.header.loopFrame / patternSize) * 2 * numRegs;
 
             // Total number of pointers, including final sequence
-            uint16_t seqTotalSize =
-                finalBuffers.sequenced.size() * (1 + (finalBuffers.sequenced[0].size() >> 1));
+            int addFinalSequence = 0;
+            if (isDividingEvenly && options.extraFinalSequence) {
+                addFinalSequence = 1;
+            }
+
+            uint16_t seqTotalSize = finalBuffers.sequenced.size() *
+                                    (addFinalSequence + (finalBuffers.sequenced[0].size() >> 1));
 
             ayt_header[0] = (2 << 4); // Version 2.0
             //  uint16_t Ayt_ActiveRegs     ; active reg (bit 2:reg 13...bit 15:reg 0), encoded in
@@ -2053,17 +2069,17 @@ int main(int argc, char** argv) {
             copy(interleavedData.begin(), interleavedData.end(),
                  ayt_file.begin() + offset_sequences);
 
-            if (!isDividingEvenly) {
-                if (options.addFinalSequence) {
-
-                    // TODO: Adding Final sequence to add to interleaved Data
-                    // If dividing evenly, and if final sequence was not inserted, then we must add a final sequence
-                    // TODO: search inside ayt file for specific data
-                    // Right now we simply add these 3 spacial bytes at the end of the file
-                    uint16_t ptr_final_sequence[3];
-                    for (int k = 0; k < 3; k++)
+            if (isDividingEvenly && options.extraFinalSequence) {
+                cout << "Creating Additional Sequence" << endl;
+                // TODO: Adding Final sequence to add to interleaved Data
+                // If dividing evenly, and if final sequence was not inserted, then we must add
+                // a final sequence
+                // TODO: search inside ayt file for specific data
+                // Right now we simply add these 3 spacial bytes at the end of the file
+                uint16_t ptr_final_sequence[3];
+                for (int k = 0; k < 3; k++)
                     ptr_final_sequence[k] = ayt_file.size() - ayt_header.size() + numRegs * 2 + k;
-                
+
                 for (int r = 0; r < 14; ++r) {
                     // Check if register is exported
                     if (converter.activeRegs & (1 << r)) {
@@ -2072,13 +2088,12 @@ int main(int argc, char** argv) {
                         ayt_file.push_back(ptr >> 8);
                     }
                 }
-                
+
                 // push final sequence special values
                 ayt_file.push_back(0x00);
                 ayt_file.push_back(0x3F);
                 ayt_file.push_back(0xBF);
             }
-        }
 
             // init sequence
             // 2 cases: if empty, we can take any byte with bit 7 set
@@ -2088,7 +2103,6 @@ int main(int argc, char** argv) {
             ayt_file[9] = (pointerToInitTable >> 8) & 0xff;
             ayt_header[8] = pointerToInitTable & 0xff;
             ayt_header[9] = (pointerToInitTable >> 8) & 0xff;
-            //        converter.
 
             if ((converter.activeRegs & 0x3fffu) != 0x3fffu) {
                 for (const auto& pair : converter.initRegValues) {
@@ -2107,7 +2121,7 @@ int main(int argc, char** argv) {
             }
 
             // CSV stats
-          
+
             if (options.exportCsv == true) {
                 cout << "Export csv" << endl;
 
