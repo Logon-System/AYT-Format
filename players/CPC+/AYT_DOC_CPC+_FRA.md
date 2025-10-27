@@ -122,7 +122,7 @@ Voici le traitement à mettre en place pour appeler une routine d'initialisation
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
 		ld a,2			; A indique combien de fois la musique sera jouée
-		ld bc,#aabb	; Configuration de la page Asic en entrée et en sortie
+		ld bc,#xxyy	; Configuration de la page Asic en entrée (xx) et en sortie (yy) (00:off/01:on)
 		call Ayt_Builder
 		ld (InitPlayer),hl	; Mise a jour de la routine d'initialisation
 		...
@@ -191,6 +191,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
 
 
 
