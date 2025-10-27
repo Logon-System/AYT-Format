@@ -28,7 +28,7 @@ On peut, par exemple:
 Ce qu'il faut retenir, c'est que le player aura besoin :
 - de déconnecter la page Asic si cette dernière est connectée en entrée ET que le fichier **AYT** déborde dans la zone occupée par cette page.
 - de connecter la page Asic pour mettre à jour les registres de contrôle du DMA.
-- de connecter ou déconnecter la page Asic selon ce qui est souhaité.
+- de connecter ou déconnecter la page Asic selon ce qui est souhaité par l'utilisateur.
 
 Chacune de ces actions peut prendre quelques micro-secondes et le contexte est donc important pour que le gain de CPU soit optimal.
 Ainsi, par exemple, on peut avoir les 2 cas opposés suivants :
@@ -191,6 +191,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
 
 
 
