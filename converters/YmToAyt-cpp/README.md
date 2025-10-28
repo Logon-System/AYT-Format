@@ -31,17 +31,17 @@ This project is designed to be built with a standard C++ compiler (C++11 or late
 For instance, if you're using g++ (adjust flags as necessary for your system):
 
 ```bash
-  g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq
+  g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt
 ```
 
 Under windows (mingw or cygwin) you might add -static option to avoid a missing DLL error at runtime:
 ```bash
-  g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq -static
+  g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt.exe -static
 ```
 
 Additionally you can strip the binary :
 ```bash
-  strip YmToSeq
+  strip ym2ayt.exe
 ```
 
 ## Usage
@@ -60,7 +60,7 @@ Convert a track, setting the target to the Amstrad CPC's clock speed, and save t
 ./ym2ayt -t cpc my_tune.ym
 ```
 
-You can specify multiple files, or use wildcards 
+You can specify multiple files, or use wildcards
 
 ```bash
 ./ym2ayt -t cpc *.ym
