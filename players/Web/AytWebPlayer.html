@@ -132,12 +132,16 @@
       <div class="row" style="margin-top:10px; gap:8px; margin-top: 10px; font-size: 12px;">
         <label for="clockSel">Master Clock :</label>
         <select id="clockSel" title="Fréquence du chip sonore (Master Clock)">
-          <option value="1000000" selected>1 000 000 Hz</option>
-          <option value="1750000">1 750 000 Hz</option>
-          <option value="1764000">1 764 000 Hz</option>
-          <option value="1773400">1 773 400 Hz</option>
-          <option value="1789772">1 789 772 Hz</option>
-          <option value="2000000">2 000 000 Hz</option>
+          <option value="0" selected> CPC (1Mhz)</option>
+          <option value="1"> ORIC (1Mhz)</option>
+          <option value="2"> ZX UNO (1.75Mhz)</option>
+          <option value="3"> PENTAGON (1.75Mhz)</option>
+          <option value="4"> TIMEXTS2068 (1.764Mhz)</option>
+          <option value="5"> ZX 128 (1.773Mhz)</option>
+          <option value="6"> MSX (1.789Mhz)</option>
+          <option value="7"> ATARI (2Mhz)</option>
+          <option value="8"> VG5000 (1Mhz)</option>
+<!--          <option value="15"> Unknown</option>-->
         </select>
         <button id="play" disabled>Play</button>
         <button id="stop" disabled>Stop</button>
@@ -295,7 +299,7 @@
         const songFrameRates = [50, 25, 60, 30, 100, 200, 300, 0];
         const frameRate = songFrameRates[frameRateID];
 
-        return { regs, frames, loopFrame, frameRate, masterClock: platform.masterClock };
+        return { regs, frames, loopFrame, frameRate, platformId, masterClock: platform.masterClock };
       }
     }
 
@@ -669,8 +673,8 @@
       f.arrayBuffer().then(buf => {
         parser = new AYT_Parser(buf);
         parser.parse();
-        const { regs, frames, loopFrame, frameRate, masterClock } = parser.expandToRegisters();
-        $clockSel.value = masterClock;
+        const { regs, frames, loopFrame, frameRate, platformId, masterClock } = parser.expandToRegisters();
+        $clockSel.value = platformId;
 
         $play.disabled = false;
         $stop.disabled = true;
@@ -700,7 +704,7 @@
       if (!parser) return;
       const { regs, frames, loopFrame, frameRate, masterClock } = parser.expandToRegisters();
 
-      const mc = parseInt($clockSel.value, 10) || masterClock;
+      const mc = platformFrequencies[parseInt($clockSel.value, 10)].masterClock || masterClock;
       player = new AYT_YM_Player({ regs, frames, loopFrame, frameRate, masterClock: mc });
       player.start();
       $play.disabled = true;
