@@ -158,6 +158,19 @@
 
   <script>
 
+    const platformFrequencies = [
+      { name: "CPC", masterClock: 1000000 },
+      { name: "ORIC", masterClock: 1000000 },
+      { name: "ZXUNO", masterClock: 1750000 },
+      { name: "PENTAGON", masterClock: 1750000 },
+      { name: "TIMEXTS2068", masterClock: 1764000 },
+      { name: "ZX128", masterClock: 1773400 },
+      { name: "MSX", masterClock: 1789772 },
+      { name: "ATARI", masterClock: 2000000 },
+      { name: "VG5000", masterClock: 1000000 },
+      { name: "Unknown", masterClock: 1000000 },
+    ]
+
 
     let globalVolumeFactor = 0.6;
 
@@ -274,18 +287,6 @@
         const platformId = this.header.pf & 31;
         let platform = { name: "Unknown", masterclock: 1000000.0 };
 
-        const platformFrequencies = [
-          { name: "CPC", masterClock: 1000000.0 },
-          { name: "ORIC", masterClock: 1000000.0 },
-          { name: "ZXUNO", masterClock: 1750000.0 },
-          { name: "PENTAGON", masterClock: 1750000.0 },
-          { name: "TIMEXTS2068", masterClock: 1764000.0 },
-          { name: "ZX128", masterClock: 1773400.0 },
-          { name: "MSX", masterClock: 1789772.5 },
-          { name: "ATARI", masterClock: 2000000.0 },
-          { name: "VG5000", masterClock: 1000000.0 },
-        ]
-
         if (platformId < platformFrequencies.length) {
           platform = platformFrequencies[platformId];
         }
@@ -388,11 +389,9 @@
       }
       envStep() {
         if (this.EnvAtk) {
-          if (this.EnvLevel < 31) this.EnvLevel += 1;
-          if (this.EnvLevel < 31) this.EnvLevel += 1;
+          if (this.EnvLevel < 31) this.EnvLevel++;
         } else {
-          if (this.EnvLevel > 0) this.EnvLevel -= 1;
-          if (this.EnvLevel > 0) this.EnvLevel -= 1;
+          if (this.EnvLevel > 0) this.EnvLevel--;
         }
         if (((this.EnvAtk) && (this.EnvLevel === 31)) ||
           ((!this.EnvAtk) && (this.EnvLevel === 0))) {
@@ -572,7 +571,7 @@
         const outL = evt.outputBuffer.getChannelData(0);
         const outR = evt.outputBuffer.getChannelData(1);
         const N = outL.length;
-        const ticks = Math.max(1, (this.ay.master_clock / 8) / this.sampleRate);
+        const chipTicksPerSample = Math.max(1, (this.ay.master_clock / 8) / this.sampleRate);
         for (let i = 0; i < N; i++) {
           if (this.applyRegs) {
             if (this.curFrame >= this.totalFrames) {
@@ -581,7 +580,7 @@
             this.applyFrame(this.curFrame);
             this.applyRegs = false;
           }
-          this.ticksFrac += ticks;
+          this.ticksFrac += chipTicksPerSample;
           while (this.ticksFrac > 1.0) {
             this.ay.tick();
             this.ticksFrac--;
@@ -736,7 +735,7 @@
       $volumeValue.textContent = `${volumePercent}%`;
       showMeta(`Volume global ajusté à ${volumePercent}%`);
     });
-    try {console.log('AYT WEB PLAYER by\n┏┓┏┓┏┓   ╻   ┓ ┏┓┏┓┏┓┳┓  ┏┓┓┏┏┓┏┳┓┏┓┳┳┓\n┃┓┃┃┣┫  ━╋━  ┃ ┃┃┃┓┃┃┃┃  ┗┓┗┫┗┓ ┃ ┣ ┃┃┃\n┗┛┣┛┛┗   ╹   ┗┛┗┛┗┛┗┛┛┗  ┗┛┗┛┗┛ ┻ ┗┛┛ ┗');}catch (e) { }
+    try { console.log('AYT WEB PLAYER by\n┏┓┏┓┏┓   ╻   ┓ ┏┓┏┓┏┓┳┓  ┏┓┓┏┏┓┏┳┓┏┓┳┳┓\n┃┓┃┃┣┫  ━╋━  ┃ ┃┃┃┓┃┃┃┃  ┗┓┗┫┗┓ ┃ ┣ ┃┃┃\n┗┛┣┛┛┗   ╹   ┗┛┗┛┗┛┗┛┛┗  ┗┛┗┛┗┛ ┻ ┗┛┛ ┗'); } catch (e) { }
 
   </script>
 </body>
