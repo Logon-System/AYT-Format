@@ -1,12 +1,14 @@
-// aytconsoleplayer_sdl.cpp — C++17, Portable (via SDL2) pour format AYT
+// AYT CLI player — C++17, requires SDL2
+// Tronic / Siko / Longshot
+// GPA + Logon Sytem
 
-// Compile (Linux/g++):
-// g++ -std=c++17 -O2 -pipe -s -DNOMINMAX  ayt-player-cli.cpp -o ayt-player
-// -lSDL2
+// Build:
+// Under linux:
+// g++ -std=c++17 -O2 -pipe -s -DNOMINMAX  ayt-player-cli.cpp -o ayt-player -lSDL2
 //
-// Compile (Windows/g++ avec SDL2):
-// g++ -std=c++17 -O2 -pipe -s -DNOMINMAX ayt-player-cli.cpp -o ayt-player.exe
-// -lmingw32 -lSDL2main -lSDL2
+// Under Windows/Mingw:
+//  g++ -std=c++17 -O2 -pipe -s ayt-player-cli.cpp -o ayt-player.exe -lmingw32 -lSDL2main -lSDL2  -Wl,-Bstatic -lstdc++ -static-libgcc
+
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -27,11 +29,6 @@
 #include <string>
 #include <vector>
 
-// Constante pour M_PI si non défini
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 using TWord = uint16_t;
 
 // Helpers
@@ -41,8 +38,7 @@ template <typename T> static inline T clampv(T v, T lo, T hi) {
 template <typename T> static inline T maxi(T a, T b) { return (a > b) ? a : b; }
 
 // ========================
-// AYT Parser (TAYTParser)
-// Basé sur le code JS de AytWebPlayer.html
+// AYT Parser
 // ========================
 
 struct TAYTHeader {
@@ -165,13 +161,7 @@ public:
     std::map<int, int> constMap;
     size_t p = seqStart + seqLen + size_t(presentCount) * 2;
 
-    // Sauter le marqueur AYT 00 3F BF si présent
-    if (p + 3 < fileSize && FileData[p] == 0x00 && FileData[p + 1] == 0x3F &&
-        FileData[p + 2] == 0xBF) {
-      p += 3;
-    }
-
-    while (p + 1 < fileSize) {
+     while (p + 1 < fileSize) {
       const int a = FileData[p++];
       if (a == 0xFF)
         break;
