@@ -14,12 +14,19 @@
  *  // Ultra optimized Z80 Players by Longshot
  *
  *  Build with :
- *    g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq
+ *    g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt
  *  Under windows (mingw or cygwin) you might add -static option to avoid a missing DLL error:
- *    g++ -std=c++17 -O2 -Wall YmToSeq.cpp -o YmToSeq -static
+ *    g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt -static
  *  And then:
- *    strip YmToSeq
+ *    strip ym2ayt
+ * 
+ *  basic usage:
+ *  ./ym2ayt mysong.ym -t cpc 
  *
+ *  better optimization (slower):
+ *  ./ym2ayt mysong.ym -t cpc -O2  
+ *
+ *  check README.md for detailed usage, --help for options
  */
 
 #include "ym_to_ayt.h"
