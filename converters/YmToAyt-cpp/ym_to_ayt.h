@@ -76,11 +76,11 @@ struct Options {
     bool exportCsv = false;
 
     // Options for Genetic Algorithm Optimization
-    size_t GA_MU = 10;             // Taille de la population de parents (μ)
-    size_t GA_LAMBDA = 40;         // Nombre d'enfants générés (λ)
-    double GA_MUTATION_RATE = 0.02; // chance de mutation par enfant
-    double GA_CROSSOVER_RATE = 0.8; // chance d'utiliser le croisement
-    int GA_NUM_GENERATION_MIN = 50000;
+    size_t GA_MU = 10;                  // Taille de la population de parents (μ)
+    size_t GA_LAMBDA = 40;              // Nombre d'enfants générés (λ)
+    double GA_MUTATION_RATE = 0.02;     // chance de mutation par enfant
+    double GA_CROSSOVER_RATE = 0.8;     // chance d'utiliser le croisement
+    int GA_NUM_GENERATION_MIN = 20000;  
     int GA_NUM_GENERATION_MAX = 100000;
     int GA_ADDITIONAL_GENERATIONS = 10000;
 };
@@ -129,7 +129,7 @@ constexpr double FREQ_NOT_FOUND = -1;
 // Définition de la marge de tolérance (epsilon) pour la comparaison des frequences
 constexpr double EPSILON = 100;
 
-constexpr uint8_t final_sequence_values[3] = {0x00, 0x3F, 0xC0};
+constexpr uint8_t final_sequence_values[3] = {0x00, 0x3F, 0xBF};
 constexpr uint8_t final_sequence[16] = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0};
 
 // Définition de la structure pour associer le nom de la plateforme à sa fréquence

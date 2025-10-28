@@ -348,7 +348,7 @@ static void dumpAsDb(const fs::path& filePath, const ByteBlock& data, uint8_t gr
 
 static void saveRawData(const fs::path& baseName, const ByteBlock& data, const string& suffix) {
     string prefix = baseName.string() + suffix;
-    writeAllBytes(prefix + ".bin", data);
+    // writeAllBytes(prefix + ".bin", data);
     dumpAsDb(prefix + ".txt", data, 16);
 }
 
@@ -1604,6 +1604,33 @@ int main(int argc, char** argv) {
             continue;
         }
 
+        // Shortcuts
+        if (arg == "-O0") {
+            options.optimizationLevel = 0;
+            continue;
+        }
+
+        if (arg == "-O1") {
+            options.optimizationLevel = 1;
+            continue;
+        }
+
+        if (arg == "-O2") {
+            options.optimizationMethod = "ga";
+            options.optimizationLevel = 2;
+            continue;
+        }
+
+        if (arg == "-O3") {
+            options.optimizationMethod = "ga";
+            options.optimizationLevel = 2;
+            options.GA_NUM_GENERATION_MIN=50000;
+            options.patternSizeMin=1;
+            options.patternSizeMax=128;
+            continue;
+        }
+
+
         /* ------------------------------------------------------------------------------------------------
          */
         /* Options nécessitant un argument (ou plus) */
@@ -1721,7 +1748,6 @@ int main(int argc, char** argv) {
 
         if (parseOptionArgument({"--ga-gen-min"}, &Options::GA_NUM_GENERATION_MIN, options, argv, i,
                                 argc, &parseInt)) {
-            cout << "**** min gen" << options.GA_NUM_GENERATION_MIN << endl;
             continue;
         }
 
@@ -1804,21 +1830,19 @@ int main(int argc, char** argv) {
             // Apply tone period multiplier (R0..R5)
             if (options.periodCoef > 0) {
                 if (verbosity)
-                    cout << "Applying tone period multiplier (R0..R5): " << options.periodCoef
-                         << endl;
+                    cout << "Applying tone period scaling: x" << options.periodCoef << endl;
                 YMScalePeriods(ymdata.rawRegisters, options.periodCoef);
             }
 
             if (options.periodCoef > 0) {
                 if (verbosity)
-                    cout << "Applying tone period multiplier (R0..R5): " << options.periodCoef
-                         << endl;
+                    cout << "Applying noise scaling: x" << options.periodCoef << endl;
                 YMScaleNoise(ymdata.rawRegisters, options.periodCoef);
             }
 
             if (options.envCoef > 0) {
                 if (verbosity)
-                    cout << "Applying tone period multiplier (R0..R5): " << options.envCoef << endl;
+                    cout << "Applying envelope scaling: x" << options.envCoef << endl;
                 YMScaleEnvelope(ymdata.rawRegisters, options.envCoef);
             }
 
@@ -1842,49 +1866,36 @@ int main(int argc, char** argv) {
             }
 
             // If dividing evenly, we can create an additional sequence, or replace last values with
-            // special sequence Depending on options.addFinalSequence
+            // special sequence, depending on options.addFinalSequence
             if (!options.extraFinalSequence) {
-                cout << "Changing End of raw registers, by putting final sequnce values" << endl;
+                cout << "Changing End of raw registers, repacing with final sequence values"
+                     << endl;
                 for (int i = 0; i < 16; i++) {
                     uint8_t v = final_sequence_values[final_sequence[i]];
                     size_t s = ymdata.rawRegisters[i].size();
-                    if (v != 0) {
-                        ymdata.rawRegisters[i][s - 1] = v;
-                    }
+                    // if (v != 0) {
+                    ymdata.rawRegisters[i][s - 1] = v;
+                    //}
                 }
-            }
-
-            cout << "rawRegistersWithEndSequence size = " << rawRegistersWithEndSequence[0].size()
-                 << endl;
-            cout << "rawRegisters                size = " << ymdata.rawRegisters[0].size();
-
-            // Save Raw register patterns
-            if (options.saveFiles) {
-
-                for (size_t r = 0; r < ymdata.rawRegisters.size(); ++r) {
-                    saveRawData(baseName, ymdata.rawRegisters[r],
-                                string("_Raw_R") + (r < 10 ? "0" : "") + to_string(r));
-                }
-
-                for (size_t r = 0; r < rawRegistersWithEndSequence.size(); ++r) {
-                    saveRawData(baseName, rawRegistersWithEndSequence[r],
-                                string("_XRaw_R") + (r < 10 ? "0" : "") + to_string(r));
-                }
-
             }
 
             size_t bestTotal = static_cast<size_t>(-1);
             int bestSize = -1;
 
-            for (int s = options.patternSizeMax; s >= options.patternSizeMin;
-                 s -= options.patternSizeStep)
-            {
-                size_t currentTotal = 0;
-                //          vector<AYTConverter> currentBuffers(numActiveRegs);
-                ResultSequences currentBuffers;
-                bool valid = true;
+            RegisterValues& selRegValueSet = ymdata.rawRegisters;
 
+            for (int s = options.patternSizeMax; s >= options.patternSizeMin;
+                 s -= options.patternSizeStep) {
+                bool valid = true;
                 bool isDividingEvenly = (ymdata.header.frameCount % s) == 0;
+
+                RegisterValues& regValueSet = ymdata.rawRegisters;
+                if (!isDividingEvenly)
+                    regValueSet = rawRegistersWithEndSequence;
+
+                size_t currentTotal = 0;
+
+                ResultSequences currentBuffers;
 
                 if ((options.onlyDivisible == true) && !isDividingEvenly) {
                     valid = false;
@@ -1894,12 +1905,7 @@ int main(int argc, char** argv) {
 
                     try {
 
-                        if (isDividingEvenly)
-                            currentBuffers =
-                                buildBuffers(ymdata.rawRegisters, converter.activeRegs, s);
-                        else
-                            currentBuffers =
-                                buildBuffers(rawRegistersWithEndSequence, converter.activeRegs, s);
+                        currentBuffers = buildBuffers(regValueSet, converter.activeRegs, s);
 
                         currentTotal = currentBuffers.optimizedOverlap.optimized_heap.size();
 
@@ -1921,6 +1927,8 @@ int main(int argc, char** argv) {
                             bestTotal = currentTotal;
                             bestSize = s;
                             finalBuffers = currentBuffers;
+                            selRegValueSet = regValueSet;
+
                             if (verbosity > 0)
                                 cout << "New Best Pattern size found: " << s
                                      << " (Total Size: " << currentTotal << " bytes)"
@@ -1938,6 +1946,15 @@ int main(int argc, char** argv) {
 
             patternSize = bestSize;
             totalSize = bestTotal;
+
+            // Save Raw register patterns
+            if (options.saveFiles) {
+
+                for (size_t r = 0; r < selRegValueSet.size(); ++r) {
+                    saveRawData(baseName, selRegValueSet[r],
+                                string("_Raw_R") + (r < 10 ? "0" : "") + to_string(r));
+                }
+            }
 
             if (options.optimizationLevel > 1) {
 
@@ -1986,8 +2003,8 @@ int main(int argc, char** argv) {
             bool isLoopingEvenly = (ymdata.header.loopFrame % patternSize) == 0;
 
             if (verbosity > 0) {
-                cout << " Active Regs: " << numRegs << " Flags=0x" << hex << converter.activeRegs << dec
-                     << endl;
+                cout << " Active Regs: " << numRegs << " Flags=0x" << hex << converter.activeRegs
+                     << dec << endl;
                 cout << " Pattern Length: " << patternSize << endl;
 
                 cout << " Init Sequence: ";
@@ -2031,8 +2048,7 @@ int main(int argc, char** argv) {
                                     (addFinalSequence + (finalBuffers.sequenced[0].size() >> 1));
 
             ayt_header[0] = (2 << 4); // Version 2.0
-            //  uint16_t Ayt_ActiveRegs     ; active reg (bit 2:reg 13...bit 15:reg 0), encoded in
-            //  Big endian!
+            //  Ayt_ActiveRegs: active reg (bit 2:reg 13...bit 15:reg 0), encoded in Big endian
             ayt_header[1] = reverse_bits((converter.activeRegs >> 8) & 255); // Active Regs R13-R8
             ayt_header[2] = reverse_bits(converter.activeRegs & 255);        // Active Regs R7-R0
 
