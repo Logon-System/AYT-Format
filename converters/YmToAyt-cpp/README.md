@@ -79,14 +79,14 @@ By default, a fast optimization method is applied (glutony), but if you're seeki
 You can control large population and extended search, althought default values provide good results
 
 ```bash
-./ym2ayt -O ga --ga-pop-size 40 120 --ga-max-gen 250000 -t atari my_long_track.ym
+./ym2ayt -O ga --ga-pop-size 40 120 --ga-gen-max 250000 -t atari my_long_track.ym
 ```
 The two parameters (Mu and Lambda) for population size are used for the exploration/exploitation balance:
  * mu correspond to the number of the best individuals,  selected and kept after evaluation
  * lambda corresponds to the children generated, by combining and mutating genes from their parents. Parents are randomly picked amond the mu best individuals. By defaut mu=10, lambda=40. You can try 1000, 4000 on a faster computer (and then reduce max generation as it will converge faster)
 
 ```bash
-./ym2ayt -O ga --ga-pop-size 1000 4000 --ga-max-gen 2000 --ga-ext-gen 1000  -t atari my_track.ym
+./ym2ayt -O ga --ga-pop-size 1000 4000 --ga-gen-max 2000 --ga-gen-ext 1000  -t atari my_track.ym
 ```
 
 
