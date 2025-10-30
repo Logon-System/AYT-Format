@@ -1,11 +1,10 @@
-<!doctype html>
-<html lang="fr">
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AYT Web Player</title>
-  <meta name="color-scheme" content="dark" />
+  <meta name="color-scheme" content="dark">
   <style>
     :root {
       --bg: #0b0c10;
@@ -18,12 +17,9 @@
       --ok: #34d399;
     }
 
-    * {
-      box-sizing: border-box
-    }
+    * { box-sizing: border-box }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       background: var(--bg);
       color: var(--txt);
@@ -31,11 +27,7 @@
     }
 
 
-    .wrap {
-      max-width: 880px;
-      margin: 26px auto;
-      padding: 0 16px
-    }
+    .wrap { max-width: 880px; margin: 26px auto; padding: 0 16px }
 
     .card {
       background: var(--panel);
@@ -45,17 +37,8 @@
       box-shadow: 0 10px 24px rgba(0, 0, 0, .22)
     }
 
-    h1 {
-      font-size: 24px;
-      margin: 0 0 8px
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap
-    }
+    h1 { font-size: 24px; margin: 0 0 8px }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
 
     .drop {
       border: 2px dashed #2b3143;
@@ -65,15 +48,9 @@
       background: #0f121a;
       cursor: pointer
     }
+    .drop.hover { background: #111626; border-color: #4f8cff }
 
-    .drop.hover {
-      background: #111626;
-      border-color: #4f8cff
-    }
-
-    input[type=file] {
-      display: none
-    }
+    input[type=file] { display: none }
 
     button {
       background: var(--btn);
@@ -83,14 +60,9 @@
       padding: 8px 14px;
       cursor: pointer
     }
+    button:hover { background: var(--btnh) }
 
-    button:hover {
-      background: var(--btnh)
-    }
-
-    label {
-      margin-right: 4px;
-    }
+    label { margin-right: 4px; }
 
     select {
       background: var(--btn);
@@ -110,29 +82,25 @@
       padding: 10px
     }
 
-    .volume_value {
-      display: inline-block;
-      width: 50px;
-      text-align: right;
-    }
+    .volume_value { display: inline-block; width: 50px; text-align: right; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <h1>AYT Web Player</h1>
-    by GPA & Logon System
+    by GPA &amp; Logon System
     <hr>
 
     <div class="card">
 
       <div id="drop" class="drop">Drag and drop a <b>.ayt</b> file or click to load one</div>
-      <input id="file" type="file" accept=".ayt" />
+      <input id="file" type="file" accept=".ayt">
 
       <div class="row" style="margin-top:10px; gap:8px; margin-top: 10px; font-size: 12px;">
         <label for="clockSel">Master Clock :</label>
         <select id="clockSel" title="Fréquence du chip sonore (Master Clock)">
-          <option value="0" selected> CPC (1Mhz)</option>
+          <option value="0" selected="selected"> CPC (1Mhz)</option>
           <option value="1"> ORIC (1Mhz)</option>
           <option value="2"> ZX UNO (1.75Mhz)</option>
           <option value="3"> PENTAGON (1.75Mhz)</option>
@@ -143,16 +111,15 @@
           <option value="8"> VG5000 (1Mhz)</option>
 <!--          <option value="15"> Unknown</option>-->
         </select>
-        <button id="play" disabled>Play</button>
-        <button id="stop" disabled>Stop</button>
+        <button id="play" disabled="disabled">Play</button>
+        <button id="stop" disabled="disabled">Stop</button>
 
         <label style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
           Volume : <span id="$volume-value" class="volume_value">60%</span>
-          <input type="range" id="$global-volume" min="0" max="100" value="60" step="1"
-            title="Contrôle l'amplification du mixage final (0% à 100%)" style="width: 120px;">
+          <input type="range" id="$global-volume" min="0" max="100" value="60" step="1" title="Contrôle l'amplification du mixage final (0% à 100%)" style="width: 120px;">
         </label>
 
-        <button id="$exportYM" disabled title="Exporter les données YM reconstruites">💾 Export YM</button>
+        <button id="$exportYM" disabled="disabled" title="Exporter les données YM reconstruites">💾 Export YM</button>
 
       </div>
 
@@ -173,7 +140,7 @@
       { name: "ATARI", masterClock: 2000000 },
       { name: "VG5000", masterClock: 1000000 },
       { name: "Unknown", masterClock: 1000000 },
-    ]
+    ];
 
 
     let globalVolumeFactor = 0.6;
@@ -248,7 +215,6 @@
         const N = this.header.N | 0;
         const regs = Array.from({ length: 16 }, () => new Uint8Array(0));
         const constMap = new Map(this.constInits.map(ci => [ci.regIndex | 0, ci.value | 0]));
-        console.info(constMap);
 
         const P = this.presentRegs.length;
         const blocks = (this.seq.length / 2) / P | 0;
@@ -402,14 +368,11 @@
             else this.EnvLevel = 0;
             return;
           }
-          if (this.EnvHold) {
-            return;
-          }
+          if (this.EnvHold) { return; }
           if (this.EnvAlt) {
             this.EnvAtk = !this.EnvAtk;
           } else {
-            if (this.EnvAtk) this.EnvLevel = 0;
-            else this.EnvLevel = 31;
+            if (this.EnvAtk) this.EnvLevel = 0; else this.EnvLevel = 31;
           }
         }
       }
@@ -505,7 +468,6 @@
         this.totalFrames = expanded.frames | 0;
         this.loopFrame = expanded.loopFrame | 0;
         this.masterClock = expanded.masterClock || 1000000;
-        //        console.log("Player init:", { frames: this.totalFrames, loopFrame: this.loopFrame, masterClock: this.masterClock });
         this.ay = new AYChip(false, this.masterClock);
         this.hp = null;
         this.setSampleRate(48000, expanded.frameRate || 50);
@@ -551,25 +513,27 @@
       stop() {
         this.isPlaying = false;
         if (this.proc) {
-          this.proc.disconnect();
+          try { this.proc.disconnect(); } catch (_) {}
           this.proc = null;
+        }
+        // Ferme l'AudioContext pour s'assurer qu'aucun son ne continue
+        if (this.audio && typeof this.audio.close === 'function') {
+          const ctx = this.audio;
+          this.audio = null;
+          try { ctx.close(); } catch (_) {}
         }
       }
 
       applyFrame(frameIdx) {
-        let arr = [];
         for (let r = 0; r <= 12; r++) {
           const v = this.regs[r][frameIdx] | 0;
           this.ay.writeReg(r, v);
-          arr.push(v);
         }
         const v13 = this.regs[13][frameIdx] | 0;
-          arr.push(v13);
 
         if (v13 !== 0xFF) {
           this.ay.writeReg(13, v13);
         }
-        console.log(arr);
       }
 
       onAudio(evt) {
@@ -655,6 +619,7 @@
     const $clockSel = document.getElementById('clockSel');
 
     let parser = null;
+    let player = null; // <-- important : référence globale au player
 
     function showMeta(txt) {
       $meta.textContent = txt;
@@ -672,6 +637,11 @@
     }
 
     function handleFile(f) {
+      // Stoppe toute lecture en cours AVANT de charger un nouveau fichier
+      if (player) {
+        player.stop();
+        player = null;
+      }
       f.arrayBuffer().then(buf => {
         parser = new AYT_Parser(buf);
         parser.parse();
@@ -704,6 +674,11 @@
 
     $play.addEventListener('click', () => {
       if (!parser) return;
+      // Stoppe un éventuel player en cours avant de relancer
+      if (player) {
+        player.stop();
+        player = null;
+      }
       const { regs, frames, loopFrame, frameRate, masterClock } = parser.expandToRegisters();
 
       const mc = platformFrequencies[parseInt($clockSel.value, 10)].masterClock || masterClock;
@@ -716,6 +691,7 @@
     $stop.addEventListener('click', () => {
       if (!player) return;
       player.stop();
+      player = null;
       $play.disabled = false;
       $stop.disabled = true;
     });
@@ -740,6 +716,10 @@
       globalVolumeFactor = volumePercent / 100;
       $volumeValue.textContent = `${volumePercent}%`;
       showMeta(`Volume global ajusté à ${volumePercent}%`);
+    });
+    // Nettoyage si on quitte la page (par sécurité)
+    window.addEventListener('beforeunload', () => {
+      if (player) { player.stop(); player = null; }
     });
     try { console.log('AYT WEB PLAYER by\n┏┓┏┓┏┓   ╻   ┓ ┏┓┏┓┏┓┳┓  ┏┓┓┏┏┓┏┳┓┏┓┳┳┓\n┃┓┃┃┣┫  ━╋━  ┃ ┃┃┃┓┃┃┃┃  ┗┓┗┫┗┓ ┃ ┣ ┃┃┃\n┗┛┣┛┛┗   ╹   ┗┛┗┛┗┛┗┛┛┗  ┗┛┗┛┗┛ ┻ ┗┛┛ ┗'); } catch (e) { }
 
