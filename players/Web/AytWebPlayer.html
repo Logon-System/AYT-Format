@@ -226,12 +226,8 @@
           addrs.push(readU16LE(v, addrStart + i * 2));
         }
 
-        let p = addrStart + presentCount * 2;
-        if (v.getUint8(p) !== 0x00 || v.getUint8(p + 1) !== 0x3F || v.getUint8(p + 2) !== 0xBF) {
-          console.warn("AYT marker 00 3F BF non trouvé à", p);
-        } else {
-          p += 3;
-        }
+
+        let p = ptr_init;
         const constInits = [];
         while (p < this.u8.length) {
           const a = v.getUint8(p++);
@@ -252,6 +248,8 @@
         const N = this.header.N | 0;
         const regs = Array.from({ length: 16 }, () => new Uint8Array(0));
         const constMap = new Map(this.constInits.map(ci => [ci.regIndex | 0, ci.value | 0]));
+        console.info(constMap);
+
         const P = this.presentRegs.length;
         const blocks = (this.seq.length / 2) / P | 0;
         const frames = blocks * N;
@@ -559,15 +557,19 @@
       }
 
       applyFrame(frameIdx) {
+        let arr = [];
         for (let r = 0; r <= 12; r++) {
           const v = this.regs[r][frameIdx] | 0;
           this.ay.writeReg(r, v);
+          arr.push(v);
         }
         const v13 = this.regs[13][frameIdx] | 0;
+          arr.push(v13);
 
         if (v13 !== 0xFF) {
           this.ay.writeReg(13, v13);
         }
+        console.log(arr);
       }
 
       onAudio(evt) {
