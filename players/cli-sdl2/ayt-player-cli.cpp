@@ -157,9 +157,9 @@ public:
 
     const uint8_t *seq = FileData.data() + seqStart;
 
-    // 5. Extraire les initialisations constantes (Const Inits)
+    // 5. Extract Registers Initialization constants 
     std::map<int, int> constMap;
-    size_t p = seqStart + seqLen + size_t(presentCount) * 2;
+    size_t p = header.PtrInit; //seqLen + size_t(presentCount) * 2;
 
      while (p + 1 < fileSize) {
       const int a = FileData[p++];
@@ -167,6 +167,9 @@ public:
         break;
       const int b = FileData[p++];
       constMap[a & 0xFF] = b & 0xFF;
+
+    //std::cout<< p << " R"<<a <<"="<< b<<std::endl;
+
     }
 
     // 6. Décompression/Expansion des données dans header.Regs
