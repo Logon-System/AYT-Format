@@ -2018,7 +2018,6 @@ int main(int argc, char** argv) {
             }
 
             patternSize = bestSize;
-            totalSize = bestTotal;
 
             // Save Raw register patterns
             if (options.saveFiles) {
@@ -2086,8 +2085,6 @@ int main(int argc, char** argv) {
                 }
                 cout << endl;
 
-                totalSize =
-                    finalBuffers.optimizedOverlap.optimized_heap.size() + interleavedData.size();
                 cout << " Loop to sequence : " << (ymdata.header.loopFrame / patternSize);
                 if (!isLoopingEvenly) {
                     cout << " (Warn: not looping to the start of a pattern) "
