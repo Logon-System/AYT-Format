@@ -74,11 +74,15 @@ struct Options {
     string targetParam = "cpc";
     bool onlyDivisible = false;
     bool exportCsv = false;
+    bool exportAllRegs = false; // Do not skip any register
+    bool filterReg13=false;
+    bool save_size= false; // Use this option if you want to store the size of the file in the name
 
     // Options for Genetic Algorithm Optimization
     size_t GA_MU = 10;                  // Taille de la population de parents (μ)
     size_t GA_LAMBDA = 40;              // Nombre d'enfants générés (λ)
-    double GA_MUTATION_RATE = 0.02;     // chance de mutation par enfant
+    double GA_MUTATION_RATE_MIN = 0.02; // Min Mutation rate per childend
+    double GA_MUTATION_RATE_MAX = 0.5; // Min Mutation rate per childend
     double GA_CROSSOVER_RATE = 0.8;     // chance d'utiliser le croisement
     int GA_NUM_GENERATION_MIN = 20000;  
     int GA_NUM_GENERATION_MAX = 100000;

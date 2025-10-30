@@ -19,12 +19,12 @@
  *    g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt -static
  *  And then:
  *    strip ym2ayt
- * 
+ *
  *  basic usage:
- *  ./ym2ayt mysong.ym -t cpc 
+ *  ./ym2ayt mysong.ym -t cpc
  *
  *  better optimization (slower):
- *  ./ym2ayt mysong.ym -t cpc -O2  
+ *  ./ym2ayt mysong.ym -t cpc -O2
  *
  *  check README.md for detailed usage, --help for options
  */
@@ -200,6 +200,7 @@ static void YMScalePeriods(array<ByteBlock, 16>& regs, double coef) {
         return;
     if (coef <= 0.0)
         return;
+    int overflow_count[3] = {0, 0, 0};
 
     for (int k = 0; k < 3; ++k) {
         int lo = k * 2;  // R0, R2, R4
@@ -217,11 +218,21 @@ static void YMScalePeriods(array<ByteBlock, 16>& regs, double coef) {
             if (p < 1)
                 p = 1;
             while (p > 0x0FFF) {
-                cerr << "Period overflow! R" << lo << "-R" << hi << endl;
+                if (verbosity > 1)
+                    cerr << "Frame " << f << " : Period overflow! R" << lo << "-R" << hi << endl;
+                overflow_count[k]++;
                 p = p >> 1; // Divide by 2 in case of overflow (higher octave)
             }
             L[f] = uint8_t(p & 0xFF);
             H[f] = uint8_t((hib & 0xF0) | ((p >> 8) & 0x0F)); // préserve nibble haut
+        }
+    }
+
+    for (int k = 0; k < 3; ++k) {
+        if (overflow_count[k] > 0) {
+            cerr << "/!\\ Warning !" << overflow_count[k]
+                 << " period overflows detected for channel " << k
+                 << ". Increase verbosity for more info" << endl;
         }
     }
 }
@@ -315,6 +326,34 @@ static void dumpDb(ofstream& file, const ByteBlock& data, uint8_t groupSize, siz
     }
 }
 
+int filterReg13(std::vector<uint8_t>& vec, bool apply) {
+    if (vec.empty())
+        return 0;
+
+    bool dansSequence = false;
+    uint8_t prevValue = 255;
+    int suspicious_values_count = 0;
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        //        if (vec[i] != 0) {
+        if (prevValue == vec[i]) {
+            if (!dansSequence) {
+                dansSequence = true;
+                prevValue = vec[i];
+            }
+            suspicious_values_count++;
+            if (apply == true)
+                vec[i] = 255;
+
+        } else {
+            dansSequence = false;
+            prevValue = vec[i];
+        }
+    }
+    return suspicious_values_count;
+}
+
+/*
 static void dumpDw(ofstream& file, const ByteBlock& data, uint8_t groupSize, size_t start = 0,
                    size_t length = 0) {
     if (!file) {
@@ -342,6 +381,7 @@ static void dumpDw(ofstream& file, const ByteBlock& data, uint8_t groupSize, siz
         }
     }
 }
+*/
 
 // Dump all data stored in a ByteBlock to a text file, using db
 // directives
@@ -384,7 +424,7 @@ static uint32_t fnv1a32(const ByteBlock& data) {
  */
 static uint32_t analyze_data_buffers(const array<ByteBlock, 16>& rawValues,
                                      vector<pair<size_t, uint8_t>>& fixedValues) {
-    // Réinitialise le vecteur de sortie pour les valeurs fixes
+    // Reset fixed values vector
     fixedValues.clear();
 
     // Initialise le masque binaire des changements à 0
@@ -398,14 +438,17 @@ static uint32_t analyze_data_buffers(const array<ByteBlock, 16>& rawValues,
             continue;
         }
 
-        // Check if a buffer is contant
         bool isConstant = true;
-        // We skip the very 1st value, as sometimes a register only changes once, at the beginning
-        // (0,255, 255, ...)
         uint8_t firstValue = buffer[1];
-        if (buffer.size() > 2) {
-            isConstant = all_of(buffer.begin() + 2, buffer.end() - 1,
-                                [&firstValue](uint8_t val) { return val == firstValue; });
+        // Check if a buffer is contant (except if explicitly requested)
+        if (!options.exportAllRegs) {
+            // We skip the very 1st value, as sometimes a register only changes once, at the
+            // beginning (0,255, 255, ...). This is very common. Also skip last value, for the same
+            // reason
+            if (buffer.size() > 2) {
+                isConstant = all_of(buffer.begin() + 2, buffer.end() - 1,
+                                    [&firstValue](uint8_t val) { return val == firstValue; });
+            }
         }
 
         if (!isConstant) {
@@ -737,8 +780,6 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
 
     int max_generations = options.GA_NUM_GENERATION_MIN;
 
-    cout << "Num Gen" << max_generations << endl;
-
     for (size_t i = 1; i < options.GA_MU; ++i) {
         shuffle(base_order.begin(), base_order.end(), rng);
         double fitness = calculate_fitness(base_order, original_patterns, patSize);
@@ -759,7 +800,6 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
             const auto& p2 = population[dist_parent(rng)];
 
             vector<int> child_order;
-            //            uniform_real_distribution<> dist_prob(0.0, 1.0);
 
             if (dist_prob(rng) < options.GA_CROSSOVER_RATE) {
                 // Croisement
@@ -769,24 +809,20 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
                 child_order = (p1.second < p2.second) ? p1.first : p2.first;
             }
 
-            // Mutation
-            // int nmut = 1;
-            double tmut = 0.05;
+            double tmut = options.GA_MUTATION_RATE_MIN;
+
+            // Adaptive Mutation Rate
             if (BestCost1 == BestCost0) {
-                // nmut = (int) (dist_prob(rng)*5);
-                tmut = 1;
-                // for (int i=0; i<=nmut; i++)
-                //    mutate2(child_order);
+                tmut = options.GA_MUTATION_RATE_MAX;
             }
-
-            if (BestCost1 > BestCost0 && p1.second >= BestCost0) {
-                // nmut = 1+p1.second-BestCost0;
-                float dc = p1.second - BestCost0;
-                if (dc > 0)
-                    tmut = 0.01 + 0.5 * dc / (double)(BestCost1 - BestCost0);
-
-                // cout << p1.second << " " << BestCost0 << " " << BestCost1 << " " << nmut << " "
-                // << tmut << endl;
+            if (BestCost1 < BestCost0 + 10) {
+                if ((BestCost1 > BestCost0) && (p1.second >= BestCost0)) {
+                    double dc = p1.second - BestCost0;
+                    if (dc > 0)
+                        tmut = options.GA_MUTATION_RATE_MIN +
+                               (options.GA_MUTATION_RATE_MAX - options.GA_MUTATION_RATE_MIN) * dc /
+                                   (double)(BestCost1 - BestCost0);
+                }
             }
 
             switch (i & 15) {
@@ -1410,7 +1446,8 @@ static void printUsage(const char* prog) {
          << "  -h, --help                   Show help" << endl
          << "  -v, --verbose                Increase verbosity" << endl
          << "  -q, --quiet                  Low verbosity" << endl
-         << "  -s, --save                   Save intermediary files" << endl
+         << "  -s, --save-regs              Save intermediary files (raw regs register dumps)"
+         << endl
          << "  -p, --pattern-size N[:N][/N] Pattern search range (presets: 'full', 'auto')" << endl
          << "  -l, --only-evenly-looping    Skip sizes that don't loop at thebeginning of a pattern"
          << endl
@@ -1427,6 +1464,9 @@ static void printUsage(const char* prog) {
             "sa, ifs)"
          << "  -P, --output-path PATH       Folder where to store results" << endl
          << "  -c, --csv                    Export stats in CSV format" << endl
+         << "  -R, --export--all-regs       Force exporting all registers, even constant ones"
+         << endl
+         << "   --fur-filter                Apply repeated values in R13 sequences" << endl
          << "  --ga-pop-size M L            Size of population Mu and Lambda" << endl
          << "  --ga-gen-min N               Minimum number of generations" << endl
          << "  --ga-gen-max N               Maximum number of generations" << endl
@@ -1593,8 +1633,13 @@ int main(int argc, char** argv) {
             verbosity = 0;
             continue;
         }
-        if (arg == "-s" || arg == "--save") {
+        if (arg == "-s" || arg == "--save-regs") {
             options.saveFiles = true;
+            continue;
+        }
+
+        if (arg == "-S" || arg == "--save-size") {
+            options.save_size = true;
             continue;
         }
         if (arg == "-l" || arg == "--only-evenly-looping") {
@@ -1603,6 +1648,15 @@ int main(int argc, char** argv) {
         }
         if (arg == "-c" || arg == "--csv") {
             options.exportCsv = true;
+            continue;
+        }
+        if (arg == "-R" || arg == "--export-all-regs") {
+            options.exportAllRegs = true;
+            continue;
+        }
+
+        if (arg == "--fur-filter") {
+            options.filterReg13 = true;
             continue;
         }
 
@@ -1631,12 +1685,11 @@ int main(int argc, char** argv) {
         if (arg == "-O3") {
             options.optimizationMethod = "ga";
             options.optimizationLevel = 2;
-            options.GA_NUM_GENERATION_MIN=50000;
-            options.patternSizeMin=1;
-            options.patternSizeMax=128;
+            options.GA_NUM_GENERATION_MIN = 50000;
+            options.patternSizeMin = 1;
+            options.patternSizeMax = 128;
             continue;
         }
-
 
         /* ------------------------------------------------------------------------------------------------
          */
@@ -1809,6 +1862,19 @@ int main(int argc, char** argv) {
 
             ymdata.readFrames(file);
 
+            // Check for potential anomalies in reg13 sequence
+            int r13_suspicious_values = filterReg13(ymdata.rawRegisters[13], options.filterReg13);
+            if (r13_suspicious_values > 0) {
+                if (!options.filterReg13) {
+                    cout << "Replaced " << r13_suspicious_values << "repeated values" << endl;
+                } else {
+                    cout << "/!\\ Warning! Detected " << r13_suspicious_values
+                         << "repeated values in R13 sequence. Try --fur-filter if you encounter "
+                            "issues."
+                         << endl;
+                }
+            }
+
             // Computes automatically coefficients to appy to registers, depending on YM masterClock
             // and target platform
             if (options.targetClock > 0) {
@@ -1827,7 +1893,6 @@ int main(int argc, char** argv) {
             }
 
             fs::path baseName = inputPath.stem();
-            size_t totalSize = 0;
             int patternSize = 0;
 
             ResultSequences finalBuffers;
@@ -1875,8 +1940,9 @@ int main(int argc, char** argv) {
             // If dividing evenly, we can create an additional sequence, or replace last values with
             // special sequence, depending on options.addFinalSequence
             if (!options.extraFinalSequence) {
-                cout << "Changing End of raw registers, repacing with final sequence values"
-                     << endl;
+                if (verbosity > 0)
+                    cout << "Changing End of raw registers, replacing with final sequence values"
+                         << endl;
                 for (int i = 0; i < 16; i++) {
                     uint8_t v = final_sequence_values[final_sequence[i]];
                     size_t s = ymdata.rawRegisters[i].size();
@@ -2032,7 +2098,6 @@ int main(int argc, char** argv) {
                 cout << " Patterns size : " << finalBuffers.optimizedOverlap.optimized_heap.size()
                      << " bytes" << endl;
                 cout << " Sequences size : " << interleavedData.size() << " bytes" << endl;
-                cout << " Total size (sequences + patterns) : " << totalSize << " bytes" << endl;
             }
 
             // Export AYTs
@@ -2136,18 +2201,24 @@ int main(int argc, char** argv) {
 
             ayt_file.push_back(0xFF);
 
-            writeAllBytes(baseName.string() + ".ayt", ayt_file);
+            string flags = "";
+            if (!options.targetParam.empty())
+                flags += "-" + options.targetParam;
+            if (options.filterReg13)
+                flags += "-fr13";
+            if (options.save_size)
+                flags += "-" + to_string(ayt_file.size());
+            string ayt_filename = baseName.string() + flags + ".ayt";
+            writeAllBytes(ayt_filename, ayt_file);
 
             if (verbosity > 0) {
                 cout << " Total File size: " << ayt_file.size() << endl;
-                cout << "AYT file \"" << baseName.string() << ".ayt\" saved." << endl;
+                cout << "AYT file \"" << ayt_filename << "\" saved." << endl;
             }
 
             // CSV stats
 
             if (options.exportCsv == true) {
-                cout << "Export csv" << endl;
-
                 cout << baseName << ";" << ymdata.header.masterClock << ";"
                      << ymdata.header.frequency << ";" << ymdata.header.frameCount << ";"
                      << ((double)ymdata.header.frameCount) / ymdata.header.frequency << ";"
@@ -2155,6 +2226,7 @@ int main(int argc, char** argv) {
                      << hex << real_changeMask /*converter.activeRegs*/ << dec << ";" << patternSize
                      << ";" << isDividingEvenly << ";" << isLoopingEvenly
                      << ";" //<< orig_patterns_size << ";"
+                     << ";" << r13_suspicious_values
                      << finalBuffers.optimizedOverlap.optimized_heap.size() << ";"
                      << interleavedData.size() << ";" << ayt_file.size() << ";" << endl;
             }
