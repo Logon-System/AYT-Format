@@ -326,32 +326,39 @@ static void dumpDb(ofstream& file, const ByteBlock& data, uint8_t groupSize, siz
     }
 }
 
+
 int filterReg13(std::vector<uint8_t>& vec, bool apply) {
-    if (vec.empty())
+    if (vec.empty()) {
         return 0;
+    }
 
-    bool dansSequence = false;
-    uint8_t prevValue = 255;
-    int suspicious_values_count = 0;
+    bool inSequence = false;
+    uint8_t lastNon255Value = 255;
+    int suspiciousCount = 0;
 
-    for (size_t i = 0; i < vec.size(); ++i) {
-        //        if (vec[i] != 0) {
-        if (prevValue == vec[i]) {
-            if (!dansSequence) {
-                dansSequence = true;
-                prevValue = vec[i];
+    for (uint8_t& value : vec) {
+        if (value != 255) {
+            if (value == lastNon255Value) {
+                if (!inSequence) {
+                    inSequence = true;
+                }
+                suspiciousCount++;
+                if (apply) {
+                    value = 255;
+                }
+            } else {
+                inSequence = false;
+                lastNon255Value = value;
             }
-            suspicious_values_count++;
-            if (apply == true)
-                vec[i] = 255;
-
         } else {
-            dansSequence = false;
-            prevValue = vec[i];
+            inSequence = false;
         }
     }
-    return suspicious_values_count;
+
+    return suspiciousCount;
 }
+
+
 
 /*
 static void dumpDw(ofstream& file, const ByteBlock& data, uint8_t groupSize, size_t start = 0,
@@ -1865,11 +1872,12 @@ int main(int argc, char** argv) {
             // Check for potential anomalies in reg13 sequence
             int r13_suspicious_values = filterReg13(ymdata.rawRegisters[13], options.filterReg13);
             if (r13_suspicious_values > 0) {
-                if (!options.filterReg13) {
-                    cout << "Replaced " << r13_suspicious_values << "repeated values" << endl;
+                if (options.filterReg13) {
+                    cout << path << ": R13: Replaced " << r13_suspicious_values
+                         << " repeated values" << endl;
                 } else {
-                    cout << "/!\\ Warning! Detected " << r13_suspicious_values
-                         << "repeated values in R13 sequence. Try --fur-filter if you encounter "
+                    cout << "/!\\ Warning! " << path << ": Detected " << r13_suspicious_values
+                         << " repeated values in R13 sequence. Try --fur-filter if you encounter "
                             "issues."
                          << endl;
                 }
