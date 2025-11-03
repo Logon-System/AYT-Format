@@ -77,8 +77,6 @@
 ;;----------------------------------------------------
 ;; Size of routine : 57 bytes
 ;; The AY register initialization routine is created if constant registers require prior initialization. 
-;; User can define whether to specify a 34-byte area for this single-use initialization, or whether to let the builder define the address after the player. 
-;; In all cases, builder returns the address where the initialization routine was created. 
 ;; Note that if the initialization routine is not necessary, it will contain a single ret.
 ;;--------------------------------------------------------------------------
 ;; Notes :
@@ -640,4 +638,5 @@ Ayt_Player_B4_End
 
 Ayt_Builder_End
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
