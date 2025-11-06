@@ -31,12 +31,12 @@ This project is designed to be built with a standard C++ compiler (C++11 or late
 For instance, if you're using g++ (adjust flags as necessary for your system):
 
 ```bash
-  g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt
+  g++ -std=c++17 -O2 -Wall *.cpp -o ym2ayt
 ```
 
 Under windows (mingw or cygwin) you might add -static option to avoid a missing DLL error at runtime:
 ```bash
-  g++ -std=c++17 -O2 -Wall ym_to_ayt.cpp -o ym2ayt.exe -static
+  g++ -std=c++17 -O2 -Wall *.cpp -o ym2ayt.exe -static
 ```
 
 Additionally you can strip the binary :
