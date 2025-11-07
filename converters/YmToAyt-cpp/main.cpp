@@ -123,7 +123,14 @@ static void printUsage(const char* prog) {
          << "  -h, --help                   Show help" << endl
          << "  -v, --verbose                Increase verbosity" << endl
          << "  -q, --quiet                  Low verbosity" << endl
+         << "  -o, --output FILE            Name of the output file (works only if there is a "
+            "single file)"
+         << endl
+         << "  -P, --output-path PATH       Folder where to store results files (must exist)"
+         << endl
          << "  -s, --save-regs              Save intermediary files (raw regs register dumps)"
+         << endl
+         << "  -S, --save-size              Add actual file size in output file"
          << endl
          << "  -p, --pattern-size N[:N][/N] Pattern search range (presets: 'full', 'auto')" << endl
          << "  -l, --only-evenly-looping    Skip sizes that don't loop at thebeginning of a pattern"
@@ -136,18 +143,13 @@ static void printUsage(const char* prog) {
          << endl
          << "  -t, --target ARCH            Name of the target architecture ("
          << generate_platform_list() << ")" << endl
-         << "  -o, --output FILE            Name of the output file (works only if there is a "
-            "single file)"
+         << "  -c, --csv                    Export stats in CSV format" << endl
+         << "  -R, --export--all-regs       Force exporting all registers, even constant ones"
          << endl
          << "  -O, --overlap-optim N        Overlap optimization method (none, ga, tabu, "
             "sa, ifs)"
          << endl
-         << "  -P, --output-path PATH       Folder where to store results files (must exist)"
-         << endl
-         << "  -c, --csv                    Export stats in CSV format" << endl
-         << "  -R, --export--all-regs       Force exporting all registers, even constant ones"
-         << endl
-         << "   --fur-filter                Apply repeated values in R13 sequences" << endl
+         << "   --fur-filter                Apply repeated values fix in R13 sequences" << endl
          << "  --ga-pop-size M L            Size of population Mu and Lambda" << endl
          << "  --ga-gen-min N               Minimum number of generations" << endl
          << "  --ga-gen-max N               Maximum number of generations" << endl
@@ -523,7 +525,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (inputPaths.size()>0 && (!options.outputFile.empty())) {
+    if (inputPaths.size()>1 && (!options.outputFile.empty())) {
         cerr << "Error: Cannot use -o with multiple files.Maybe you can use -P instead?" << endl;
         printUsage(argv[0]);
         return 1;
