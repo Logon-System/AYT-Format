@@ -6,8 +6,8 @@
 ;;
 ;;**********************************************************************************************************************************************
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
-AYT_Player	equ #100		; Address for player created by builder (247 to 317 bytes according AYT file & Player settings) 
-					; + 57 bytes of AY Init routine when there are less than 14 registers in AYT files.
+AYT_Player	equ #100		; Address for player created by builder (269 to 342 bytes according AYT file & Player settings) 
+							; 57 bytes can be retrieved from the end of the player after the first call to the player.
 AYT_Builder	equ #300		; Builder can be deleted once AYT file is initialised and player created.
 AYT_File	equ #1000		; Address of AYT file in memory
 
@@ -25,8 +25,8 @@ StartExample
 		ld (#38),hl		;
 					; int active
 		;-------------------------------------------------------------------------------------------------------------------------------
-		; Build the player routine (needs 247 to 317 bytes, and 57 bytes more if less than 14 regs in AYT file)
-		; Note that these 57 bytes can be retrieved after the first call to the player. 
+		; Build the player routine (needs 269 to 342 bytes)
+		; Note that 57 bytes can be retrieved after the first call to the player. 
 		;-------------------------------------------------------------------------------------------------------------------------------
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Adress where Player is built
@@ -99,5 +99,6 @@ MyStack
 		org AYT_File
 		incbin "../../ayt-files/still_scrolling.ayt"
 		
+
 
 
