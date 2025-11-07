@@ -75,7 +75,7 @@ The *calling method* defines how the *player* is called in Z80A.
 It is a compilation option for the *builder*:
 - If **CALL**, the program must use the Z80A **"CALL"** instruction to invoke the *player*.
 - If **JP**, the program uses the Z80A **"JP"** instruction.  
-  - The *player* does not save the **SP** register, saving **11 NOPs** (on **CPC**) or **37 Ts**.
+  - The *player* does not save the **SP** register, saving **11 NOPs** (on **CPC**).
   - This option is useful only if the program calling the *player* would modify **SP** anyway.
   - Otherwise, it has these drawbacks:
     - The *builder* must be called every time the return address changes:
@@ -100,5 +100,6 @@ The CPU usage can vary from 1 to 3 NOP instructions depending on the active regi
 | CALL          | 12               | 433         | 308           | 490            |
 | CALL          | 13               | 463         | 325           | 490            |
 | CALL          | 14               | 492         | 342           | 490            |
+
 
 
