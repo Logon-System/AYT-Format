@@ -84,6 +84,9 @@ It is a compilation option for the *builder*:
     - The stack pointer must be restored, as any push or call would corrupt **AYT** data.
 
 The table below shows *player* performance for 10–14 active registers for both calling methods.
+The player size includes the register initialization routine, which can be retrieved after the first call to the *player*.
+This initialization routine accounts for **57 bytes** at the end of the player.
+The CPU usage can vary from 1 to 3 NOP instructions depending on the active registers.
 
 | Calling Method | Active Registers | CPU (NOPs) | Player Size (bytes) | Builder Size (bytes) |
 | :-----------: | :--------------: | :---------: | :----------------: | :----------------: |
@@ -97,4 +100,5 @@ The table below shows *player* performance for 10–14 active registers for both
 | CALL          | 12               | 433         | 308           | 490            |
 | CALL          | 13               | 463         | 325           | 490            |
 | CALL          | 14               | 492         | 342           | 490            |
+
 
