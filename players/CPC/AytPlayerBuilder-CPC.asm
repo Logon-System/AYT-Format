@@ -327,7 +327,7 @@ Ayt_ActiveReg_Found
 		;----------------------------------------------------------------
 		;
 		push hl				; Save active reg param
-		ld hl,Ayt_PLayer_B1_Start
+		ld hl,Ayt_Player_B1_Start
 		ld bc,Ayt_Player_B1_End-Ayt_Player_B1_Start
 		ldir
 		pop hl	
@@ -645,4 +645,5 @@ Ayt_Player_B4_End
 
 Ayt_Builder_End
 ;;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
