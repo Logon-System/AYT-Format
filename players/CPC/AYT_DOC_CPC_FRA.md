@@ -76,7 +76,7 @@ La *méthode d'appel* correspond à la façon dont le *player* est appelé en Z8
 Cette méthode est une option de compilation du *builder*.
 - Lorsque la *méthode d'appel* est de type **CALL**, le programme qui utilise le *player* doit l'appeler avec l'instruction Z80A **"CALL"**
 - Lorsque la *méthode d'appel* est de type **JP**, le *player* doit être appelé avec l'instruction Z80A **"JP"**. Cette méthode nécessite toutefois que le programmeur fournisse au *builder* l'adresse de retour du *player*.
-  - Le *player* ne sauvegarde alors pas le registre **SP**, ce qui permet de *"gagner"* **11 nops** (sur **CPC**) ou **37 Ts**.
+  - Le *player* ne sauvegarde alors pas le registre **SP**, ce qui permet de *"gagner"* **11 nops** (sur **CPC**).
   - C'est une option intéressante seulement si le programme qui appelle le player devait de toute manière modifier le registre **SP**.
   - Dans les autres cas, elle présente les problèmes suivants :
     - elle impose d'appeler le *builder* à chaque fois que l'adresse de retour change :
@@ -85,18 +85,22 @@ Cette méthode est une option de compilation du *builder*.
     - elle impose de restaurer le pointeur de pile car le moindre push ou call serait destructeur pour les données **AYT**.
   
 Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 registres actifs pour les deux *méthodes d'appel* possibles.
+La taille du player comptabilise la routine d'initialisation des registres, qui peut être récupérée après le premier appel du player. 
+Cette routine d'initialisation représente 57 octets à la fin du player.
+La CPU peut varier de 1 à 3 Nops selon les registres actifs.
 
 | Méthode Appel | Nombre Registres | CPU en Nops | Taille Player en octets | Taille Builder en octets |
 | :-----------: | :--------------: | :---------: | :-----------: | :------------: |
-| JP            | 10               | 358         | 247           | 466            |
-| JP            | 11               | 389         | 264           | 466            |        
-| JP            | 12               | 320         | 281           | 466            |        
-| JP            | 13               | 450         | 297           | 466            |        
-| JP            | 14               | 479         | 312           | 466            |        
-| CALL          | 10               | 369         | 252           | 480            |
-| CALL          | 11               | 400         | 268           | 480            |
-| CALL          | 12               | 431         | 286           | 480            |
-| CALL          | 13               | 461         | 302           | 480            |
-| CALL          | 14               | 490         | 317           | 480            |
+| JP            | 10               | 360         | 269           | 476            |
+| JP            | 11               | 391         | 286           | 476            |        
+| JP            | 12               | 422         | 303           | 476            |        
+| JP            | 13               | 452         | 320           | 476            |        
+| JP            | 14               | 481         | 337           | 476            |        
+| CALL          | 10               | 371         | 274           | 490            |
+| CALL          | 11               | 402         | 291           | 490            |
+| CALL          | 12               | 433         | 308           | 490            |
+| CALL          | 13               | 463         | 325           | 490            |
+| CALL          | 14               | 492         | 342           | 490            |
+
 
 
