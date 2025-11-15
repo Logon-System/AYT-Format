@@ -250,7 +250,7 @@ uint32_t analyze_data_buffers(const array<ByteBlock, 16>& rawValues,
     // Reset fixed values vector
     fixedValues.clear();
 
-    int real_changeMask; // Temporaire, a mettre dans la struct/classe YMData
+    uint16_t real_changeMask; // Temporaire, a mettre dans la struct/classe YMData
     // Initialise le masque binaire des changements à 0
     uint32_t changeMask = 0;
     // Check the 14 registers data series

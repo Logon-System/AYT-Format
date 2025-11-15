@@ -11,6 +11,7 @@ const std::vector<int> songFrequencies = {50, 25, 60, 30, 100, 200, 300, 0};
 // result buffers
 class ResultSequences {
   public:
+    int num_patterns;
     // Sequences (pointers to patterns)
     vector<ByteBlock> sequenced;
     // patterns are data blocs to be sent to a register

@@ -14,7 +14,9 @@ static uint32_t fnv1a32(const ByteBlock& data) {
     return h;
 }
 
-
+/**
+ * Recherche ds buffers dupliqués
+ */
 ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activeRegs,
                                     int patSize, int optimizationLevel) {
 
@@ -28,6 +30,8 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
         uniqueHashes; // Hash -> Index de Pattern (pour la recherche rapide)
 
     int next_pattern_idx = 0; // Compteur pour les indices de pattern (0, 1, 2, ...)
+
+    
 
     for (size_t i = 0; i <= 14; ++i) {
         if (!(activeRegs & (1 << i))) {
@@ -105,11 +109,38 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
 
         // --- Phase 2: Fast overlap optimization (gluttony) ---
         auto initial_result = merge_ByteBlocks_greedy(uniquePatternsMap, patSize);
-        return {move(sequenceBuffers), move(uniquePatternsMap), move(initial_result)};
+        return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(initial_result)};
     }
 
-    // return no opt
-    return {move(sequenceBuffers), move(uniquePatternsMap), move(no_opt_result)};
+
+        // --- Phase 2: Niveau 1 - Déduplication SANS chevauchement ---
+        // Construction de l'OptimizedResult pour la compatibilité du pipeline.
+        
+        int current_offset = 0;
+        
+        // On itère sur tous les patterns uniques dans l'ordre de leur index (0, 1, 2, ...)
+        for (const auto& pair : uniquePatternsMap) {
+            int pattern_idx = pair.first;
+            const ByteBlock& pattern_data = pair.second;
+
+            // 1. Ajouter le pattern complet au Heap (concaténation simple)
+            no_opt_result.optimized_heap.insert(no_opt_result.optimized_heap.end(), 
+                                                pattern_data.begin(), 
+                                                pattern_data.end());
+
+            // 2. Définir le pointeur (offset) de ce pattern dans le Heap
+            no_opt_result.optimized_pointers[pattern_idx] = current_offset;
+            
+            // 3. Ajouter l'index à l'ordre (pour la cohérence)
+            no_opt_result.optimized_block_order.push_back(pattern_idx);
+            
+            // 4. Mettre à jour l'offset pour le pattern suivant
+            current_offset += patSize;
+        }
+
+        // Le code reste compatible car l'OptimizedResult est maintenant rempli.
+        return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(no_opt_result)};
+ 
 }
 
 void replaceByOptimizedIndex(vector<ByteBlock>& sequenceBuffers,
@@ -186,23 +217,6 @@ ByteBlock interleaveSequenceBuffers(const vector<ByteBlock>& sequenceBuffers) {
 }
 
 
-// Fonction Coût : Calcule la taille des patterns pour un ordre donné
-double calculate_fitness(const vector<int>& ByteBlock_order, const map<int, ByteBlock>& ByteBlocks,
-                         int ByteBlock_size) {
-    if (ByteBlock_order.empty())
-        return 0;
-
-    double total_size = ByteBlock_size; // Commencez avec la taille du premier bloc
-
-    for (size_t i = 1; i < ByteBlock_order.size(); ++i) {
-        const ByteBlock& B_prev = ByteBlocks.at(ByteBlock_order[i - 1]);
-        const ByteBlock& B_curr = ByteBlocks.at(ByteBlock_order[i]);
-
-        int overlap = find_max_overlap(B_prev, B_curr, ByteBlock_size);
-        total_size += (ByteBlock_size - overlap);
-    }
-    return total_size;
-}
 
 
 // Fonction pour reconstruire le Heap et les pointeurs finaux

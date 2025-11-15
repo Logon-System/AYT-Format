@@ -94,3 +94,22 @@ OptimizedResult merge_ByteBlocks_greedy(const map<int, ByteBlock>& original_Byte
 
     return result;
 }
+
+
+// Fonction Coût : Calcule la taille des patterns pour un ordre donné
+double calculate_fitness(const vector<int>& ByteBlock_order, const map<int, ByteBlock>& ByteBlocks,
+                         int ByteBlock_size) {
+    if (ByteBlock_order.empty())
+        return 0;
+
+    double total_size = ByteBlock_size; // Commencez avec la taille du premier bloc
+
+    for (size_t i = 1; i < ByteBlock_order.size(); ++i) {
+        const ByteBlock& B_prev = ByteBlocks.at(ByteBlock_order[i - 1]);
+        const ByteBlock& B_curr = ByteBlocks.at(ByteBlock_order[i]);
+
+        int overlap = find_max_overlap(B_prev, B_curr, ByteBlock_size);
+        total_size += (ByteBlock_size - overlap);
+    }
+    return total_size;
+}

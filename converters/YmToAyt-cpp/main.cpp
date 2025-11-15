@@ -42,8 +42,6 @@ struct Options options;
 // Flag set to true when a slow optimization has started, so it can be interrupted with CTRL+C
 bool optimization_running = false;
 
-uint32_t real_changeMask = 0;
-
 // I/O helpers
 static void writeAllBytes(const filesystem::path& filePath, const ByteBlock& data) {
     ofstream file(filePath, ios::binary);
@@ -130,8 +128,7 @@ static void printUsage(const char* prog) {
          << endl
          << "  -s, --save-regs              Save intermediary files (raw regs register dumps)"
          << endl
-         << "  -S, --save-size              Add actual file size in output file"
-         << endl
+         << "  -S, --save-size              Add actual file size in output file" << endl
          << "  -p, --pattern-size N[:N][/N] Pattern search range (presets: 'full', 'auto')" << endl
          << "  -l, --only-evenly-looping    Skip sizes that don't loop at thebeginning of a pattern"
          << endl
@@ -525,7 +522,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (inputPaths.size()>1 && (!options.outputFile.empty())) {
+    if (inputPaths.size() > 1 && (!options.outputFile.empty())) {
         cerr << "Error: Cannot use -o with multiple files.Maybe you can use -P instead?" << endl;
         printUsage(argv[0]);
         return 1;
@@ -559,10 +556,10 @@ int main(int argc, char** argv) {
             int r13_suspicious_values = ymdata.filterReg13(options.filterReg13);
             if (r13_suspicious_values > 0) {
                 if (options.filterReg13) {
-                    cout << path << ": R13: Replaced " << r13_suspicious_values
+                    cerr << path << ": R13: Replaced " << r13_suspicious_values
                          << " repeated values" << endl;
                 } else {
-                    cout << "/!\\ Warning! " << path << ": Detected " << r13_suspicious_values
+                    cerr << "/!\\ Warning! " << path << ": Detected " << r13_suspicious_values
                          << " repeated values in R13 sequence. Try --fur-filter if you encounter "
                             "issues."
                          << endl;
@@ -776,6 +773,7 @@ int main(int argc, char** argv) {
                 cout << " Active Regs: " << numRegs << " Flags=0x" << hex << converter.activeRegs
                      << dec << endl;
                 cout << " Pattern Length: " << patternSize << endl;
+                cout << "Number of unique patterns" << finalBuffers.num_patterns << endl;
 
                 cout << " Init Sequence: ";
                 for (const auto& pair : converter.initRegValues) {
@@ -923,13 +921,15 @@ int main(int argc, char** argv) {
                 cout << baseName << ";" << ymdata.header.masterClock << ";"
                      << ymdata.header.frequency << ";" << ymdata.header.frameCount << ";"
                      << ((double)ymdata.header.frameCount) / ymdata.header.frequency << ";"
-                     << ymdata.header.loopFrame << ";" << finalBuffers.sequenced.size();
-                for (int i = 13; i >= 0; i--) {
-                    cout << ";" << ((real_changeMask >> i) & 1);
+                     << ymdata.header.loopFrame << ";" << finalBuffers.sequenced.size() <<";"
+                   << hex << converter.activeRegs << dec  ;
+                
+                   for (int i = 13; i >= 0; i--) {
+                    cout << ";" << ((converter.activeRegs >> i) & 1);
                 }
-                cout << ";" << patternSize << ";" << isDividingEvenly << ";" << isLoopingEvenly
-                     << ";" << r13_suspicious_values << ";"
-                     << finalBuffers.optimizedOverlap.optimized_heap.size() << ";"
+                cout << ";" << patternSize << ";" << finalBuffers.num_patterns << ";"
+                     << isDividingEvenly << ";" << isLoopingEvenly << ";" << r13_suspicious_values
+                     << ";" << finalBuffers.optimizedOverlap.optimized_heap.size() << ";"
                      << interleavedData.size() << ";" << ayt_file.size() << ";" << endl;
             }
         } catch (const exception& e) {
