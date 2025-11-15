@@ -17,10 +17,12 @@ struct Options {
     // Add an extra sequence in case frames are divided evenly
     bool extraFinalSequence= false;
 
+    bool useSilenceMasking = false;
     int optimizationLevel = 1;
     std::string optimizationMethod = "gluttony";
     std::string outputPath = "";
     std::string outputFile = "";
+
 
     std::string sizeParam = "4:64/4";
     std::string targetParam = "cpc";

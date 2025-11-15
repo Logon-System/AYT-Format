@@ -14,11 +14,23 @@ static uint32_t fnv1a32(const ByteBlock& data) {
     return h;
 }
 
+
+// Récupère l'index du Registre (0-14) correspondant à l'index de canal (0=A, 1=B, 2=C)
+// Les indices de canal (0, 1, 2) correspondent aux bits 0, 1, 2 du Registre 7.
+int get_channel_index(size_t reg_idx) {
+    if (reg_idx == 0 || reg_idx == 1 || reg_idx == 8) return 0;  // Canal A: R0, R1 (Fréq), R8 (Vol)
+    if (reg_idx == 2 || reg_idx == 3 || reg_idx == 9) return 1;  // Canal B: R2, R3 (Fréq), R9 (Vol)
+    if (reg_idx == 4 || reg_idx == 5 || reg_idx == 10) return 2; // Canal C: R4, R5 (Fréq), R10 (Vol)
+    // R6 (Bruit), R7 (Mixer), R11/12 (Env Période), R13 (Env Forme), R14/15 (E/S) n'ont pas de masque simple
+    return -1; 
+}
+
+
 /**
- * Recherche ds buffers dupliqués
+ * Recherche des buffers dupliqués
  */
 ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activeRegs,
-                                    int patSize, int optimizationLevel) {
+                                    int patSize, int optimizationLevel, bool useSilenceMasking) {
 
     // --- Phase 1: Découpage en blocs et déduplication initiale ---
     OptimizedResult no_opt_result;
@@ -38,22 +50,25 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
             continue;
         }
 
-        const auto& src = rawData[i];
+        const auto& src = rawData[i]; // Buffer du registre courant (R_i)
         const size_t N = src.size();
         const size_t num_blocks = (N == 0) ? 0 : ((N + size_t(patSize) - 1) / size_t(patSize));
 
         ByteBlock seq;
         seq.reserve(num_blocks * 2);
 
-        // PointerSequence seq;
-        // seq.reserve(num_blocks); // Moins de mémoire nécessaire!
-
+        // Détermination du canal affecté par R7 (seulement si useSilenceMasking est vrai)
+        int channel_idx = useSilenceMasking ? get_channel_index(i) : -1;
+        
+        // Référence au Registre 7 pour l'état de silence (si nécessaire)
+        const ByteBlock& R7_src = rawData[7]; 
+        
         for (size_t blk = 0; blk < num_blocks; ++blk) {
             size_t start = blk * size_t(patSize);
             size_t remain = (start < N) ? (N - start) : 0;
             size_t take = min(remain, size_t(patSize));
 
-            // Création du Pattern (avec padding)
+            // Création du Pattern BRUT (avec padding)
             ByteBlock pat(patSize);
             if (take) {
                 memcpy(pat.data(), &src[start], take);
@@ -64,8 +79,42 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
                 memset(pat.data(), 0, size_t(patSize));
             }
 
-            // Déduplication par Hachage et Comparaison
-            uint32_t h = fnv1a32(pat);
+            // --- Logique d'Application du Masque de Silence ---
+            ByteBlock pattern_to_hash = pat; // Par défaut, on utilise le pattern brut
+            
+            if (useSilenceMasking && channel_idx != -1) {
+                // Le registre i est lié à un canal (A, B ou C).
+                
+                // Masque binaire pour le Registre 7: Bit 0=A, 1=B, 2=C. Bit à 1 => silencieux (mix)
+                uint8_t silence_mask_bit = (1 << channel_idx); 
+                
+                // On prépare le pattern filtré qui servira au hachage et à la comparaison
+                pattern_to_hash.clear();
+                pattern_to_hash.reserve(patSize);
+
+                for (int frame = 0; frame < patSize; ++frame) {
+                    // Vérification de la limite du buffer R7 (pour le padding)
+                    if (start + frame >= R7_src.size()) {
+                        // Si au-delà des données réelles, on garde la valeur padée du pattern brut
+                        pattern_to_hash.push_back(pat[frame]);
+                        continue;
+                    }
+                    
+                    uint8_t r7_val = R7_src[start + frame];
+                    
+                    // Si le bit de silence est ACTIF dans R7 pour ce canal (r7_val & silence_mask_bit) est VRAI
+                    if ((r7_val & silence_mask_bit) != 0) { // Le canal est SILENCIEUX (bit à 1)
+                        // La valeur est ignorée (masquée). On met une valeur neutre (0x00) pour la déduplication.
+                        pattern_to_hash.push_back(0x00); 
+                    } else { // Le canal est ACTIF (bit à 0)
+                        // La valeur est importante, on la garde.
+                        pattern_to_hash.push_back(pat[frame]);
+                    }
+                }
+            }
+            
+            // Déduplication par Hachage et Comparaison (utilise pattern_to_hash)
+            uint32_t h = fnv1a32(pattern_to_hash);
             int idx;
 
             // Recherche du hash
@@ -73,26 +122,46 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
             bool found = false;
 
             if (it_hash != uniqueHashes.end()) {
-                // Le hash est déjà là. On doit vérifier le contenu pour les collisions
                 int existing_idx = it_hash->second;
-                if (uniquePatternsMap.at(existing_idx) == pat) {
+                
+                // === Vérification stricte des collisions (re-masquage) ===
+                // On masque le pattern brut déjà stocké pour le comparer au pattern_to_hash actuel
+                ByteBlock existing_pattern_masked = uniquePatternsMap.at(existing_idx);
+                
+                if (useSilenceMasking && channel_idx != -1) {
+                    existing_pattern_masked.clear();
+                    existing_pattern_masked.reserve(patSize);
+
+                    for (int frame = 0; frame < patSize; ++frame) {
+                        if (start + frame >= R7_src.size()) {
+                            existing_pattern_masked.push_back(uniquePatternsMap.at(existing_idx)[frame]);
+                            continue;
+                        }
+                        
+                        uint8_t r7_val = R7_src[start + frame];
+                        uint8_t silence_mask_bit = (1 << channel_idx); 
+                        
+                        if ((r7_val & silence_mask_bit) != 0) {
+                            existing_pattern_masked.push_back(0x00); // Masque
+                        } else {
+                            existing_pattern_masked.push_back(uniquePatternsMap.at(existing_idx)[frame]);
+                        }
+                    }
+                }
+
+                if (existing_pattern_masked == pattern_to_hash) {
                     idx = existing_idx;
                     found = true;
                 }
-                // Si collision (le pattern n'est pas le même), on le traite comme un nouveau
-                // pattern ci-dessous.
             }
 
             if (!found) {
                 // Nouveau pattern
                 idx = next_pattern_idx++;
-                uniqueHashes[h] = idx;
-                uniquePatternsMap[idx] = move(pat); // Stockage du pattern
-
-                if (optimizationLevel == 0) {
-                    no_opt_result.optimized_heap.insert(no_opt_result.optimized_heap.end(),
-                                                        pat.begin(), pat.end());
-                }
+                // On utilise le HASH du pattern MASQUÉ pour le tracking (uniqueHashes)
+                uniqueHashes[h] = idx; 
+                // On stocke le pattern BRUT (pat) dans la map pour la phase 2 (overlap)
+                uniquePatternsMap[idx] = move(pat); 
             }
 
             if (idx > 0xFFFF)
@@ -106,41 +175,28 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
     }
 
     if (optimizationLevel != 0) {
-
-        // --- Phase 2: Fast overlap optimization (gluttony) ---
+        // --- Phase 2: Optimisation du chevauchement (Glouton ou GA/SA) ---
         auto initial_result = merge_ByteBlocks_greedy(uniquePatternsMap, patSize);
         return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(initial_result)};
-    }
 
-
+    } else {
         // --- Phase 2: Niveau 1 - Déduplication SANS chevauchement ---
-        // Construction de l'OptimizedResult pour la compatibilité du pipeline.
-        
         int current_offset = 0;
-        
-        // On itère sur tous les patterns uniques dans l'ordre de leur index (0, 1, 2, ...)
         for (const auto& pair : uniquePatternsMap) {
             int pattern_idx = pair.first;
             const ByteBlock& pattern_data = pair.second;
 
-            // 1. Ajouter le pattern complet au Heap (concaténation simple)
             no_opt_result.optimized_heap.insert(no_opt_result.optimized_heap.end(), 
                                                 pattern_data.begin(), 
                                                 pattern_data.end());
 
-            // 2. Définir le pointeur (offset) de ce pattern dans le Heap
             no_opt_result.optimized_pointers[pattern_idx] = current_offset;
-            
-            // 3. Ajouter l'index à l'ordre (pour la cohérence)
             no_opt_result.optimized_block_order.push_back(pattern_idx);
-            
-            // 4. Mettre à jour l'offset pour le pattern suivant
             current_offset += patSize;
         }
 
-        // Le code reste compatible car l'OptimizedResult est maintenant rempli.
         return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(no_opt_result)};
- 
+    }
 }
 
 void replaceByOptimizedIndex(vector<ByteBlock>& sequenceBuffers,

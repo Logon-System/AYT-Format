@@ -35,4 +35,4 @@ class AYTConverter {
 };
 
 ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activeRegs, int patSize,
-                             int optimizationLevel);
+                             int optimizationLevel,bool useSilenceMasking=false);

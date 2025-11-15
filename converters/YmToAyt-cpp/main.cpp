@@ -340,6 +340,11 @@ int main(int argc, char** argv) {
             continue;
         }
 
+        if (arg=="--useSilenceMasking") {
+            options.useSilenceMasking = true;
+            continue;
+        }
+ 
         if (arg == "-x" || arg == "--extraFinalSequence") {
             options.extraFinalSequence = true;
             continue;
@@ -566,21 +571,27 @@ int main(int argc, char** argv) {
                 }
             }
 
+            // Actual coefficients
+            double periodCoef = options.periodCoef;
+            double noiseCoef = options.noiseCoef;
+            double envCoef = options.envCoef;
+            
+
             // Computes automatically coefficients to appy to registers, depending on YM masterClock
             // and target platform
             if (options.targetClock > 0) {
                 if (options.periodCoef < 0)
-                    options.periodCoef = options.targetClock / ymdata.header.masterClock;
+                    periodCoef = options.targetClock / ymdata.header.masterClock;
                 if (options.noiseCoef < 0)
-                    options.noiseCoef = options.targetClock / ymdata.header.masterClock;
+                    noiseCoef = options.targetClock / ymdata.header.masterClock;
                 if (options.envCoef < 0)
-                    options.envCoef = options.targetClock / ymdata.header.masterClock;
+                    envCoef = options.targetClock / ymdata.header.masterClock;
             }
 
             if (options.verbosity > 0) {
-                cout << "Period Coef = " << options.periodCoef << endl;
-                cout << "Noise Coef = " << options.noiseCoef << endl;
-                cout << "Envelop Coef = " << options.envCoef << endl;
+                cout << "Period Coef = " << periodCoef << endl;
+                cout << "Noise Coef = " << noiseCoef << endl;
+                cout << "Envelop Coef = " << envCoef << endl;
             }
 
             filesystem::path baseName = inputPath.stem();
@@ -591,22 +602,22 @@ int main(int argc, char** argv) {
             AYTConverter converter;
 
             // Apply tone period multiplier (R0..R5)
-            if (options.periodCoef > 0) {
+            if (periodCoef > 0) {
                 if (options.verbosity)
-                    cout << "Applying tone period scaling: x" << options.periodCoef << endl;
-                ymdata.scalePeriods(options.periodCoef, options.verbosity > 1);
+                    cout << "Applying tone period scaling: x" << periodCoef << endl;
+                ymdata.scalePeriods(periodCoef, options.verbosity > 1);
             }
 
-            if (options.noiseCoef > 0) {
+            if (noiseCoef > 0) {
                 if (options.verbosity)
-                    cout << "Applying noise scaling: x" << options.noiseCoef << endl;
-                ymdata.scaleNoise(options.noiseCoef);
+                    cout << "Applying noise scaling: x" << noiseCoef << endl;
+                ymdata.scaleNoise(noiseCoef);
             }
 
-            if (options.envCoef > 0) {
+            if (envCoef > 0) {
                 if (options.verbosity)
-                    cout << "Applying envelope scaling: x" << options.envCoef << endl;
-                ymdata.scaleEnvelope(options.envCoef);
+                    cout << "Applying envelope scaling: x" << envCoef << endl;
+                ymdata.scaleEnvelope(envCoef);
             }
 
             // Determine number of registers and fixed values
@@ -670,7 +681,7 @@ int main(int argc, char** argv) {
                     try {
 
                         currentBuffers = buildBuffers(regValueSet, converter.activeRegs, s,
-                                                      options.optimizationLevel);
+                                                      options.optimizationLevel,options.useSilenceMasking);
 
                         currentTotal = currentBuffers.optimizedOverlap.optimized_heap.size();
 
