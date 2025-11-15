@@ -15,6 +15,35 @@ static uint32_t fnv1a32(const ByteBlock& data) {
 }
 
 
+// Récupère l'index du Registre de Volume associé au canal (R8, R9, R10).
+// Renvoie -1 si le registre n'est pas associé à un canal ou une fréquence.
+int get_volume_reg_index(size_t reg_idx) {
+    if (reg_idx == 0 || reg_idx == 1) return 8; // Fréquence A -> Volume R8
+    if (reg_idx == 2 || reg_idx == 3) return 9; // Fréquence B -> Volume R9
+    if (reg_idx == 4 || reg_idx == 5) return 10; // Fréquence C -> Volume R10
+    if (reg_idx == 6) return 8; // Bruit (partage les volumes, arbitrairement R8 pour l'exemple)
+    return -1; 
+}
+
+
+/**
+ * Vérifie si le volume du canal est à zéro en mode manuel.
+ * @param volume_val La valeur du Registre de Volume (R8, R9 ou R10)
+ * @return true si le volume est 0 (bits 3-0) ET en mode manuel (bit 4 = 0).
+ */
+bool is_volume_manual_zero(uint8_t volume_val) {
+    // Bit 4 (M) à 0: Mode manuel (non enveloppé)
+    bool is_manual = (volume_val & 0b00010000) == 0;
+    
+    // Bits 3-0 à 0: Volume = 0
+    uint8_t volume_level = volume_val & 0b00001111;
+    bool is_zero = (volume_level == 0);
+
+    return is_manual && is_zero;
+}
+
+
+
 // Récupère l'index du Registre (0-14) correspondant à l'index de canal (0=A, 1=B, 2=C)
 // Les indices de canal (0, 1, 2) correspondent aux bits 0, 1, 2 du Registre 7.
 int get_channel_index(size_t reg_idx) {
@@ -29,6 +58,230 @@ int get_channel_index(size_t reg_idx) {
 /**
  * Recherche des buffers dupliqués
  */
+
+
+/**
+ * Recherche ds buffers dupliqués
+ */
+ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activeRegs,
+                                    int patSize, int optimizationLevel, bool useSilenceMasking) {
+
+    // --- Phase 1: Découpage en blocs et déduplication initiale ---
+    OptimizedResult no_opt_result;
+
+    vector<ByteBlock> sequenceBuffers;
+    map<int, ByteBlock>
+        uniquePatternsMap; 
+    unordered_map<uint32_t, int>
+        uniqueHashes; 
+
+    int next_pattern_idx = 0; 
+
+    // Les buffers de R7, R8, R9, R10 sont nécessaires pour le masquage
+    const ByteBlock& R7_src = rawData[7]; 
+    const ByteBlock& R8_src = rawData[8]; 
+    const ByteBlock& R9_src = rawData[9]; 
+    const ByteBlock& R10_src = rawData[10]; 
+
+    
+    for (size_t i = 0; i <= 14; ++i) {
+        if (!(activeRegs & (1 << i))) {
+            continue;
+        }
+
+        const auto& src = rawData[i]; 
+        const size_t N = src.size();
+        const size_t num_blocks = (N == 0) ? 0 : ((N + size_t(patSize) - 1) / size_t(patSize));
+
+        ByteBlock seq;
+        seq.reserve(num_blocks * 2);
+
+        // Indices pour le masquage
+        int channel_idx = useSilenceMasking ? get_channel_index(i) : -1;
+        int volume_reg_idx = useSilenceMasking ? get_volume_reg_index(i) : -1;
+        
+        for (size_t blk = 0; blk < num_blocks; ++blk) {
+            size_t start = blk * size_t(patSize);
+            size_t remain = (start < N) ? (N - start) : 0;
+            size_t take = min(remain, size_t(patSize));
+
+            // Création du Pattern BRUT (avec padding)
+            ByteBlock pat(patSize);
+            if (take) {
+                memcpy(pat.data(), &src[start], take);
+                uint8_t pad = src[start + take - 1];
+                if (take < (size_t)patSize)
+                    memset(pat.data() + take, pad, size_t(patSize) - take);
+            } else {
+                memset(pat.data(), 0, size_t(patSize));
+            }
+
+            // --- Logique d'Application du Masque ---
+            ByteBlock pattern_to_hash = pat; // Par défaut, on utilise le pattern brut
+            
+            if (useSilenceMasking && (channel_idx != -1 || volume_reg_idx != -1)) {
+                // On crée le pattern filtré
+                pattern_to_hash.clear();
+                pattern_to_hash.reserve(patSize);
+                
+                // Pointeur vers le bon buffer de volume
+                const ByteBlock* R_VOL_src = nullptr;
+                if (volume_reg_idx == 8) R_VOL_src = &R8_src;
+                else if (volume_reg_idx == 9) R_VOL_src = &R9_src;
+                else if (volume_reg_idx == 10) R_VOL_src = &R10_src;
+
+                for (int frame = 0; frame < patSize; ++frame) {
+                    bool should_mask = false;
+                    
+                    // Vérification des limites pour R7 et R_VOL
+                    bool is_valid_frame = (start + frame < R7_src.size()); 
+                    
+                    if (is_valid_frame) {
+                        // 1. Masquage via R7 (Canal coupé)
+                        if (channel_idx != -1) {
+                            // Bit 0=A, 1=B, 2=C. Bit à 1 => silencieux (mix)
+                            uint8_t silence_mask_bit = (1 << channel_idx); 
+                            uint8_t r7_val = R7_src[start + frame];
+                            if ((r7_val & silence_mask_bit) != 0) {
+                                should_mask = true;
+                            }
+                        }
+
+                        // 2. Masquage via Volume Manuel Zéro
+                        // S'applique aux registres de Fréquence (R0-R5) et Bruit (R6)
+                        if (volume_reg_idx != -1 && R_VOL_src) {
+                            uint8_t vol_val = R_VOL_src->at(start + frame);
+                            if (is_volume_manual_zero(vol_val)) {
+                                should_mask = true;
+                            }
+                        }
+                    } else {
+                        // Cas du padding: si le registre est de canal, on ne masque pas la valeur padée
+                        // car elle est la dernière valeur réelle du buffer.
+                        // On garde should_mask = false pour ce cas.
+                    }
+                    
+                    if (should_mask) {
+                        pattern_to_hash.push_back(0x00); 
+                    } else { 
+                        // Si aucune condition de masquage n'est remplie OU c'est du padding
+                        pattern_to_hash.push_back(pat[frame]);
+                    }
+                }
+            }
+            
+            // Déduplication par Hachage et Comparaison (utilise pattern_to_hash)
+            uint32_t h = fnv1a32(pattern_to_hash);
+            int idx;
+
+            // Recherche du hash
+            auto it_hash = uniqueHashes.find(h);
+            bool found = false;
+
+            if (it_hash != uniqueHashes.end()) {
+                int existing_idx = it_hash->second;
+                
+                // === Vérification stricte des collisions (re-masquage) ===
+                ByteBlock existing_pattern_masked = uniquePatternsMap.at(existing_idx);
+                
+                if (useSilenceMasking && (channel_idx != -1 || volume_reg_idx != -1)) {
+                    // On recalcule le pattern masqué pour le pattern stocké
+                    existing_pattern_masked.clear();
+                    existing_pattern_masked.reserve(patSize);
+                    
+                    const ByteBlock* R_VOL_src_existing = nullptr;
+                    if (volume_reg_idx == 8) R_VOL_src_existing = &R8_src;
+                    else if (volume_reg_idx == 9) R_VOL_src_existing = &R9_src;
+                    else if (volume_reg_idx == 10) R_VOL_src_existing = &R10_src;
+
+
+                    for (int frame = 0; frame < patSize; ++frame) {
+                        bool should_mask = false;
+                        
+                        // Vérification des limites pour R7 et R_VOL
+                        bool is_valid_frame = (start + frame < R7_src.size()); 
+                        
+                        if (is_valid_frame) {
+                            // 1. Masquage via R7 (Canal coupé)
+                            if (channel_idx != -1) {
+                                uint8_t silence_mask_bit = (1 << channel_idx); 
+                                uint8_t r7_val = R7_src[start + frame];
+                                if ((r7_val & silence_mask_bit) != 0) {
+                                    should_mask = true;
+                                }
+                            }
+                            
+                            // 2. Masquage via Volume Manuel Zéro
+                            if (volume_reg_idx != -1 && R_VOL_src_existing) {
+                                uint8_t vol_val = R_VOL_src_existing->at(start + frame);
+                                if (is_volume_manual_zero(vol_val)) {
+                                    should_mask = true;
+                                }
+                            }
+                        }
+                        
+                        if (should_mask) {
+                            existing_pattern_masked.push_back(0x00); // Masque
+                        } else {
+                            existing_pattern_masked.push_back(uniquePatternsMap.at(existing_idx)[frame]);
+                        }
+                    }
+                }
+
+
+                if (existing_pattern_masked == pattern_to_hash) {
+                    idx = existing_idx;
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                // Nouveau pattern
+                idx = next_pattern_idx++;
+                // On utilise le HASH du pattern MASQUÉ pour le tracking (uniqueHashes)
+                uniqueHashes[h] = idx; 
+                // On stocke le pattern BRUT (pat) dans la map pour la phase 2 (overlap)
+                uniquePatternsMap[idx] = move(pat); 
+            }
+
+            if (idx > 0xFFFF)
+                throw runtime_error("Pattern index exceeds 16-bit");
+
+            // Stockage de l'Index (16 bits, Little-Endian)
+            seq.push_back(uint8_t(idx & 0xFF));
+            seq.push_back(uint8_t((idx >> 8) & 0xFF));
+        }
+        sequenceBuffers.push_back(move(seq));
+    }
+
+    if (optimizationLevel != 0) {
+        // --- Phase 2: Optimisation du chevauchement (Glouton ou GA/SA) ---
+        auto initial_result = merge_ByteBlocks_greedy(uniquePatternsMap, patSize);
+        return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(initial_result)};
+
+    } else {
+        // --- Phase 2: Niveau 1 - Déduplication SANS chevauchement ---
+        int current_offset = 0;
+        for (const auto& pair : uniquePatternsMap) {
+            int pattern_idx = pair.first;
+            const ByteBlock& pattern_data = pair.second;
+
+            no_opt_result.optimized_heap.insert(no_opt_result.optimized_heap.end(), 
+                                                pattern_data.begin(), 
+                                                pattern_data.end());
+
+            no_opt_result.optimized_pointers[pattern_idx] = current_offset;
+            no_opt_result.optimized_block_order.push_back(pattern_idx);
+            current_offset += patSize;
+        }
+
+        return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(no_opt_result)};
+    }
+}
+
+
+/*
+
 ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activeRegs,
                                     int patSize, int optimizationLevel, bool useSilenceMasking) {
 
@@ -198,6 +451,7 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
         return {next_pattern_idx, move(sequenceBuffers), move(uniquePatternsMap), move(no_opt_result)};
     }
 }
+*/
 
 void replaceByOptimizedIndex(vector<ByteBlock>& sequenceBuffers,
                              const OptimizedResult& optimized_result) {
