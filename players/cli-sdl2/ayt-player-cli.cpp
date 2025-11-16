@@ -28,8 +28,10 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 using TWord = uint16_t;
+int verbosity = 1;
 
 // Helpers
 template <typename T> static inline T clampv(T v, T lo, T hi) {
@@ -564,14 +566,19 @@ public:
             return;
           }
         }
-        // Boucle sur les 14 registres (0 à 13) car AYT ne s'occupe que de
-        // ceux-là
-        for (int rr = 0; rr <= 12; ++rr) {
+        // Boucle sur les 14 registres (0 à 13) 
+        for (int rr = 0; rr <= 13; ++rr) {
           uint8_t vreg = P->GetRegFrame(rr, FCurFrame);
+          if (verbosity>1) std::cout <<  std::hex << std::setw(2) << std::setfill('0') << (int)vreg << " ";
+
           if (rr == 13 && vreg == 0xFF)
-            continue; // R13=0xFF est un skip (comme dans le code JS)
+            continue; // R13=0xFF est un skip en YM
           AY.WriteReg(rr, vreg);
+          
         }
+        
+
+        if (verbosity>1) std::cout << std::endl;
         FApplyRegs = false;
       }
 
@@ -642,6 +649,8 @@ static void PlayViaSDL(TAYTPlayer &Player, int SampleRate) {
                              std::string(SDL_GetError()));
   }
 
+  if (verbosity>1) std::cout << std::setw(2) << std::setfill('0');
+
   SDL_PauseAudioDevice(dev, 0);
 
   std::cin.get();
@@ -695,7 +704,6 @@ static int getArg(int argc, char **argv, const std::string &name) {
 // ========================
 int main(int argc, char **argv) {
 
-  int verbosity = 1;
 
   if (SDL_Init(SDL_INIT_AUDIO) < 0) {
     std::cerr << "Error: SDL_Init failed: " << SDL_GetError() << std::endl;
@@ -733,7 +741,7 @@ int main(int argc, char **argv) {
 
     if (getArg(argc, argv, "quiet") > 0)
       verbosity = 0;
-    // if (getArg(argc,argv,"v")>0) verbosity = 0;
+    if (getArg(argc,argv,"v")>0) verbosity ++;
 
     // Remplacement de TYMParser par TAYTParser
     TAYTParser parser;
