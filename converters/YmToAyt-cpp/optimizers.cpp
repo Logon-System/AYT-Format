@@ -18,9 +18,13 @@ int find_max_overlap(const ByteBlock& B1, const ByteBlock& B2, int ByteBlockSize
     return max_overlap;
 }
 
+
 OptimizedResult merge_ByteBlocks_greedy(const map<int, ByteBlock>& original_ByteBlocks,
                                                int ByteBlockSize) {
     OptimizedResult result;
+
+    if (original_ByteBlocks.empty())
+        return result;
 
     // Suivi des blocs déjà inclus dans le Heap
     map<int, bool> included;
@@ -28,72 +32,85 @@ OptimizedResult merge_ByteBlocks_greedy(const map<int, ByteBlock>& original_Byte
         included[pair.first] = false;
     }
 
-    // 1. Démarrer avec le premier bloc (nous choisissons B0 arbitrairement)
-    int current_ByteBlock_index = original_ByteBlocks.begin()->first;
-    const ByteBlock& first_ByteBlock = original_ByteBlocks.at(current_ByteBlock_index);
+    // Itérer sur tous les blocs pour s'assurer que même les séquences déconnectées sont incluses.
+    for (const auto& pair : original_ByteBlocks) {
+        int start_ByteBlock_index = pair.first;
+        
+        if (included[start_ByteBlock_index]) {
+            continue; // Déjà inclus
+        }
 
-    result.optimized_heap.insert(result.optimized_heap.end(), first_ByteBlock.begin(),
-                                 first_ByteBlock.end());
-    result.optimized_pointers[current_ByteBlock_index] = 0;
-    result.optimized_block_order.push_back(current_ByteBlock_index);
-    included[current_ByteBlock_index] = true;
+        // --- Démarrer une nouvelle séquence ---
+        int current_block_index = start_ByteBlock_index;
+        const ByteBlock& first_ByteBlock = original_ByteBlocks.at(current_block_index);
+        
+        // Le pointeur du premier bloc est la taille actuelle du Heap. 
+        // C'est l'endroit où le nouveau bloc va commencer.
+        int start_offset = result.optimized_heap.size(); 
 
-    // 2. Itération gloutonne pour greffer les autres blocs
-    int ByteBlocks_to_include = original_ByteBlocks.size() - 1;
+        // Ajouter le bloc complet au Heap (il n'y a pas de chevauchement au début de la séquence)
+        result.optimized_heap.insert(result.optimized_heap.end(), first_ByteBlock.begin(),
+                                     first_ByteBlock.end());
 
-    for (int i = 0; i < ByteBlocks_to_include; ++i) {
-        int best_overlap = -1;
-        int best_next_ByteBlock_index = -1;
+        // Enregistrer le pointeur de départ
+        result.optimized_pointers[current_block_index] = start_offset;
+        result.optimized_block_order.push_back(current_block_index);
+        included[current_block_index] = true;
+        
+        // --- Extension gloutonne de la séquence ---
+        bool extended = true;
+        while (extended) {
+            extended = false;
+            int best_overlap = 0;
+            int best_next_ByteBlock_index = -1;
 
-        // Le bloc de tête est le dernier ajouté à la séquence (End-of-Heap)
-        const ByteBlock& current_head = original_ByteBlocks.at(current_ByteBlock_index);
+            const ByteBlock& current_ByteBlock = original_ByteBlocks.at(current_block_index);
 
-        // Trouver le meilleur bloc non inclus à greffer sur le bloc de tête
-        for (const auto& pair : original_ByteBlocks) {
-            int next_index = pair.first;
-            const ByteBlock& next_ByteBlock = pair.second;
+            // Rechercher le meilleur chevauchement avec n'importe quel bloc restant
+            for (const auto& inner_pair : original_ByteBlocks) {
+                int next_index = inner_pair.first;
+                const ByteBlock& next_ByteBlock = inner_pair.second;
 
-            if (!included[next_index]) {
-                int overlap = find_max_overlap(current_head, next_ByteBlock, ByteBlockSize);
+                if (!included[next_index]) {
+                    int overlap = find_max_overlap(current_ByteBlock, next_ByteBlock, ByteBlockSize);
 
-                if (overlap > best_overlap) {
-      
-              best_overlap = overlap;
-                    best_next_ByteBlock_index = next_index;
+                    // Si on trouve un chevauchement, on le choisit
+                    if (overlap > best_overlap) {
+                        best_overlap = overlap;
+                        best_next_ByteBlock_index = next_index;
+                        extended = true;
+                    }
                 }
             }
+
+            if (extended) {
+                // Un chevauchement optimal a été trouvé. Fusionner les blocs.
+                const ByteBlock& best_next_ByteBlock =
+                    original_ByteBlocks.at(best_next_ByteBlock_index);
+
+                // Calculer l'index du pointeur du nouveau bloc : 
+                // Pointeur = Pointeur_précédent + (Taille_bloc - Overlap)
+                int new_pointer_index =
+                    result.optimized_pointers.at(current_block_index) + (ByteBlockSize - best_overlap);
+
+                // Ajouter la partie non chevauchante au Heap
+                result.optimized_heap.insert(result.optimized_heap.end(),
+                                             best_next_ByteBlock.begin() + best_overlap,
+                                             best_next_ByteBlock.end());
+
+                // Mettre à jour l'état
+                result.optimized_pointers[best_next_ByteBlock_index] = new_pointer_index;
+                result.optimized_block_order.push_back(best_next_ByteBlock_index);
+                included[best_next_ByteBlock_index] = true;
+                current_block_index = best_next_ByteBlock_index;
+            }
         }
-
-        if (best_next_ByteBlock_index != -1) {
-            const ByteBlock& best_next_ByteBlock =
-                original_ByteBlocks.at(best_next_ByteBlock_index);
-
-            // Calcul du nouveau pointeur
-            int new_pointer_index = result.optimized_pointers.at(current_ByteBlock_index) +
-                                    ByteBlockSize - best_overlap;
-
-            // Greffer le nouveau fragment au Heap
-            // int non_overlapping_length = ByteBlockSize - best_overlap;
-
-            result.optimized_heap.insert(result.optimized_heap.end(),
-                                         best_next_ByteBlock.begin() + best_overlap,
-                                         best_next_ByteBlock.end());
-
-            // Mettre à jour l'état
-            result.optimized_pointers[best_next_ByteBlock_index] = new_pointer_index;
-            result.optimized_block_order.push_back(best_next_ByteBlock_index);
-            included[best_next_ByteBlock_index] = true;
-            current_ByteBlock_index = best_next_ByteBlock_index;
-        } else {
-            // Aucun chevauchement trouvé. Démarrer une nouvelle séquence.
-            // (Dans cette approche gloutonne, on ne devrait pas arriver ici si les données sont
-            // très liées)
-            break;
-        }
+        // La boucle 'for' passe au prochain bloc non inclus.
     }
 
     return result;
 }
+
 
 
 // Fonction Coût : Calcule la taille des patterns pour un ordre donné
