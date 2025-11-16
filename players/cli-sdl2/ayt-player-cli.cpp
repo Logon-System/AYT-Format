@@ -9,6 +9,7 @@
 // Under Windows/Mingw:
 //  g++ -std=c++17 -O2 -pipe -s ayt-player-cli.cpp -o ayt-player.exe -lmingw32 -lSDL2main -lSDL2  -Wl,-Bstatic -lstdc++ -static-libgcc
 
+// TODO : use framerate fields
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -31,7 +32,9 @@
 #include <iomanip>
 
 using TWord = uint16_t;
+// Verbositt level. 0 = quiet. 2 = dumps registers while playing
 int verbosity = 1;
+bool enableHighPass=true;
 
 // Helpers
 template <typename T> static inline T clampv(T v, T lo, T hi) {
@@ -51,7 +54,7 @@ struct TAYTHeader {
   int FrameCount = 0;
   int LoopFrame = 0;
   std::vector<int> PresentRegs;
-  std::array<std::vector<uint8_t>, 16>
+  std::array<std::vector<uint8_t>, 14>
       Regs; // Registres [0..15][frame 0..FrameCount-1]
 };
 
@@ -63,7 +66,6 @@ struct TConstInit {
 class TAYTParser {
   std::ifstream F;
 
-  // Contenu binaire du fichier pour faciliter le parsing
   std::vector<uint8_t> FileData;
 
   uint16_t ReadU16LE(size_t off) const {
@@ -93,7 +95,7 @@ public:
     header.Magic = FileData[0];
     header.B0 = FileData[1];
     header.B1 = FileData[2];
-    header.N = FileData[3];
+    header.N = FileData[3]; // Pattern size
     header.PtrFirst = ReadU16LE(4);
     header.PtrLoop = ReadU16LE(6);
     header.PtrInit = ReadU16LE(8);
@@ -169,9 +171,6 @@ public:
         break;
       const int b = FileData[p++];
       constMap[a & 0xFF] = b & 0xFF;
-
-    //std::cout<< p << " R"<<a <<"="<< b<<std::endl;
-
     }
 
     // 6. Décompression/Expansion des données dans header.Regs
@@ -190,10 +189,6 @@ public:
     }
     const int c13 = constMap.count(13) ? constMap.at(13) : 0xFF;
     header.Regs[13].assign(header.FrameCount, c13);
-
-    // Les registres 14 et 15 ne sont pas utilisés dans AYT/YM
-    header.Regs[14].assign(header.FrameCount, 0);
-    header.Regs[15].assign(header.FrameCount, 0);
 
     size_t sp = 0; // Pointeur dans le buffer de séquence
     for (int b = 0; b < blocks; b++) {
@@ -244,10 +239,10 @@ public:
               << header.PresentRegs.size() << " regs)" << std::endl;
     std::cout << "Total Frames: " << header.FrameCount << "" << std::endl;
     std::cout << "Loop Frame: " << header.LoopFrame << "" << std::endl;
-    std::cout << "Present Registers (R): ";
-    for (int r : header.PresentRegs)
-      std::cout << r << " ";
-    std::cout << "" << std::endl;
+    std::cout << "Enabled Registers: ";
+
+    for (int r : header.PresentRegs) std::cout << r << " ";
+    std::cout << std::endl;
 
     std::cout << "MasterClock : " << std::fixed << header.masterClock << " Hz"
               << std::endl;
@@ -255,11 +250,9 @@ public:
 };
 
 // ========================
-// Cœur AY (TAYChip) - Identique à la version YM
-// (Pas de changement requis)
+// Cœur AY (TAYChip) 
 // ========================
 class TAYChip {
-  // ... (Corps de la classe TAYChip comme dans ymconsoleplayer.cpp) ...
   uint8_t R[16]{};
 
   int TonePeriod[3]{1, 1, 1};
@@ -462,7 +455,7 @@ public:
 };
 
 // ========================
-// High-pass 20 Hz (THighPass) - Identique
+// High-pass 20 Hz (THighPass) 
 // ========================
 struct THighPass {
   double Alpha{0.0};
@@ -487,14 +480,12 @@ struct THighPass {
 };
 
 // ========================
-// Player (TAYTPlayer)
-// Adapté pour utiliser TAYTParser
+// Player 
 // ========================
 class TAYTPlayer {
   const TAYTParser *P{nullptr};
   TAYChip AY;
-  int FFrameRate{50}; // Le format AYT ne stocke pas le frame rate, on prend
-                      // 50Hz par défaut
+  int FFrameRate{50};  // 50Hz par défaut
   int FMasterClock{1000000};
   int FFrameCount{0};
   int FLoopFrame{0};
@@ -512,7 +503,6 @@ class TAYTPlayer {
   std::atomic<bool> FIsPlaying{false};
 
 public:
-  // Le constructeur reçoit le TAYTParser au lieu du TYMParser
   TAYTPlayer(const TAYTParser *Parser, int SampleRate, int OverrideClock,
              bool UseYMDAC)
       : P(Parser), AY(UseYMDAC, OverrideClock > 0 ? OverrideClock : 1000000) {
@@ -593,7 +583,8 @@ public:
       float Lf = 0.f, Rf = 0.f;
       AY.MixSample(Lf, Rf);
       double Ld = double(Lf), Rd = double(Rf);
-      HP.Process(Ld, Rd);
+      if (enableHighPass)
+        HP.Process(Ld, Rd);
 
       int li = clampv(int(std::lround(Ld * 32767.0)), -32768, 32767);
       int ri = clampv(int(std::lround(Rd * 32767.0)), -32768, 32767);
@@ -613,11 +604,9 @@ public:
 };
 
 // ========================
-// Callback audio SDL - Identique
+// Callback audio SDL 
 // ========================
-// Utilise l'interface FillBufferPCM16 du player
 static void audioCallback(void *userdata, Uint8 *stream, int len) {
-  // Le player doit maintenant être TAYTPlayer
   TAYTPlayer *player = reinterpret_cast<TAYTPlayer *>(userdata);
   int frames_to_fill = len / sizeof(int16_t) / 2;
 
@@ -629,7 +618,7 @@ static void audioCallback(void *userdata, Uint8 *stream, int len) {
 }
 
 // ========================
-// SDL Audio Runner - Identique
+// SDL Audio Runner 
 // ========================
 static void PlayViaSDL(TAYTPlayer &Player, int SampleRate) {
   SDL_AudioSpec want, have;
@@ -648,8 +637,6 @@ static void PlayViaSDL(TAYTPlayer &Player, int SampleRate) {
     throw std::runtime_error("SDL_OpenAudioDevice failed: " +
                              std::string(SDL_GetError()));
   }
-
-  if (verbosity>1) std::cout << std::setw(2) << std::setfill('0');
 
   SDL_PauseAudioDevice(dev, 0);
 
@@ -691,9 +678,10 @@ static std::string getArgValue(int argc, char **argv, const std::string &name,
 
 static int getArg(int argc, char **argv, const std::string &name) {
   std::string key = "-" + name;
+  std::string key2 = "--" + name;
   int cnt = 0;
   for (int i = 1; i < argc; ++i) {
-    if (key == argv[i])
+    if (key == argv[i] || key2==argv[i])
       cnt++;
   }
   return cnt;
@@ -715,7 +703,7 @@ int main(int argc, char **argv) {
       std::cout
           << "Usage: " << (argc > 0 ? argv[0] : "ayt-player")
           << " <fichier.ayt> [--rate=48000] [--dac=ym|ay] [--clock=1773400] "
-             "[--quiet]"
+             "[--quiet] [-v] [--disable-high-pass]"
           << std::endl;
       SDL_Quit();
       return 1;
@@ -743,13 +731,19 @@ int main(int argc, char **argv) {
       verbosity = 0;
     if (getArg(argc,argv,"v")>0) verbosity ++;
 
+    if (getArg(argc,argv,"disable-high-pass")) enableHighPass = false;
+    if (getArg(argc,argv,"enable-high-pass")) enableHighPass = true;
+    
+
     // Remplacement de TYMParser par TAYTParser
     TAYTParser parser;
     parser.LoadFromFile(fileName);
 
-    if (verbosity > 0)
+    if (verbosity > 0) {
       parser.PrintHeader(); // Affiche les infos AYT
-
+      std::cout<<"High pass filter : " << (enableHighPass ? "Enable":"Disabled") << std::endl;
+      
+    }
     int EffClock = (ForceClk > 0) ? ForceClk : parser.header.masterClock;
 
     // Remplacement de TYMPlayer par TAYTPlayer
