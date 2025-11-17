@@ -253,9 +253,7 @@ public:
     std::cout << std::endl;
 
     std::cout << "- Pattern Size: " << (int)header.N << "" << std::endl;
-    std::cout << "- Blocks/Sequence words: "
-              << (header.T2 - header.PresentRegs.size()) / 2 << " (x"
-              << header.PresentRegs.size() << " regs)" << std::endl;
+    std::cout << "- Blocks/Sequence words: " << header.T2 << std::endl;
     std::cout << "- Loop Frame: " << header.LoopFrame << "" << std::endl;
 
     std::cout << "- MasterClock : " << std::fixed << header.masterClock << " Hz"
