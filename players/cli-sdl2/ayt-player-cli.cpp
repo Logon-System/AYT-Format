@@ -151,17 +151,22 @@ public:
     if (header.PtrFirst < pattDeb || size_t(header.PtrFirst) > fileSize)
       throw std::runtime_error("Invalid PattStart/PtrFirst values");
 
-    if (pattDeb + pattLen > fileSize)
-      throw std::runtime_error("Invalid fileSize");
-
+    if (pattDeb + pattLen > fileSize) {
+      std::cerr << "Invalid size: Pattern Start+Len=" << pattDeb << "+" << pattLen << "=" << pattDeb + pattLen << ">" << "filesize " << fileSize;
+      throw std::runtime_error("Invalid fileSize: pattern Start+len>filesize");
+    }
+    
     const uint8_t *patt = FileData.data() + pattDeb;
 
     const int seqWords = int(header.T2) - presentCount;
     const size_t seqLen = size_t(seqWords) * 2;
     const size_t seqStart = size_t(header.PtrFirst);
 
-    if (seqStart + seqLen > fileSize)
-      throw std::runtime_error("Invalid fileSize");
+    if (seqStart + seqLen > fileSize) {
+
+      std::cerr << "Invalid size: Sequence Start+Len=" << seqStart << "+" << seqLen << "=" << seqStart + seqLen << ">" << "filesize " << fileSize;
+      throw std::runtime_error("Invalid fileSize: SeqStart+seqLen > filesize");
+    }
 
     const uint8_t *seq = FileData.data() + seqStart;
 
@@ -706,6 +711,8 @@ int main(int argc, char **argv) {
     return 2;
   }
 
+  TAYTParser parser;
+
   try {
     if (argc < 2) {
       std::cout
@@ -746,7 +753,6 @@ int main(int argc, char **argv) {
       enableHighPass = true;
 
     // Parse AYT file
-    TAYTParser parser;
     parser.LoadFromFile(fileName);
 
     if (verbosity > 0) {
@@ -769,6 +775,8 @@ int main(int argc, char **argv) {
     return 0;
   } catch (const std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
+          parser.PrintHeader(); // Affiche les infos AYT
+
     SDL_Quit();
     return 2;
   }
