@@ -745,7 +745,7 @@ int main(int argc, char** argv) {
                 if (options.optimizationMethod == "sa") {
                     final_result = refine_order_with_simulated_annealing(
                         finalBuffers.optimizedOverlap, finalBuffers.patternMap, patternSize,
-                        optimization_running);
+                        options, optimization_running);
                 }
                 if (options.optimizationMethod == "ils") {
                     final_result = refine_order_with_ils(
