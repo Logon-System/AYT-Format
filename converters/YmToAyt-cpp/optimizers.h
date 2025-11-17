@@ -16,8 +16,7 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
 
 OptimizedResult refine_order_with_simulated_annealing(const OptimizedResult& glouton_result,
                                                       const map<int, ByteBlock>& original_patterns,
-                                                      int max_iterations, int patSize,
-                                                      bool& optimization_running);
+                                                      int patSize, bool& optimization_running);
 
 OptimizedResult refine_order_with_tabu_search(const OptimizedResult& glouton_result,
                                               const map<int, ByteBlock>& original_patterns,

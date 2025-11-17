@@ -171,8 +171,8 @@ bool parsePatternSize(const string& size_str, Options& options) {
         return true;
     }
     if (s == "auto") {
-        options.patternSizeMin = 4;
-        options.patternSizeMax = 64;
+        options.patternSizeMin = 8;
+        options.patternSizeMax = 96;
         options.patternSizeStep = 4;
         return true;
     }
@@ -362,7 +362,7 @@ int main(int argc, char** argv) {
         }
 
         if (arg == "-O2") {
-            options.optimizationMethod = "ga";
+            options.optimizationMethod = "sa";
             options.optimizationLevel = 2;
             continue;
         }
@@ -370,8 +370,7 @@ int main(int argc, char** argv) {
         if (arg == "-O3") {
             options.optimizationMethod = "ga";
             options.optimizationLevel = 2;
-            options.ga_NUM_GENERATION_MIN = 50000;
-            options.patternSizeMin = 1;
+            options.patternSizeMin = 2;
             options.patternSizeMax = 128;
             continue;
         }
@@ -745,7 +744,7 @@ int main(int argc, char** argv) {
 
                 if (options.optimizationMethod == "sa") {
                     final_result = refine_order_with_simulated_annealing(
-                        finalBuffers.optimizedOverlap, finalBuffers.patternMap, 1000, patternSize,
+                        finalBuffers.optimizedOverlap, finalBuffers.patternMap, patternSize,
                         optimization_running);
                 }
                 if (options.optimizationMethod == "ils") {
@@ -910,6 +909,8 @@ int main(int argc, char** argv) {
                 flags += "-" + options.targetParam;
             if (options.filterReg13)
                 flags += "-fr13";
+            if (options.useSilenceMasking)
+                flags += "-sopt";
             if (options.save_size)
                 flags += "-" + to_string(ayt_file.size());
 
