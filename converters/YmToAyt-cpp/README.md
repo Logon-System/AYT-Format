@@ -20,8 +20,8 @@ The tool uses an advanced pattern search and an optional Genetic Algorithm (GA) 
 
   * Converts standard `.YM` format files.
   * Supports multiple input files in a single run.
-  * Advanced pattern matching logic with customizable search ranges.
-  * Genetic Algorithm (GA) driven optimization for maximum compression.
+  * Advanced pattern matching logic.
+  * Meta heuristics optimization (Simulated anhealing, genetic algorithms) for maximum compression.
   * Platform-specific clock rate adjustment (e.g., Amstrad CPC, Atari ST).
   * Option to scale period, noise, and envelope values.
 
@@ -70,7 +70,7 @@ You can specify multiple files, or use wildcards
 
 ### Example 2: Genetic Algorithm Optimization
 
-By default, a fast optimization method is applied (glutony), but if you're seeking for smaller files, you can use a better, but sower method. The recommended method is using Genetic Algorithm. Enable the GA methof  with `-o ga option`, or simply `-O2` .
+By default, a fast optimization method is applied (greedy), but if you're seeking for smaller files, you can use a better, but sower method. The recommended method is using Genetic Algorithm. Enable the GA methof  with `-o ga option`, or simply `-O2` .
 
 ```
 ./ym2ayt -O2 my_track.ym
@@ -106,12 +106,12 @@ The two parameters (Mu and Lambda) for population size are used for the explorat
 | | | - `N`: Set minimum and maximum size to $N$ (`N:N/1`). | |
 | | | - `N:M`: Set size range from $N$ to $M$, with step 1 (`N:M/1`). | |
 | | | - `N:M/S`: Set size range from $N$ to $M$, with step $S$. | |
-| | | - `auto`: Equivalent to `4:64/4`. | |
+| | | - `auto`: Equivalent to `4:96/4`. | |
 | | | - `full`: Equivalent to `1:128/1`. | |
 | `-l` | `--only-evenly-looping` | Skip pattern sizes that do not loop at the beginning of a pattern (improves playback synchronization). | `false` |
-| `-O` | `--overlap-optim` | Overlap optimization method amng `none`, `gutony`, `ga`, `sa`, `tabu`, `ils`  | `glutony` |
+| `-O` | `--overlap-optim` | Overlap optimization method amng `none`, `gutony`, `ga`, `sa`, `tabu`, `ils`  | `greedy` |
 | `-O0` | | Shortcut for -O non | |
-| `-O1` | | Shortcut for -O glutony | |
+| `-O1` | | Shortcut for -O greedy | |
 | `-O2` | | Shortcut for -O ga | |
 | `-O3` | | Shortcut for -O ga -p full -ga-pop-size 50000 | |
 

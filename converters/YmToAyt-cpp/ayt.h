@@ -16,7 +16,7 @@ class ResultSequences {
     vector<ByteBlock> sequenced;
     // patterns are data blocs to be sent to a register
     map<int, ByteBlock> patternMap;   // Initial map of patterns
-    OptimizedResult optimizedOverlap; // Optimized by gluttony algorithm
+    OptimizedResult optimizedOverlap; // Optimized by greedy algorithm
 };
 
 // Structure containing result of converter

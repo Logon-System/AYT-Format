@@ -19,7 +19,7 @@ struct Options {
 
     bool useSilenceMasking = false;
     int optimizationLevel = 1;
-    std::string optimizationMethod = "gluttony";
+    std::string optimizationMethod = "greedy";
     std::string outputPath = "";
     std::string outputFile = "";
 

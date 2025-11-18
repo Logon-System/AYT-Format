@@ -783,7 +783,7 @@ int main(int argc, char** argv) {
                 cout << " Active Regs: " << numRegs << " Flags=0x" << hex << converter.activeRegs
                      << dec << endl;
                 cout << " Pattern Length: " << patternSize << endl;
-                cout << "Number of unique patterns" << finalBuffers.num_patterns << endl;
+                cout << " Unique patterns" << finalBuffers.num_patterns << endl;
 
                 cout << " Init Sequence: ";
                 for (const auto& pair : converter.initRegValues) {
@@ -819,8 +819,10 @@ int main(int argc, char** argv) {
                 addFinalSequence = 1;
             }
 
-            uint16_t seqTotalSize = finalBuffers.sequenced.size() *
-                                    (addFinalSequence + (finalBuffers.sequenced[0].size() >> 1));
+            uint16_t seqTotalSize = (interleavedData.size()>>1) + addFinalSequence*numRegs; //
+            // 
+            // Should be equal to 
+            //finalBuffers.sequenced.size() * (addFinalSequence + (finalBuffers.sequenced[0].size() >> 1));
 
             ayt_header[0] = (2 << 4); // Version 2.0
             //  Ayt_ActiveRegs: active reg (bit 2:reg 13...bit 15:reg 0), encoded in Big endian
@@ -828,12 +830,11 @@ int main(int argc, char** argv) {
             ayt_header[2] = reverse_bits(converter.activeRegs & 255);        // Active Regs R7-R0
 
             // uint8_t Ayt_PatternSize
-            ayt_header[3] = patternSize; // Num regs (vs reg patters)
-            // uint16_t Ayt_FirstSeqMarker ; Offset from
+            ayt_header[3] = patternSize; 
+            // Pointer to Sequence block 
             ayt_header[4] = uint8_t(offset_sequences & 0xFF);
             ayt_header[5] = uint8_t((offset_sequences >> 8) & 0xFF);
-            // Ayt_LoopSeqMarker ;
-            // Loop = beginning, can be changed (using data from YM?)
+            // Pointer to Loop Sequence 
             ayt_header[6] = uint8_t(offset_loop_sequence & 0xFF);
             ayt_header[7] = uint8_t((offset_loop_sequence >> 8) & 0xFF);
 
