@@ -147,7 +147,7 @@ static void printUsage(const char* prog) {
             "sa, ifs)"
          << endl
          << "  -Om, --pattern-masking       Enables masking for deduplication" << endl
-         << "  -Oz, --normalize-patterns    Replace ignored bits in regiters by 0s" << endl
+         << "  -Oz, --normalize-patterns    Replace ignored bits in regiters by 0s." << endl
          << "  -OO                          Shortcut for diabling all optimizations" << endl
          << "  -O1                          Shortcut for fast optimization" << endl
          << "  -O2                          Shortcut for slower, better optimization" << endl
@@ -183,13 +183,13 @@ bool parsePatternSize(const string& size_str, Options& options) {
         return true;
     }
 
-    options.sizeParam = s; // Sauvegarder la valeur brute
+    options.sizeParam = s; // Keep raw string
 
     try {
         size_t colon_pos = s.find(':');
         size_t slash_pos = s.find('/');
 
-        // 1. Gérer le Step (s'il existe)
+        // 1. Extract step (if available)
         string step_str = "1";
         if (slash_pos != string::npos) {
             step_str = s.substr(slash_pos + 1);
@@ -204,7 +204,7 @@ bool parsePatternSize(const string& size_str, Options& options) {
 
         // 2. Gérer Min et Max
         if (colon_pos == string::npos) {
-            // Un seul nombre N -> Min=N, Max=N
+            // Single number as parameter: force pattern size (Min=Max=N)
             int n = stoi(s);
             if (n < 1 || n > 256) {
                 cerr << "Pattern Size must be 1..256" << endl;
@@ -213,7 +213,7 @@ bool parsePatternSize(const string& size_str, Options& options) {
             options.patternSizeMin = n;
             options.patternSizeMax = n;
         } else {
-            // Deux nombres Min:Max
+            // Two numbers, defines a range (Min:Max)
             string min_str = s.substr(0, colon_pos);
             string max_str = s.substr(colon_pos + 1);
 
@@ -245,7 +245,7 @@ template <typename T>
 bool parseOptionArgument(const vector<string>& optionNames, T Options::*member, Options& options,
                          char** argv, int& i, int argc, T (*converter)(const string&)) {
     const string& arg = argv[i];
-    // Vérifie si l'argument actuel correspond à une des options attendues
+    // Check if parameter value is valid
     bool isOption = false;
     for (const auto& name : optionNames) {
         if (arg == name) {
@@ -254,10 +254,10 @@ bool parseOptionArgument(const vector<string>& optionNames, T Options::*member, 
         }
     }
     if (!isOption) {
-        return false; // Ce n'est pas cette option, on passe
+        return false; // Not matching
     }
 
-    // Parsing de l'argument
+    // Argument parsing
     if (i + 1 >= argc) {
         cerr << "Option " << arg << " requires an argument" << endl;
         return false;
@@ -273,6 +273,7 @@ bool parseOptionArgument(const vector<string>& optionNames, T Options::*member, 
     }
 }
 
+// Used for storing 'used registers' field in AYT header 
 static uint8_t reverse_bits(uint8_t byte) {
     uint8_t reversed = 0;
     for (int i = 0; i < 8; ++i) {
@@ -374,7 +375,6 @@ int main(int argc, char** argv) {
         }
 
         if (arg == "-O3") {
-//ca d            options.enableNormPatterns = true;
             options.enableMaskPatterns = true;
             options.patternSizeMin = 2;
             options.patternSizeStep = 1;
@@ -408,10 +408,9 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        /* ------------------------------------------------------------------------------------------------
-         */
-        /* Options nécessitant un argument (ou plus) */
-
+        // ------------------------------------------------------------------------------------------------
+        // Options requiring an argument (or more)
+        
         else if (arg == "-t" || arg == "--target") {
             if (i + 1 >= argc) {
                 cerr << "Option " << arg << " requires an argument" << endl;
@@ -435,7 +434,7 @@ int main(int argc, char** argv) {
                 return 1;
             }
             if (!parsePatternSize(argv[++i], options)) {
-                return 1; // Erreur gérée dans parsePatternSize
+                return 1; // Parse error
             }
             continue;
         }
@@ -443,7 +442,7 @@ int main(int argc, char** argv) {
         if (parseOptionArgument({"-sp", "--scale-period"}, &Options::periodCoef, options, argv, i,
                                 argc, &parseDouble)) {
             if (options.periodCoef <= 0.0) {
-                cerr << "Period coefficient must be > 0" << endl; // exception?
+                cerr << "Period coefficient must be > 0" << endl; // throw exception?
                 return 1;
             }
             continue;
@@ -589,7 +588,7 @@ int main(int argc, char** argv) {
 
             ymdata.readFrames(file);
 
-            // Check for potential anomalies in reg13 sequence
+            // Check for potential anomalies in reg13 sequence (non #FF repeated values )
             int r13_suspicious_values = ymdata.filterReg13(options.filterReg13);
             if (r13_suspicious_values > 0) {
                 if (options.filterReg13) {
@@ -655,7 +654,7 @@ int main(int argc, char** argv) {
             converter.activeRegs = analyze_data_buffers(
                 ymdata.rawRegisters, converter.initRegValues, options.exportAllRegs);
 
-            // devrait etre calculé avant
+            // TODO: should be computed earlier (in analyze_data_buffers)
             int numRegs = 0;
             for (int r = 0; r < 14; ++r) {
                 // Check if register is exported
@@ -852,11 +851,7 @@ int main(int argc, char** argv) {
             }
 
             uint16_t seqTotalSize = (interleavedData.size() >> 1) + addFinalSequence * numRegs; //
-            //
-            // Should be equal to
-            // finalBuffers.sequenced.size() * (addFinalSequence + (finalBuffers.sequenced[0].size()
-            // >> 1));
-
+          
             ayt_header[0] = (2 << 4); // Version 2.0
             //  Ayt_ActiveRegs: active reg (bit 2:reg 13...bit 15:reg 0), encoded in Big endian
             ayt_header[1] = reverse_bits((converter.activeRegs >> 8) & 255); // Active Regs R13-R8
