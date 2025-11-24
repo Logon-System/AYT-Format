@@ -3,7 +3,7 @@
 #include "typedefs.h"
 #include "optimizers.h"
 
-constexpr uint8_t final_sequence_values[3] = {0x00, 0x3F, 0xBF};
+constexpr uint8_t final_sequence_values[3] = {0x00, 0x3F, 0xBF}; // R*, R7,R13
 constexpr uint8_t final_sequence[16] = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0};
 
 const std::vector<int> songFrequencies = {50, 25, 60, 30, 100, 200, 300, 0};
@@ -35,4 +35,4 @@ class AYTConverter {
 };
 
 ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activeRegs, int patSize,
-                             int optimizationLevel,bool useSilenceMasking=false);
+                             const Options &options);

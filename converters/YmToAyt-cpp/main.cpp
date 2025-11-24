@@ -138,7 +138,7 @@ static void printUsage(const char* prog) {
          << endl
          << "  -sv, --scale-envelope F      Multiply tone periods (R0..R5) by F (e.g., 0.5,2)"
          << endl
-         << "  -t, --target ARCH            Name of the target architecture ("
+         << "  -t, --target ARCH            Name of target architecture ("
          << generate_platform_list() << ")" << endl
          << "  -c, --csv                    Export stats in CSV format" << endl
          << "  -R, --export--all-regs       Force exporting all registers, even constant ones"
@@ -146,7 +146,13 @@ static void printUsage(const char* prog) {
          << "  -O, --overlap-optim N        Overlap optimization method (none, ga, tabu, "
             "sa, ifs)"
          << endl
-         << "   --fur-filter                Apply repeated values fix in R13 sequences" << endl
+         << "  -Om, --pattern-masking       Enables masking for deduplication" << endl
+         << "  -Oz, --normalize-patterns    Replace ignored bits in regiters by 0s" << endl
+         << "  -OO                          Shortcut for diabling all optimizations" << endl
+         << "  -O1                          Shortcut for fast optimization" << endl
+         << "  -O2                          Shortcut for slower, better optimization" << endl
+         << "  -O3                          Shortcut for agressive optimization" << endl
+         << "   --r13-filter                Apply repeated values fix in R13 sequences" << endl
          << "  --ga-pop-size M L            Size of population Mu and Lambda" << endl
          << "  --ga-gen-min N               Minimum number of generations" << endl
          << "  --ga-gen-max N               Maximum number of generations" << endl
@@ -335,16 +341,11 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        if (arg == "--fur-filter") {
+        if (arg == "--r13-filter") {
             options.filterReg13 = true;
             continue;
         }
 
-        if (arg=="--useSilenceMasking") {
-            options.useSilenceMasking = true;
-            continue;
-        }
- 
         if (arg == "-x" || arg == "--extraFinalSequence") {
             options.extraFinalSequence = true;
             continue;
@@ -353,25 +354,57 @@ int main(int argc, char** argv) {
         // Shortcuts
         if (arg == "-O0") {
             options.optimizationLevel = 0;
+            options.optimizationMethod="none";
+            options.enableMaskPatterns = true;
             continue;
         }
 
         if (arg == "-O1") {
+            options.optimizationMethod="greedy";
             options.optimizationLevel = 1;
+            options.enableMaskPatterns = true;
             continue;
         }
 
         if (arg == "-O2") {
             options.optimizationMethod = "sa";
             options.optimizationLevel = 2;
+            options.enableMaskPatterns = true;
             continue;
         }
 
         if (arg == "-O3") {
-            options.optimizationMethod = "ga";
-            options.optimizationLevel = 2;
+//ca d            options.enableNormPatterns = true;
+            options.enableMaskPatterns = true;
             options.patternSizeMin = 2;
+            options.patternSizeStep = 1;
             options.patternSizeMax = 128;
+            options.optimizationMethod = "ga";
+            continue;
+        }
+
+        if (arg == "-Om" || arg == "--pattern-masking") {
+            options.enableMaskPatterns = true;
+            continue;
+        }
+
+        if (arg == "-Oz" || arg == "--normalize-patterns") {
+            options.enableNormPatterns = true;
+            continue;
+        }
+
+        if (arg == "--disable-pattern-masking") {
+            options.enableMaskPatterns = false;
+            continue;
+        }
+
+        if (arg == "--disable-normalize-patterns") {
+            options.enableNormPatterns = false;
+            continue;
+        }
+
+        if (arg == "--sort-patterns") {
+            options.sortPatterns = true;
             continue;
         }
 
@@ -457,7 +490,7 @@ int main(int argc, char** argv) {
                 options.optimizationLevel = 2;
                 continue;
             }
-            if (options.optimizationMethod == "glutonny") {
+            if (options.optimizationMethod == "greedy") {
                 options.optimizationLevel = 1;
                 continue;
             }
@@ -564,7 +597,7 @@ int main(int argc, char** argv) {
                          << " repeated values" << endl;
                 } else {
                     cerr << "/!\\ Warning! " << path << ": Detected " << r13_suspicious_values
-                         << " repeated values in R13 sequence. Try --fur-filter if you encounter "
+                         << " repeated values in R13 sequence. Try --r13-filter if you encounter "
                             "issues."
                          << endl;
                 }
@@ -574,7 +607,6 @@ int main(int argc, char** argv) {
             double periodCoef = options.periodCoef;
             double noiseCoef = options.noiseCoef;
             double envCoef = options.envCoef;
-            
 
             // Computes automatically coefficients to appy to registers, depending on YM masterClock
             // and target platform
@@ -679,8 +711,8 @@ int main(int argc, char** argv) {
 
                     try {
 
-                        currentBuffers = buildBuffers(regValueSet, converter.activeRegs, s,
-                                                      options.optimizationLevel,options.useSilenceMasking);
+                        currentBuffers =
+                            buildBuffers(regValueSet, converter.activeRegs, s, options);
 
                         currentTotal = currentBuffers.optimizedOverlap.optimized_heap.size();
 
@@ -819,10 +851,11 @@ int main(int argc, char** argv) {
                 addFinalSequence = 1;
             }
 
-            uint16_t seqTotalSize = (interleavedData.size()>>1) + addFinalSequence*numRegs; //
-            // 
-            // Should be equal to 
-            //finalBuffers.sequenced.size() * (addFinalSequence + (finalBuffers.sequenced[0].size() >> 1));
+            uint16_t seqTotalSize = (interleavedData.size() >> 1) + addFinalSequence * numRegs; //
+            //
+            // Should be equal to
+            // finalBuffers.sequenced.size() * (addFinalSequence + (finalBuffers.sequenced[0].size()
+            // >> 1));
 
             ayt_header[0] = (2 << 4); // Version 2.0
             //  Ayt_ActiveRegs: active reg (bit 2:reg 13...bit 15:reg 0), encoded in Big endian
@@ -830,11 +863,11 @@ int main(int argc, char** argv) {
             ayt_header[2] = reverse_bits(converter.activeRegs & 255);        // Active Regs R7-R0
 
             // uint8_t Ayt_PatternSize
-            ayt_header[3] = patternSize; 
-            // Pointer to Sequence block 
+            ayt_header[3] = patternSize;
+            // Pointer to Sequence block
             ayt_header[4] = uint8_t(offset_sequences & 0xFF);
             ayt_header[5] = uint8_t((offset_sequences >> 8) & 0xFF);
-            // Pointer to Loop Sequence 
+            // Pointer to Loop Sequence
             ayt_header[6] = uint8_t(offset_loop_sequence & 0xFF);
             ayt_header[7] = uint8_t((offset_loop_sequence >> 8) & 0xFF);
 
@@ -882,9 +915,8 @@ int main(int argc, char** argv) {
                 }
 
                 // push final sequence special values
-                ayt_file.push_back(0x00);
-                ayt_file.push_back(0x3F);
-                ayt_file.push_back(0xBF);
+                for (int k = 0; k < 3; k++)
+                    ayt_file.push_back(final_sequence_values[k]);
             }
 
             // init sequence
@@ -910,8 +942,14 @@ int main(int argc, char** argv) {
                 flags += "-" + options.targetParam;
             if (options.filterReg13)
                 flags += "-fr13";
-            if (options.useSilenceMasking)
-                flags += "-sopt";
+            if (options.enableNormPatterns)
+                flags += "-norm";
+            if (options.sortPatterns)
+                flags += "-sort";
+            if (options.enableMaskPatterns)
+                flags += "-mask";
+            if (options.optimizationMethod != "none")
+                flags += "-" + options.optimizationMethod;
             if (options.save_size)
                 flags += "-" + to_string(ayt_file.size());
 
@@ -934,10 +972,10 @@ int main(int argc, char** argv) {
                 cout << baseName << ";" << ymdata.header.masterClock << ";"
                      << ymdata.header.frequency << ";" << ymdata.header.frameCount << ";"
                      << ((double)ymdata.header.frameCount) / ymdata.header.frequency << ";"
-                     << ymdata.header.loopFrame << ";" << finalBuffers.sequenced.size() <<";"
-                   << hex << converter.activeRegs << dec  ;
-                
-                   for (int i = 13; i >= 0; i--) {
+                     << ymdata.header.loopFrame << ";" << finalBuffers.sequenced.size() << ";"
+                     << hex << converter.activeRegs << dec;
+
+                for (int i = 13; i >= 0; i--) {
                     cout << ";" << ((converter.activeRegs >> i) & 1);
                 }
                 cout << ";" << patternSize << ";" << finalBuffers.num_patterns << ";"

@@ -16,20 +16,28 @@ struct Options {
 
     // Add an extra sequence in case frames are divided evenly
     bool extraFinalSequence= false;
-
-    bool useSilenceMasking = false;
+    // Dedupliation using masks
+    bool enableMaskPatterns = false; 
+    // Replace masked bits by zeros
+    bool enableNormPatterns = false; 
+    // Fix R13 repeated values
+    bool filterReg13=false;
+    
     int optimizationLevel = 1;
+    // sort patterns by signifiance (force to true whent pattern deduplication is enabled)
+    bool sortPatterns = false; 
+
     std::string optimizationMethod = "greedy";
+
     std::string outputPath = "";
     std::string outputFile = "";
 
-
     std::string sizeParam = "4:64/4";
     std::string targetParam = "cpc";
+
     bool onlyDivisible = false;
     bool exportCsv = false;
     bool exportAllRegs = false; // Do not skip any register
-    bool filterReg13=false;
     bool save_size= false; // Use this option if you want to store the size of the file in the name
 
     // Genetic Algorithm Options
