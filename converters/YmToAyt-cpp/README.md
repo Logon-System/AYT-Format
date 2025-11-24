@@ -66,11 +66,11 @@ You can specify multiple files, or use wildcards
 ./ym2ayt -t cpc *.ym
 ```
 
+### Example 2: Advanced Optimization
 
+By default, a fast optimization method is applied (greedy), but if you're seeking for smaller files, you can use a better, but slower method. The recommended method is using Simulated Anhealing or Genetic Algorithm. Enable the GA method with `-O ga` option. Or you can simply use `-O2` option shortcut
 
-### Example 2: Genetic Algorithm Optimization
-
-By default, a fast optimization method is applied (greedy), but if you're seeking for smaller files, you can use a better, but sower method. The recommended method is using Genetic Algorithm. Enable the GA methof  with `-o ga option`, or simply `-O2` .
+However, if you're compressing audio data (using ZX0 for instance), you might get smaller files by *not* using a slow optimization method, and only using greedy. 
 
 ```
 ./ym2ayt -O2 my_track.ym
@@ -88,7 +88,9 @@ The two parameters (Mu and Lambda) for population size are used for the explorat
 ```bash
 ./ym2ayt -O ga --ga-pop-size 1000 4000 --ga-gen-max 2000 --ga-gen-ext 1000  -t atari my_track.ym
 ```
+## Masking 
 
+By default, an additional method is enabled. It results in sending random data when register values can be ignored. It provides better results, at it reduces the number of unique sequences. If works usually well, but if you hear sound artifacts (due to internal PSG counter not reset), you can force using 0s instead of random values with `-Oz` or `--norm-patterns`. Final files will be slightly bigger, but the songs should play without any artifacts. You also can completly force using strict deduplication method only  with `--disable-pattern-masking` 
 
 ## Options Reference
 
@@ -110,10 +112,13 @@ The two parameters (Mu and Lambda) for population size are used for the explorat
 | | | - `full`: Equivalent to `1:128/1`. | |
 | `-l` | `--only-evenly-looping` | Skip pattern sizes that do not loop at the beginning of a pattern (improves playback synchronization). | `false` |
 | `-O` | `--overlap-optim` | Overlap optimization method amng `none`, `gutony`, `ga`, `sa`, `tabu`, `ils`  | `greedy` |
-| `-O0` | | Shortcut for -O non | |
-| `-O1` | | Shortcut for -O greedy | |
-| `-O2` | | Shortcut for -O ga | |
-| `-O3` | | Shortcut for -O ga -p full -ga-pop-size 50000 | |
+| `-O0` | | Shortcut for -O none | |
+| `-O1` | | Shortcut for -O greedy -Om | |
+| `-O2` | | Shortcut for -O sa -Om | |
+| `-O3` | | Shortcut for -O ga -Om -p full -ga-pop-size 50000 | |
+| `-Om` | `--pattern-masking`| Enables pattern masking | |
+| `-Oz` | `--norm-patterns`| Enables normlizing pattern (usng 0s where ata can be masked) | |
+
 
 ### Sound Scaling Options
 
