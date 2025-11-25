@@ -36,7 +36,7 @@ A la sortie de la fonction *Ayt_Builder* :
 Si l'option **PlayerAcessByJP** vaut 1, il faut également définir l'adresse de retour du *player*.
 
 		ld ix,AYT_File			; AYT_File est l'adresse où se trouve le fichier AYT
-    ld iy,AYT_Buffer   ; AYT_Buffer est l'adresse d'un buffer en RAM
+        ld iy,AYT_Buffer   ; AYT_Buffer est l'adresse d'un buffer en RAM
 		ld de,AYT_Player		; AYT_Player est l'adresse où le player sera construit
 		ld hl,AYT_Player_Ret		; AYT_Player_Ret est l'adresse à laquelle le player revient
 		ld a,2				; A indique combien de fois la musique sera jouée
@@ -141,6 +141,7 @@ La CPU peut varier de 1 à 3 Nops selon les registres actifs.
 | CALL          | 12               | 442         | 337           | 397            |
 | CALL          | 13               | 472         | 353           | 397            |
 | CALL          | 14               | 501         | 369           | 397            |
+
 
 
 
