@@ -70,10 +70,9 @@ Here is the process to implement to call an initialization routine (PlayerAccess
 		ld a,2` ; A indicates how many times the music will be played.
 		call Ayt_Builder
 		ld(InitPlayer),bc ; Updating the initialization routine
-
 		...
 		...
-InitPlayer equ $+1
+		InitPlayer equ $+1
 		call 0 ; After the update, CALL will be on the initialization routine
 
 It is very **important to ensure that no interrupt occurs during the player call**. If you are not familiar with the **Z80A** interrupt system, you can use the **DI** instruction before calling the *player*.
@@ -143,6 +142,7 @@ The CPU usage can vary from 1 to 3 NOP instructions depending on the active regi
 | CALL          | 12               | 442         | 337           | 397            |
 | CALL          | 13               | 472         | 353           | 397            |
 | CALL          | 14               | 501         | 369           | 397            |
+
 
 
 
