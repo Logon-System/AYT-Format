@@ -6,7 +6,7 @@
 Pour un usage du *player* en **ROM**, une version spécifique de AYT_Builder a été créée. 
 Son usage et ses paramètres sont sensiblement différents de la version qui fonctionne en RAM.
 
-Si vous envisagez d'utiliser le player en RAM, je vous conseille d'utilier la version standard car elle occupe moins de place et est plus performante en CPU.
+Si vous envisagez d'utiliser le player en **RAM**, je vous conseille d'utilier la version standard car elle occupe moins de place et est plus performante en **CPU**.
 
 Sur CPC, les **ROMS** peuvent être activées aux adresses *0x0000-0x3FFF* et/ou *0xC000-0xFFFF*.
 Le player généré utilisera pour ses variables un buffer passé en paramètre à *Ayt_Builder*
@@ -141,6 +141,7 @@ La CPU peut varier de 1 à 3 Nops selon les registres actifs.
 | CALL          | 12               | 442         | 337           | 397            |
 | CALL          | 13               | 472         | 353           | 397            |
 | CALL          | 14               | 501         | 369           | 397            |
+
 
 
 
