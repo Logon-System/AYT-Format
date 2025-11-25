@@ -3,12 +3,12 @@
 ## ATTENTION !
 ### Ce document concerne l'utilisation de la version ROM de Ayt_builder
 
-Pour un usage du *player* en **ROM**, une version spécifique de AYT_Builder a été créée. 
-Son usage et ses paramètres sont sensiblement différents de la version qui fonctionne en RAM.
+Pour un usage du *player* en **ROM**, une version spécifique de *AYT_Builder* a été créée. 
+Son usage et ses paramètres sont sensiblement différents de la version qui fonctionne en **RAM**.
 
 Si vous envisagez d'utiliser le player en **RAM**, je vous conseille d'utilier la version standard car elle occupe moins de place et est plus performante en **CPU**.
 
-Sur CPC, les **ROMS** peuvent être activées aux adresses *0x0000-0x3FFF* et/ou *0xC000-0xFFFF*.
+Sur CPC, les **ROMS** peuvent être activées aux adresses **0x0000-0x3FFF** et/ou **0xC000-0xFFFF**.
 Le player généré utilisera pour ses variables un buffer passé en paramètre à *Ayt_Builder*
 
 ## Appel de Ayt_Builder sur CPC 464/664/6128
@@ -59,7 +59,7 @@ L'appel de la routine d'initialisation est donc **obligatoire** une seule fois a
 Voici le traitement à mettre en place pour appeler une routine d'initialisation (PlayerAccessByJP=0)
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
-    ld iy,AYT_Buffer   ; AYT_Buffer est l'adresse d'un buffer en RAM
+		ld iy,AYT_Buffer   ; AYT_Buffer est l'adresse d'un buffer en RAM
 		ld de,AYT_Player	; AYT_Player est l'adresse où le player sera construit
 		ld a,2			; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
@@ -141,6 +141,7 @@ La CPU peut varier de 1 à 3 Nops selon les registres actifs.
 | CALL          | 12               | 442         | 337           | 397            |
 | CALL          | 13               | 472         | 353           | 397            |
 | CALL          | 14               | 501         | 369           | 397            |
+
 
 
 
