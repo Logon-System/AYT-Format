@@ -6,11 +6,11 @@
 
 For using the *player* in **ROM**, a specific version of *AYT_Builder* has been created.
 
-Its usage and parameters are significantly different from the version that runs in *RAM*.
+Its usage and parameters are significantly different from the version that runs in **RAM**.
 
-If you plan to use the player in *RAM*, I recommend using the standard version because it takes up less space and is more *CPU* efficient.
+If you plan to use the player in **RAM**, I recommend using the standard version because it takes up less space and is more **CPU** efficient.
 
-On the CPC, **ROMs** can be activated at addresses *0x0000-0x3FFF* and/or *0xC000-0xFFFF*.
+On the CPC, **ROMs** can be activated at addresses **0x0000-0x3FFF** and/or **0xC000-0xFFFF**.
 The generated player will use a buffer passed as a parameter to *Ayt_Builder* for its variables.
 
 ## Calling Ayt_Builder on CPC 464/664/6128
@@ -143,6 +143,7 @@ The CPU usage can vary from 1 to 3 NOP instructions depending on the active regi
 | CALL          | 12               | 442         | 337           | 397            |
 | CALL          | 13               | 472         | 353           | 397            |
 | CALL          | 14               | 501         | 369           | 397            |
+
 
 
 
