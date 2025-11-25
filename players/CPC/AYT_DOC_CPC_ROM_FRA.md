@@ -14,7 +14,7 @@ Le player généré utilisera pour ses variables un buffer passé en paramètre 
 ## Appel de Ayt_Builder sur CPC 464/664/6128
 
 		ld ix,AYT_File		; AYT_File est l'adresse où se trouve le fichier AYT
-    ld iy,AYT_Buffer ; AYT_Buffer est l'adresse d'un buffer en RAM
+        ld iy,AYT_Buffer ; AYT_Buffer est l'adresse d'un buffer en RAM
 		ld de,AYT_Player	; AYT_Player est l'adresse en rom où le player sera exécuté
 		ld a,2			; A indique combien de fois la musique sera jouée
 		call Ayt_Builder
@@ -141,6 +141,7 @@ La CPU peut varier de 1 à 3 Nops selon les registres actifs.
 | CALL          | 12               | 442         | 337           | 397            |
 | CALL          | 13               | 472         | 353           | 397            |
 | CALL          | 14               | 501         | 369           | 397            |
+
 
 
 
