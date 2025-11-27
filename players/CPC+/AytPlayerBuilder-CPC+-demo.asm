@@ -38,7 +38,7 @@ StartExample
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Address where Player is built
 		ld bc,#0101		; Asic io connected at entry, connected at exit of player
-		ld a,2			; Nb of loop for the music
+		ld a,100			; Nb of loop for the music
     if PlayerAccessByJP			; Builder option for JP Method needs the address return of player.
 		ld hl,AYT_Player_Ret	; Ptr where player come back in MyProgram
     endif
@@ -133,5 +133,8 @@ Asic_Tab_Prbs
 ;; FILE AYT 
 ;;**********************************************************************************************************************************************
 		org AYT_File
-		incbin "../../ayt-files/still_scrolling.ayt"
-
+;;		incbin "../../MUSIQUES/MED/pirate_chocolat.ayt"
+;;		incbin "../../MUSIQUES/MED/my-ai-is-dumb-fixed.ayt"
+;		incbin "../../MUSIQUES/Tom&JerryAltMSX.ayt"
+;		incbin "../../MUSIQUES/3D Rotate - X-agon - X-agon_of_Phantasy-For-all2.ayt"
+		incbin "MUSIQUES/eleccity.ayt"
