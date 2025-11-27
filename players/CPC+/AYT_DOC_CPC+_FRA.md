@@ -90,15 +90,8 @@ Les utilisateurs ayant besoin que le player restitue une autre rom que 0 et/ou u
 
 
 #### Player en ROM
-Actuellement le **player** est conçu pour une utilisation en **RAM**. 
-Il utilise le principe d'auto modification de son propre code objet pour gérer ses variables.
-C'est le cas pour la mise à jour du *pointeur de séquences* et du *compteur de pattern*, mais aussi du registre Z80A **SP** lorsque le *player* est appelé avec la méthode "CALL" (voir option **PlayerAccessByJP**).
-
-Si vous projetez d'utiliser le player généré dans une **ROM**, la mise à jour du *builder* n'est pas trop complexe à réaliser.
-
-Une version ROM sera néanmions publiée si il existe une demande pour ça. 
-Il faut cependant noter que cette version perdra 6 à 9 nops de CPU (selon l'option **PlayerAccessByJP equ 0**) et qu'il faudra réserver 3 à 5 octets en ram pour y loger les variables.
-
+Cette version du **builder** est prévue pour créer un **player** qui fonctionne en **RAM**. 
+Si vous souhaitez utiliser le format **AYT** à partir d'un player en **ROM**, je vous invite à consulter le document **AYT_DOC_CPC+_ROM_FRA.md**
 
 ### Initialisation
 Si le compresseur identifie des registres dit *inactifs*, ils sont exclus des données **AYT** mais nécessitent néanmoins une initialisation préalable.
