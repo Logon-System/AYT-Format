@@ -74,7 +74,6 @@ Ce buffer contient les variable en **RAM** qui permettent le fonctionnement du p
 Etant donné que cette version du player est destinée à fonctionner en **ROM**, l'adresse de ce buffer doit respecter les règles suivantes :
 - débuter 7 octets avant le début de la **ROM** (car la liste DMA a uniquement besoin d'être écrite par le player et cela peut se faire en overlay).
 - ne jamais débuter dans l'espace de la **ROM**
-
 Exemples :
 - Si votre **ROM** est située entre **0xC000 et 0xFFFF**, alors l'adresse maximum pour déclarer l'adresse du buffer est 0xC000-7=**0xBFF9**
 - Si votre **ROM** est située entre **0x0000 et 0x3FFF**, alors la première adresse possible pour le buffer est **0x4000** 
@@ -209,7 +208,6 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
-
 
 
 
