@@ -7,7 +7,7 @@
 ;;**********************************************************************************************************************************************
 ;;==============================================================================================================================================
 ;;----------------------------------------------------------------------------------------------------------------------------------------------
-AYT_Player	equ #E000+800		; Address for player created by builder (131 to 169 bytes according AYT file & Player settings)
+AYT_Player	equ #E000+800		; Address for player created by builder 
 AYT_Buffer	equ #F000+1600		; Buffer Adresse for Variables & Dma list
 AYT_Builder	equ #200		; Builder can be deleted once AYT file is initialised and player created.
 AYT_File	equ #1000		; Address of AYT file in memory
@@ -32,7 +32,7 @@ StartExample
 		call Asic_Unlock	; ASIC page must be unlocked!!
 		;
 		;-------------------------------------------------------------------------------------------------------------------------------
-		; Build the player routine (needs 155 to 169 bytes, and 34 bytes more if Ay Init is allocated by Builder) 
+		; Build the player routine
 		;-------------------------------------------------------------------------------------------------------------------------------
 		;
 		ld ix,AYT_File		; Ptr on AYT_File
@@ -134,4 +134,5 @@ Asic_Tab_Prbs
 ;;		incbin "../../MUSIQUES/MED/pirate_chocolat.ayt"
 ;;		incbin "../../MUSIQUES/MED/my-ai-is-dumb-fixed.ayt"
 ;		incbin "../../MUSIQUES/3D Rotate - X-agon - X-agon_of_Phantasy-For-all2.ayt"
+
 		incbin "MUSIQUES/eleccity.ayt"
