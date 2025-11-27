@@ -135,6 +135,6 @@ Asic_Tab_Prbs
 		org AYT_File
 ;;		incbin "../../MUSIQUES/MED/pirate_chocolat.ayt"
 ;;		incbin "../../MUSIQUES/MED/my-ai-is-dumb-fixed.ayt"
-;		incbin "../../MUSIQUES/Tom&JerryAltMSX.ayt"
 ;		incbin "../../MUSIQUES/3D Rotate - X-agon - X-agon_of_Phantasy-For-all2.ayt"
 		incbin "MUSIQUES/eleccity.ayt"
+
