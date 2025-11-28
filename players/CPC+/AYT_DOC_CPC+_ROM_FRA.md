@@ -71,12 +71,12 @@ Il est donc judicieux d'éviter autant que possible de placer le fichier dans la
 ### Paramètre IY : Adresse d'un buffer en RAM 
 Le registre IY doit contenir l'adresse d'un buffer de 38 octets initalisés à 0 (DS 38,0) (ou 36 octets si l'option **PlayerAccessByJP** vaut 1 (voir chapitre suivant)) .
 Ce buffer contient les variable en **RAM** qui permettent le fonctionnement du player en **ROM**, de même que la liste DMA nécessaire à l'ASIC pour mettre à jour les registres AY.
-Etant donné que cette version du player est destinée à fonctionner en **ROM**, l'adresse de ce buffer doit respecter les règles suivantes :
-- débuter 7 octets avant le début de la **ROM** (car la liste DMA a uniquement besoin d'être écrite par le player et cela peut se faire en overlay).
-- ne jamais débuter dans l'espace de la **ROM**
+Etant donné que cette version du player est destinée à fonctionner en **ROM**, l'adresse de ce buffer ne jamais se trouver dans l'espace de la **ROM**
+Par ailleurs, il est nécessaire de veiller à ce que l'adresse ne franchisse pas une frontière de page de 256 octets. 
 Exemples :
-- Si votre **ROM** est située entre **0xC000 et 0xFFFF**, alors l'adresse maximum pour déclarer l'adresse du buffer est 0xC000-7=**0xBFF9**
-- Si votre **ROM** est située entre **0x0000 et 0x3FFF**, alors la première adresse possible pour le buffer est **0x4000** 
+- Si votre **ROM** est située entre **0xC000 et 0xFFFF**, alors l'adresse maximum pour déclarer l'adresse du buffer est 0xC000-38=**0xBFDA**
+- Si votre **ROM** est située entre **0x0000 et 0x3FFF**, alors la première adresse possible pour le buffer est **0x4000**
+- Vous ne devez pas placer le buffer en **0x41FE** car il va déborder dans la page de 256 octets suivante en **0x4200**.
 
 ### Options de compilation
 #### PlayerAccessByJP
@@ -208,6 +208,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
 
 
 
