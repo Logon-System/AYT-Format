@@ -83,7 +83,7 @@ It is therefore advisable to avoid placing the file in the Asic zone if the Asic
 The IY register must contain the address of a 38-byte buffer initialized to 0 (DS 38,0) (or 36 bytes if the **PlayerAccessByJP** option is set to 1 (see next chapter)).
 This buffer contains the variables in **RAM** that allow the player to function in **ROM**, as well as the DMA list required by the ASIC to update the AY registers.
 Since this version of the player is designed to run in **ROM**, the address of this buffer must never be located within the **ROM** space.
-Furthermore, it is necessary to ensure that the address does not cross a **256-bytes page boundary**.
+Furthermore, it is necessary to ensure that the address does not cross a **256-byte page boundary**.
 
 Examples:
 - If your **ROM** is located between **0xC000 and 0xFFFF**, then the maximum address for declaring the buffer address is 0xC000-38=**0xBFDA**
@@ -227,5 +227,6 @@ The table below shows *player* performance between 10 and 14 active registers fo
 | CALL          | NON OPTIMAL      | 12               | 244         | 242           | 533            |
 | CALL          | NON OPTIMAL      | 13               | 256         | 248           | 533            |
 | CALL          | NON OPTIMAL      | 14               | 268         | 254           | 533            |
+
 
 
