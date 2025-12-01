@@ -24,6 +24,7 @@ Sur les machines **"CPC+"** de Amstrad, il y a plusieurs paramètres liés aux s
 		call Ayt_Builder
 
 Le buffer en RAM devra avoir la taille suivante :
+
 		AYT_Buffer	ds 38,0		; 38 octets à 0 lorsque **PlayAccessByJP==0**
 		ou
 		AYT_Buffer 	ds 36,0		; 36 octets à 0 lorsque **PlayAccessByJP==1**
@@ -209,6 +210,7 @@ Le tableau ci-dessous détaille les performances du *player* entre 10 et 14 regi
 
 
  
+
 
 
 
