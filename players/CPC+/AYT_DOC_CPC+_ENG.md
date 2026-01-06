@@ -100,14 +100,8 @@ Users who need the player to restore a different ROM number and/or mapping (othe
 | 1.0.1  | 1.1   | 0.0.0 to 1.1.1  | **#B8** to #BF  | ON            | 0 to 7 at #0000 |
 
 #### Player in ROM
-Currently, the **player** is designed for use in **RAM**.  
-It relies on *self-modifying code* to manage its internal variables.  
-This mechanism is used for updating the *sequence pointer* and *pattern counter*, and also the Z80A **SP** register when the *player* is called using the “CALL” method (see the **PlayerAccessByJP** option).  
-
-If you plan to use the generated player in a **ROM**, modifying the *builder* to support this is not too complex.  
-
-However, a ROM-compatible version will be released if there is sufficient demand.  
-Note that this version will lose between **6 and 9 NOPs** of CPU time (depending on **PlayerAccessByJP equ 0**) and will require reserving **3 to 5 bytes** of RAM to store its variables.
+This version of the builder is designed to create a player that runs in **RAM**. 
+If you wish to use the AYT format from a **ROM** player, please refer to the **AYT_DOC_CPC+_ROM_ENG.md** document.
 
 ### Initialization
 If the compressor identifies certain *inactive* registers, they are excluded from the **AYT** data but still require prior initialization.
@@ -194,4 +188,5 @@ The table below shows *player* performance between 10 and 14 active registers fo
 | CALL | NON OPTIMAL | 12 | 220 | 214 | 612 |
 | CALL | NON OPTIMAL | 13 | 232 | 222 | 612 |
 | CALL | NON OPTIMAL | 14 | 244 | 230 | 612 |
+
 
