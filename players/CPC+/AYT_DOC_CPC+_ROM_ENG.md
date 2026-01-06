@@ -28,7 +28,7 @@ On Amstrad **"CPC+"** machines, there is an additional parameter related to the 
 The RAM buffer must have the following size:
 
 		AYT_Buffer	ds 38,0		; 38 bytes zeroed when **PlayAccessByJP==0**
-		ou
+		or
 		AYT_Buffer 	ds 36,0		; 36 bytes zeroed when **PlayAccessByJP==1**
 
 There are some constraints inherent to the space occupied by the special I/O page of the “Plus,” referred to in this document as the **Asic page**.
@@ -218,6 +218,7 @@ The table below shows *player* performance between 10 and 14 active registers fo
 | CALL          | NON OPTIMAL      | 12               | 244         | 242           | 533            |
 | CALL          | NON OPTIMAL      | 13               | 256         | 248           | 533            |
 | CALL          | NON OPTIMAL      | 14               | 268         | 254           | 533            |
+
 
 
 
