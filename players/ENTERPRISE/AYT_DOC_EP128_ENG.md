@@ -76,9 +76,9 @@ intvect
 		if PlayerAccessByJPBuilder
 			jp AYT_Player		; jump to the player			
 AYT_Player_Ret		ld sp,0			; address return of the player
-	        else
+		else
 			call AYT_Player		; call player
-   		endif
+		endif
 		ld a,#30			; Acq INT 1 (Nick Int) via DAVE register
 		out (#b4),a
 		ei			
