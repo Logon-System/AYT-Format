@@ -64,11 +64,6 @@ To call an initialization routine, use:
 ## Player Call Frequency
 The *player* is usually called in sync with the screen refresh rate.  
 
-Pour tester la Vsync à partir du processeur vidéo, il est nécessaire de définir un signal d'interruption dans le LPB (Line parameter Block) de la LPT (Line Parameter Table) qui définit la structure du frame.
-Je ne vais pas rentrer dans le détail de la structuration d'un LPT, car ça dépasse le cadre de ce document.
-Il faut cependant retenir qu'une interruption peut être générée par le processeur vidéo (via le LPB d'une ligne, par exemple la VSYNC) et est traité via un registre du processeur sonore (qui centralise la gestion des interruptions). 
-Dans l'exemple ci-desssous, "intvect" est appelé à partir de #38 (mode IM 1) 
-
 To test Vsync from the video processor, it's necessary to define an interrupt signal in the LPB (Line Parameter Block) of the LPT (Line Parameter Table), which defines the video frame structure.
 
 I won't go into the details of LPT structure, as it's beyond the scope of this document.
