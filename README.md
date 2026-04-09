@@ -5,6 +5,8 @@ It is a compact and simple format usable by any program requiring high **CPU** p
 This format is intended for all platforms using an ***AY-3-8910/AY-3-8912*** (General Instrument) sound processor or a compatible chip (***YM-2149*** from Yamaha). 
 Several authoring tools and players have been developed and tested for the following platforms: ***CPC***, ***CPC+***, ***MSX***, ***ZX 128***, ***VG5000 (VG5210)***.
 
+It is also capable of supporting sound data for Dave, the sound processor of the ***ENTERPRISE***.
+
 ![Image Presentation CPC+](./images/AYTPRES1.jpg)
 
 # Principle
