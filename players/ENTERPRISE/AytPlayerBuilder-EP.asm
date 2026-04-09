@@ -76,7 +76,7 @@
 ;; Software simulation of these envelopes can be very CPU-intensive. 
 ;; Several solutions exist, depending on the desired precision. 
 ;; It's possible to use the Dave interrupt at 1 kHz (20 interrupts per frame), but this requires software smoothing (via a slope adder) to handle the amplitude 
-;; updates for the channel(s) involved. It's also possible to use Nick (the sound processor) to generate interrupts every two lines, but this comes at the cost 
+;; updates for the channel(s) involved. It's also possible to use Nick (the video processor) to generate interrupts every two lines, but this comes at the cost 
 ;; of a fairly large Line Parameter Table (LPT).
 ;;
 ;; Consequently, I converted and adapted the AYT data (without altering its structure) to allow for the rapid processing of YM data intended for AY-3-891x 
