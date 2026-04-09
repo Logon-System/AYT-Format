@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>YM2AYT v9.5.2 - DAVE FULL LOGS & UI</title>
+    <style>
+        body { background:#0e0f12; color:#e6e8ee; font-family:sans-serif; padding:20px; text-align:center; }
+        .card { background:#151821; border:1px solid #202433; border-radius:12px; padding:20px; width:850px; margin:auto; }
+        #drop-zone { border:2px dashed #4f8cff; padding:40px; border-radius:12px; background:#0f1219; cursor:pointer; margin:20px 0; transition: 0.2s; }
+        #drop-zone.hover { background: #1a1f2e; border-color: #669eff; box-shadow: 0 0 15px rgba(79, 140, 255, 0.3); }
+        #log { background:#000; color:#00ff00; font-family:monospace; font-size:11px; padding:15px; height:350px; overflow-y:auto; text-align:left; white-space:pre-wrap; margin-bottom: 20px; border: 1px solid #333; }
+        .btn { background: #4f8cff; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none; margin: 0 auto; text-decoration: none; }
+        .btn:hover { background: #3c73d7; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>YM → AYT (DAVE v9.5.2 - 10 Flux)</h2>
+    <div id="drop-zone">GLISSE LE YM6 ICI</div>
+    <div id="log">> Prêt. En attente d'un fichier...</div>
+    <a id="save-btn" class="btn">SAUVEGARDER LE FICHIER AYT</a>
+</div>
+
+<script>
+const DAVE_VOL_LUT = [0, 1, 2, 3, 4, 6, 8, 11, 16, 21, 28, 36, 44, 52, 58, 63];
+const logEl = document.getElementById('log');
+const saveBtn = document.getElementById('save-btn');
+const dropZone = document.getElementById('drop-zone');
+let currentBlobUrl = null;
+
+function log(m) { logEl.textContent += "> " + m + "\n"; logEl.scrollTop = logEl.scrollHeight; }
+function makeKey(u8, start, len){ let s=''; for(let i=0;i<len;i++) s+=String.fromCharCode(u8[start+i]); return s; }
+
+// --- GESTION VISUELLE DU DRAG N DROP ---
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('hover'); });
+dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('hover'); });
+
+function buildOverlappedPack(uniques, N){
+    if (uniques.length===0) return { pack:new Uint8Array(0), offsets:[] };
+    const used=new Array(uniques.length).fill(false);
+    const buckets=Array.from({length:256},()=>[]);
+    for(let i=0;i<uniques.length;i++) if(uniques[i].length>0) buckets[uniques[i][0]].push(i);
+    let pack=uniques[0].slice(); const offsets=new Array(uniques.length).fill(0);
+    offsets[0]=0; used[0]=true; let currLen=N; let placed=1;
+    while(placed<uniques.length){
+        const tail=pack.slice(currLen-N,currLen); let bestJ=-1,bestK=0;
+        for(let k=N-1;k>=1;k--){
+            const list=buckets[tail[N-k]]; if(!list)continue;
+            for(let j of list){
+                if(used[j])continue; const u=uniques[j]; let ok=true;
+                for(let q=0;q<k;q++) if(u[q]!==tail[N-k+q]){ok=false;break;}
+                if(ok){bestJ=j;bestK=k;break;}
+            }
+            if(bestJ>=0)break;
+        }
+        if(bestJ<0){
+            let j=-1; for(let t=0;t<uniques.length;t++) if(!used[t]){j=t;break;}
+            if(j===-1)break; offsets[j]=currLen;
+            const np=new Uint8Array(currLen+N); np.set(pack); np.set(uniques[j],currLen);
+            pack=np; currLen+=N; used[j]=true; placed++;
+        }else{
+            offsets[bestJ]=currLen-bestK; const np=new Uint8Array(currLen+(N-bestK));
+            np.set(pack); np.set(uniques[bestJ].slice(bestK),currLen);
+            pack=np; currLen+=(N-bestK); used[bestJ]=true; placed++;
+        }
+    }
+    return { pack, offsets };
+}
+
+function buildInterleavedMarkedMem(markedPer){
+    const pos=new Array(markedPer.length).fill(0); const out=[];
+    let remaining=true; while(remaining){ remaining=false;
+        for(let i=0;i<markedPer.length;i++){
+            if(pos[i]<markedPer[i].length){ out.push(markedPer[i][pos[i]], markedPer[i][pos[i]+1]); pos[i]+=2; remaining=true; }
+        }
+    }
+    return new Uint8Array(out);
+}
+
+dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('hover');
+    saveBtn.style.display = 'none';
+    logEl.textContent = ""; 
+    if(currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+
+    const file = e.dataTransfer.files[0];
+    const buffer = await file.arrayBuffer();
+    const data = new Uint8Array(buffer);
+    const dv = new DataView(buffer);
+
+    log(`Fichier source : ${file.name} (${data.length} octets)`);
+
+    let off = 12;
+    const frameCount = dv.getUint32(off, false); off += 4;
+    const songAttr = dv.getUint32(off, false); off += 4;
+    const digicnt = dv.getUint16(off, false); off += 2; off += 10;
+    const future = dv.getUint16(off, false); off += 2;
+    const interleaved = (songAttr & 1) === 1; off += future;
+    for(let i=0; i<digicnt; i++) off += 4 + dv.getUint32(off, false);
+    const skip = () => { while(data[off] !== 0) off++; off++; }; skip(); skip(); skip();
+
+    log(`Frames detectées : ${frameCount}`);
+
+    const regs = Array.from({length:16}, () => new Uint8Array(frameCount));
+    if (interleaved) { for(let r=0; r<16; r++) for(let f=0; f<frameCount; f++) regs[r][f] = data[off++]; }
+    else { for(let f=0; f<frameCount; f++) for(let r=0; r<16; r++) regs[r][f] = data[off++]; }
+
+    let streams = Array.from({length: 10}, () => new Uint8Array(frameCount));
+    for (let f = 0; f < frameCount; f++) {
+        for (let i = 0; i < 6; i++) streams[i][f] = regs[i][f]; 
+        streams[6][f] = DAVE_VOL_LUT[regs[8][f] & 0x0F];       
+        streams[7][f] = DAVE_VOL_LUT[regs[9][f] & 0x0F];       
+        streams[8][f] = DAVE_VOL_LUT[regs[10][f] & 0x0F];      
+        let r7 = regs[7][f];
+        let vA = (r7 & 0x08) ? 0 : (regs[8][f] & 0x0F);
+        let vB = (r7 & 0x10) ? 0 : (regs[9][f] & 0x0F);
+        let vC = (r7 & 0x20) ? 0 : (regs[10][f] & 0x0F);
+        streams[9][f] = DAVE_VOL_LUT[Math.max(vA, vB, vC)];    
+    }
+
+    const bitPos = [15, 14, 13, 12, 11, 10, 7, 6, 5, 4];
+    let mask16 = 0, activeStreams = [], fluxA8Idx = -1;
+    for(let i=0; i<10; i++) {
+        if(streams[i].some(v => v !== 0) || i >= 6) { 
+            if(i === 6) fluxA8Idx = activeStreams.length;
+            activeStreams.push(streams[i]);
+            mask16 |= (1 << bitPos[i]);
+        }
+    }
+    const maskLSB = mask16 & 0xFF, maskMSB = (mask16 >> 8) & 0xFF;
+    log(`Registres actifs : ${activeStreams.length} / 10`);
+    log(`Masque DAVE : ${maskMSB.toString(16).padStart(2,'0')}${maskLSB.toString(16).padStart(2,'0')}`);
+
+    let bestN = 48, minSize = Infinity;
+    log("Recherche du meilleur N...");
+    for(let N=16; N<=128; N+=2){
+        const map=new Map(), uniques=[];
+        const nbB = Math.floor(frameCount / N);
+        for(let s of activeStreams){
+            for(let b=0; b<nbB; b++){
+                const key=makeKey(s, b*N, N);
+                if(!map.has(key)){ map.set(key,1); uniques.push(s.slice(b*N, b*N+N)); }
+            }
+        }
+        const { pack } = buildOverlappedPack(uniques, N);
+        let currentSize = 14 + pack.length + (activeStreams.length * nbB * 2) + (activeStreams.length * 2) + 2 + 5;
+        if(currentSize < minSize){ 
+            minSize = currentSize; 
+            bestN = N; 
+            log(`  -> Nouveau meilleur N : ${bestN} (Taille est. : ${minSize} bytes)`);
+        }
+    }
+
+    const map=new Map(), uniques=[];
+    const nbBlocks = Math.floor(frameCount / bestN);
+    const markedPer = Array.from({length: activeStreams.length}, () => new Uint8Array(nbBlocks * 2));
+    for(let i=0; i<activeStreams.length; i++){
+        for(let b=0; b<nbBlocks; b++){
+            const key = makeKey(activeStreams[i], b*bestN, bestN);
+            if(!map.has(key)){ map.set(key, uniques.length); uniques.push(activeStreams[i].slice(b*bestN, b*bestN+bestN)); }
+        }
+    }
+    const { pack, offsets } = buildOverlappedPack(uniques, bestN);
+    for(let i=0; i<activeStreams.length; i++){
+        for(let b=0; b<nbBlocks; b++){
+            const offVal = offsets[map.get(makeKey(activeStreams[i], b*bestN, bestN))];
+            markedPer[i][b*2] = offVal & 0xFF;
+            markedPer[i][b*2+1] = (offVal >> 8) & 0xFF;
+        }
+    }
+
+    const interleave = buildInterleavedMarkedMem(markedPer);
+    const packStart = 14;
+    const packLen = pack.length;
+    const seqqDeb = packStart + packLen;
+
+    let header = [0x20, maskLSB, maskMSB, bestN, seqqDeb&255, seqqDeb>>8, seqqDeb&255, seqqDeb>>8, 0, 0, (interleave.length/2+activeStreams.length)&255, (interleave.length/2+activeStreams.length)>>8, 9, 0];
+    let ayt = Array.from(header).concat(Array.from(pack)).concat(Array.from(interleave));
+    
+    const currentPosRel = ayt.length - packStart;
+    const silenceRel = currentPosRel + (activeStreams.length * 2);
+
+    for(let i=0; i<activeStreams.length; i++) {
+        let target = (i === fluxA8Idx) ? (silenceRel + 1) : silenceRel;
+        ayt.push(target & 255, target >> 8);
+    }
+    ayt.push(0x00, 0x80); 
+
+    const offsetInit = ayt.length;
+    ayt[8] = offsetInit & 0xFF;
+    ayt[9] = (offsetInit >> 8) & 0xFF;
+    ayt.push(0xA6, 0x00, 0xA7, 0x00, 0xFF);
+
+    const outData = new Uint8Array(ayt);
+    const blob = new Blob([outData], {type: 'application/octet-stream'});
+    currentBlobUrl = URL.createObjectURL(blob);
+    saveBtn.href = currentBlobUrl;
+    saveBtn.download = file.name.replace(/\.[Yy][Mm]$/, '') + ".ayt";
+    saveBtn.style.display = 'block';
+
+    log("-----------------------------------------");
+    log(`COMPRESSION TERMINEE`);
+    log(`Taille finale : ${outData.length} octets`);
+    log(`Ratio : ${((outData.length / data.length) * 100).toFixed(2)}%`);
+    log(`Offset Init : ${offsetInit}`);
+    log(`Silence Relatif : ${silenceRel}`);
+});
+</script>
+</body>
+</html>
