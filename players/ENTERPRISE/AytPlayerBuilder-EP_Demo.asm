@@ -36,7 +36,7 @@ RunEp128
 		call init_vram		; 
 		call init_int		; 
 		;
-		; Build the player routine (needs 296 or 312 bytes) 
+		; Build the player routine (needs 91 to 106 bytes max) 
 		;
 		ld ix,AYT_File		; Ptr on AYT_File
 		ld de,AYT_Player	; Ptr of Adress where Player is built
