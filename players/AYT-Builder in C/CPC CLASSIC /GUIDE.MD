@@ -1,30 +1,25 @@
 # AYT PC BUILD - DISTRIBUTION
-============================
-
-## Status of this distribution
 --------------------------
+## Status of this distribution
 
-This folder contains the PC tool that replaces the AYT Z80 runtime builder.
+This folder contains the *PC tool that replaces the AYT Z80 runtime builder*.
 
-It reads a .ayt source file, directly generates the specialized Z80 player,
-relocates the AYT runtime pointers, and then produces files
-usable on the Amstrad CPC.
+It reads a .ayt source file, directly generates the specialized Z80 player, relocates the AYT runtime pointers, and then produces files usable on the Amstrad CPC.
 
 In this distribution, the provided examples were generated with:
 
-player_addr = #0040
-loops = 2
+  player_addr = #0040
+  loops = 2
 
 The results are located in:
 
-dist\results\#40\
+  dist\results\#40\
 
-Folder contents
-------------------
+### Folder contents
 
-dist\
-aytpcbuild.c
-Portable C99 source code.
+  dist\
+    aytpcbuild.c
+    Portable C99 source code.
 
 aytpcbuild.exe
 Pre-compiled Windows executable.
