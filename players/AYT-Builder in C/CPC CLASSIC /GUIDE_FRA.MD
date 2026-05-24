@@ -54,6 +54,11 @@ Linux ou macOS:
 
 Le code C n'utilise pas de dépendance externe.
 
+## Script interactif Web Appli
+
+Lancer sur un navigateur:
+
+		aytpcbuild-web.html
 
 ## Script interactif Windows
 
