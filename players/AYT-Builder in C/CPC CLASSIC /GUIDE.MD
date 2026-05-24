@@ -78,81 +78,49 @@ From dist\, run:
 
 Example responses to generate a CALL bundle for tatayoyo.ayt:
 
-Select AYT
-
-Choose tatayoyo.ayt from the list.
-
-Generation Case
-
-2. CALL - Compact Bundle
-
-Player CPC Address
-
-0x0666
-
-Initial AYT Address for Tool
-
-0x1000
-
-Number of Reads/Loops
-
-2
-
-Output Root Folder
-
-Final Folder
-
-results\manual\call_bundle\tatayoyo
-
-Generate Mini Test ASM
-
-Y
-
-Generate TXT Report
-
-Y
+- Select AYT : Choose tatayoyo.ayt from the list.
+- Generation Case  : 2. CALL - Compact Bundle
+- Player CPC Address : 0x0666
+- Initial AYT Address for Tool : 0x1000
+- Number of Reads/Loops : 2
+- Output : Root Folder
+- Final Folder : results\manual\call_bundle\tatayoyo
+- Generate Mini Test ASM : Y
+- Generate TXT Report : Y
 
 The script then launches aytpcbuild.exe and produces:
 
-results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin
+                results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin
+                results\manual\call_bundle\tatayoyo\tatayoyo.bundle.asm
+                results\manual\call_bundle\tatayoyo\tatayoyo.report.txt
 
-results\manual\call_bundle\tatayoyo\tatayoyo.bundle.asm
+The generated ASM file remains portable in its folder. Its INCBIN does not contain only the binary file name, not the full path: 
 
-results\manual\call_bundle\tatayoyo\tatayoyo.report.txt
-
-The generated ASM file remains portable in its folder. Its INCBIN does not contain
-only the binary file name, not the full path: 
-
-incbin "tatayoyo.bundle.bin"
+                incbin "tatayoyo.bundle.bin"
 
 It is therefore not necessary to obtain: 
 
-incbin "results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin"
+                incbin "results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin"
 
+### General syntax
 
-General syntax
----------------- 
+                aytpcbuild --input music.ayt --player-addr 0x0100 \ 
+                --ayt-addr 0x1000 --loops N --mode jp|call [--return-addr ADDR] \ 
+                [--out-player player.bin] [--out-ayt-runtime music.runtime.ayt] \ 
+                [--out-bundle runtime.bin] [--bundle-base ADDR] \ 
+                [--out-asm-two test-two.asm] [--out-asm-bundle test-bundle.asm] \
+                [--program-addr ADDR]
+                [--report report.txt]
 
-aytpcbuild --input music.ayt --player-addr 0x0100 \ 
---ayt-addr 0x1000 --loops N --mode jp|call [--return-addr ADDR] \ 
-[--out-player player.bin] [--out-ayt-runtime music.runtime.ayt] \ 
-[--out-bundle runtime.bin] [--bundle-base ADDR] \ 
-[--out-asm-two test-two.asm] [--out-asm-bundle test-bundle.asm] \
-[--program-addr ADDR]
+#### Options
+                --input fichier.ayt
+                        Source AYT file.
 
-[--report report.txt]
+                --player-addr ADDR
+                        CPC address where the generated player will be loaded.
 
-Options
--------
-
---input fichier.ayt
-Source AYT file.
-
---player-addr ADDR
-CPC address where the generated player will be loaded.
-
---ayt-addr ADDR
-CPC address of the AYT runtime in the case of two files.
+                --ayt-addr ADDR
+                        CPC address of the AYT runtime in the case of two files.
 
 If --out-bundle is requested, the tool always produces a compact bundle.
 
