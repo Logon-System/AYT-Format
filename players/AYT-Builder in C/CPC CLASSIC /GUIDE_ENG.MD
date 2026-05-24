@@ -1,164 +1,398 @@
 # AYT PC BUILD - DISTRIBUTION
 --------------------------
+
 ## Status of this distribution
 
-This folder contains the *PC tool that replaces the AYT Z80 runtime builder*.
+This folder contains the PC tool that replaces the *AYT runtime Z80 builder*.
 
-It reads a .ayt source file, directly generates the specialized Z80 player, relocates the AYT runtime pointers, and then produces files usable on the Amstrad CPC.
+It reads a source .ayt file, directly generates the specialized Z80 player, relocates the AYT runtime pointers, and then produces the files usable on Amstrad CPC.
 
 In this distribution, the provided examples were generated with:
 
-        player_addr = #0040
-        loops = 2
+		player_addr = #0040
+		loops       = 2
 
 The results are located in:
 
-        dist\results\#40\
+		dist\results\#40\
 
-## Folder contents
 
-    dist\
-        aytpcbuild.c
-        - Portable C99 source code.
+## Folder content
 
-        aytpcbuild.exe
-        - Pre-compiled Windows executable.
+		dist\
+			aytpcbuild.c
+			- Portable C99 source.
 
-        aytpcbuild-menu.bat
-        - Interactive Windows menu to launch aytpcbuild.exe without typing the entire command line.
+		aytpcbuild.exe
+		- Precompiled Windows executable.
 
-    ayt\
-    Included AYT source files:
-        Arhey.ayt
-        complications.ayt
-        easy.ayt
-        stillscrolling.ayt
-        tatayoyo.ayt
+		aytpcbuild-menu.bat
+		- Interactive Windows menu script to run aytpcbuild.exe without typing the whole command line.
 
-    results\#40\
-        Pre-built results provided, with player at #0040.
+		ayt\
+		Included source AYT files:
+			Arhey.ayt
+			complications.ayt
+			easy.ayt
+			stillscrolling.ayt
+			tatayoyo.ayt
+
+		results\#40\
+			Provided prebuilt results, with player at #0040.
+
 
 ## Compiling the tool
 
+
 Windows with GCC:
 
-        gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe aytpcbuild.c
+		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe aytpcbuild.c
 
 Linux or macOS:
 
-        cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild aytpcbuild.c
+		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild aytpcbuild.c
 
 The C code does not use any external dependencies.
 
-## Interactive Windows Script
+
+## Windows interactive script
 
 From dist\, run:
 
-        aytpcbuild-menu.bat
+		aytpcbuild-menu.bat
 
 The script prompts for:
-        - the AYT file to process;
-        - the generation case: call_two, call_bundle, sp_two, or sp_bundle;
-        - the player address;
-        - the AYT runtime address;
-        - the number of loops;
-        - the program_addr and return_addr addresses in SP/JP mode;
-        - the output folder;
-        - whether or not to generate the mini ASM and the TXT report.
 
-The script only runs aytpcbuild.exe.
+		- the AYT file to process;
+		- the generation case: call_two, call_bundle, sp_two or sp_bundle;
+		- the player address;
+		- the AYT runtime address;
+		- the number of loops;
+		- the program_addr and return_addr addresses in SP/JP mode;
+		- the output folder;
+		- whether or not to generate the mini ASM and the TXT report.
 
-It does not run maxam.exe and does not create a *-demo.bin file.
+The script only launches aytpcbuild.exe.
+
+It does not launch maxam.exe and does not create *-demo.bin files.
 
 ### Example with tatayoyo.ayt
 
 From dist\, run:
 
-        aytpcbuild-menu.bat
+		aytpcbuild-menu.bat
 
-Example responses to generate a CALL bundle for tatayoyo.ayt:
+Example of responses to generate a CALL bundle for tatayoyo.ayt:
 
-- Select AYT : Choose tatayoyo.ayt from the list.
-- Generation Case  : 2. CALL - Compact Bundle
-- Player CPC Address : 0x0666
-- Initial AYT Address for Tool : 0x1000
-- Number of Reads/Loops : 2
-- Output : Root Folder
-- Final Folder : results\manual\call_bundle\tatayoyo
-- Generate Mini Test ASM : Y
-- Generate TXT Report : Y
+*AYT Choice*
+		- Choose tatayoyo.ayt from the list.
 
-The script then launches aytpcbuild.exe and produces:
 
-                results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin
-                results\manual\call_bundle\tatayoyo\tatayoyo.bundle.asm
-                results\manual\call_bundle\tatayoyo\tatayoyo.report.txt
+| Option | Parameter value | 
+| :-----------: | :--------------: |
+| Generation case  | 2. CALL - compact bundle  |
+| Player CPC address | 0x0666  |
+| Initial AYT address for the tool | 0x1000  |
+| Number of plays / loops |  2 |
+|  Root output folder |  results\manual |
+|  Final folder | results\manual\call_bundle\tatayoyo |
+|  Generate mini test ASM |    O |
+|  Generate TXT report |    O |
 
-The generated ASM file remains portable in its folder. Its INCBIN does not contain only the binary file name, not the full path: 
+The script then runs aytpcbuild.exe and produces:
 
-                incbin "tatayoyo.bundle.bin"
+		results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin
+		results\manual\call_bundle\tatayoyo\tatayoyo.bundle.asm
+		results\manual\call_bundle\tatayoyo\tatayoyo.report.txt
 
-It is therefore not necessary to obtain: 
+The generated ASM file remains portable inside its folder. Its INCBIN directive only contains the binary filename, not the full path:
+		incbin "tatayoyo.bundle.bin"
 
-                incbin "results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin"
+Therefore, it should not output:
+		incbin "results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin"
 
 ### General syntax
 
-                aytpcbuild --input music.ayt --player-addr 0x0100 \ 
-                --ayt-addr 0x1000 --loops N --mode jp|call [--return-addr ADDR] \ 
-                [--out-player player.bin] [--out-ayt-runtime music.runtime.ayt] \ 
-                [--out-bundle runtime.bin] [--bundle-base ADDR] \ 
-                [--out-asm-two test-two.asm] [--out-asm-bundle test-bundle.asm] \
-                [--program-addr ADDR]
-                [--report report.txt]
+		aytpcbuild --input music.ayt --player-addr 0x0100 \
+		--ayt-addr 0x1000 --loops N --mode jp|call [--return-addr ADDR] \
+		[--out-player player.bin] [--out-ayt-runtime music.runtime.ayt] \
+		[--out-bundle runtime.bin] [--bundle-base ADDR] \
+		[--out-asm-two test-two.asm] [--out-asm-bundle test-bundle.asm] \
+		[--program-addr ADDR] \
+		[--report report.txt]
+
 
 #### Options
-                --input fichier.ayt
-                        Source AYT file.
 
-                --player-addr ADDR
-                        CPC address where the generated player will be loaded.
+		--input file.ayt
+			Source AYT file.
 
-                --ayt-addr ADDR
-                        CPC address of the AYT runtime in the case of two files.
+		--player-addr ADDR
+			CPC address where the generated player will be loaded.
 
-If --out-bundle is requested, the tool always produces a compact bundle.
+		--ayt-addr ADDR
+			CPC address of the AYT runtime in the two-files setup.
 
-In this case, the AYT runtime is placed immediately after the player, and its address is automatically recalculated. The --ayt-addr value then serves as the initial address before compaction.
+		If --out-bundle is requested, the tool always produces a compact bundle.
+		In this case, the AYT runtime is placed immediately after the player and its address is automatically recalculated. The --ayt-addr value then serves as the initial address before compaction.
 
-                --loops N
-                        Number of music playbacks, from 0 to 255.
-                        The provided examples use --loops 2.
+		--loops N
+			Number of times the music plays, from 0 to 255.
+			The provided examples use --loops 2.
 
-                --mode call
-                        Generates a player called with:
-                                call AYT_Player
-                        In this mode, the player saves and restores SP itself.
+		--mode call
+			Generates a player called with:
+				call AYT_Player
+			In this mode, the player saves and restores SP by itself.
 
-                --mode jp
-                        Generates the SP/JP fast mode.
-                        The program must call the player with:
-                                jp AYT_Player
-                        The player uses SP as a fast pointer, then returns via JP to the address provided by --return-addr.
+		--mode jp
+			Generates the "fast" SP/JP mode.
+			The programme must call the player with:
+				jp AYT_Player
+				The player uses SP as a fast pointer, then returns via a JP to the address provided by --return-addr.
 
-                --return-addr ADDR
-                        Required in jp mode.
-                        For test ASMs generated by the tool:
-                                return_addr = program_addr + #24
+		--return-addr ADDR
+			Mandatory in jp mode.
+			For the test ASMs generated by the tool:
+				return_addr = program_addr + #24
 
-                --program-addr ADDR
-                        Address of the test ASM mini-program generated by --out-asm-two or --out-asm-bundle.
-                        In call mode, this option is optional.
-                        If it is absent, the tool places the launcher at #0500 when possible, otherwise, immediately after the generated data.
-                        In jp mode, this option is optional but must remain consistent with --return-addr.
+		--program-addr ADDR
+				Address of the mini test ASM program generated by --out-asm-two or --out-asm-bundle.
+  			In call mode, this option is optional.
+			If absent, the tool places the launcher at #0500 when possible, otherwise right after the generated data.
+			In jp mode, this option is optional but must remain consistent with --return-addr.
 
-                --out-player file.bin
-                        Writes the generated Z80 player.
+		--out-player file.bin
+			Writes the generated Z80 player.
 
-                --out-ayt-runtime file.ayt
-                        Writes the AYT runtime, with the sequence pointers relocated.
+		--out-ayt-runtime file.ayt
+			Writes the AYT runtime, with relocated sequence pointers.
 
-                --out-bundle file.bin
-                        Writes a compact bundle:
-                                player + ayt-runtime
-                        There are no filler holes in this file.
+		--out-bundle file.bin
+			Writes a compact bundle:
+				player + ayt-runtime
+			There is no padding hole in this file.
+
+		--bundle-base ADDR
+			Base of the bundle.
+			Dans cette version, cette adresse doit correspondre a --player-addr.
+
+		--out-asm-two file.asm
+			Generates a mini test ASM source for the two-files setup:
+				player.bin + runtime.ayt
+				This option also requires --out-player and --out-ayt-runtime.
+
+		--out-asm-bundle file.asm
+			Generates a mini test ASM source for the bundle setup:
+				bundle.bin
+				This option also requires --out-bundle.
+
+		--report file.txt
+			Writes a human-readable text report: sizes, addresses, active registers, initialization block, CPU cost, generated files and RUN of the test ASMs.
+
+		--help
+			Displays short help.
+
+
+### The 4 generated cases
+
+For each AYT, four cases are provided in dist\results\#40:
+
+#### 1. call_two
+
+CALL mode, two files:
+		<name>.player.bin
+		<name>.runtime.ayt
+		<name>.two.asm
+		<name>.two-demo.bin
+		<name>.report.txt
+
+#### 2. call_bundle
+CALL mode, compact bundle:
+
+		<name>.bundle.bin
+		<name>.bundle.asm
+		<name>.bundle-demo.bin
+		<name>.report.txt
+
+#### 3. sp_two
+SP/JP mode, two files:
+
+		<name>.player.bin
+		<name>.runtime.ayt
+		<name>.two.asm
+		<name>.two-demo.bin
+		<name>.report.txt
+
+#### 4. sp_bundle
+SP/JP mode, compact bundle:
+
+		<name>.bundle.bin
+		<name>.bundle.asm
+		<name>.bundle-demo.bin
+		<name>.report.txt
+
+
+### Structure of the #0040 results
+
+		dist\results\#40\call_two\Arhey\
+		dist\results\#40\call_two\complications\
+		dist\results\#40\call_two\easy\
+		dist\results\#40\call_two\stillscrolling\
+
+		dist\results\#40\call_bundle\Arhey\
+		dist\results\#40\call_bundle\complications\
+		dist\results\#40\call_bundle\easy\
+		dist\results\#40\call_bundle\stillscrolling\
+
+		dist\results\#40\sp_two\Arhey\
+		dist\results\#40\sp_two\complications\
+		dist\results\#40\sp_two\easy\
+		dist\results\#40\sp_two\stillscrolling\
+
+		dist\results\#40\sp_bundle\Arhey\
+		dist\results\#40\sp_bundle\complications\
+		dist\results\#40\sp_bundle\easy\
+		dist\results\#40\sp_bundle\stillscrolling\
+
+
+### Command examples
+
+The examples below are meant to be run from dist\.
+
+#### CALL two files, Arhey example:
+
+		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
+		--player-addr 0x0040 ^
+		--ayt-addr 0x1000 ^
+		--loops 2 ^
+		--mode call ^
+		--out-player "results\#40\call_two\Arhey\Arhey.player.bin" ^
+		--out-ayt-runtime "results\#40\call_two\Arhey\Arhey.runtime.ayt" ^
+		--out-asm-two "results\#40\call_two\Arhey\Arhey.two.asm" ^
+		--report "results\#40\call_two\Arhey\Arhey.report.txt"
+
+#### CALL compact bundle, Arhey example:
+
+		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
+		--player-addr 0x0040 ^
+		--ayt-addr 0x1000 ^
+		--loops 2 ^
+		--mode call ^
+		--out-bundle "results\#40\call_bundle\Arhey\Arhey.bundle.bin" ^
+		--out-asm-bundle "results\#40\call_bundle\Arhey\Arhey.bundle.asm" ^
+		--report "results\#40\call_bundle\Arhey\Arhey.report.txt"
+
+#### SP/JP two files, Arhey example:
+
+		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
+		--player-addr 0x0040 ^
+		--ayt-addr 0x1000 ^
+		--loops 2 ^
+		--mode jp ^
+		--program-addr 0x1F47 ^
+		--return-addr 0x1F6B ^
+		--out-player "results\#40\sp_two\Arhey\Arhey.player.bin" ^
+		--out-ayt-runtime "results\#40\sp_two\Arhey\Arhey.runtime.ayt" ^
+		--out-asm-two "results\#40\sp_two\Arhey\Arhey.two.asm" ^
+		--report "results\#40\sp_two\Arhey\Arhey.report.txt"
+
+#### SP/JP compact bundle, Arhey example:
+
+		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
+		--player-addr 0x0040 ^
+		--ayt-addr 0x1000 ^
+		--loops 2 ^
+		--mode jp ^
+		--program-addr 0x10EA ^
+		--return-addr 0x110E ^
+		--out-bundle "results\#40\sp_bundle\Arhey\Arhey.bundle.bin" ^
+		--out-asm-bundle "results\#40\sp_bundle\Arhey\Arhey.bundle.asm" ^
+		--report "results\#40\sp_bundle\Arhey\Arhey.report.txt"
+
+### Assembling the test ASMs
+
+The generated .asm files are compatible with Maxam.
+
+Two options are available:
+
+- use local maxam.exe, provided in the project's parent folder;
+- use Maxam Web:
+		https://amstrad.neocities.org/maxamweb/
+
+In both cases, the ASM source must have access to the files called by INCBIN. 
+
+Test ASMs generated by aytpcbuild only use the filename, for example:
+		incbin "tatayoyo.bundle.bin"
+
+Therefore, it is sufficient to keep the .asm and the referenced .bin in the same folder, or to supply them together to Maxam Web if requested by the interface.
+
+Example from:
+		dist\results\#40\call_two\Arhey\
+
+Assemble the test:
+		..\..\..\..\..\maxam.exe Arhey.two.asm Arhey.two-demo.bin
+
+Example from:
+		dist\results\#40\call_bundle\Arhey\
+
+Assemble the test:
+		..\..\..\..\..\maxam.exe Arhey.bundle.asm Arhey.bundle-demo.bin
+
+
+## Summary of included AYTs
+
+All examples below use:
+
+	player_addr = #0040
+	loops       = 2
+
+### CALL two files:
+
+| AYT Name | AYT Runtime | Player Size | demo RUN | 
+| :-----------: | :--------------: | :-------------: | :---------: |
+| Arhey.ayt | #1000 | 359 bytes | #1F47 |
+| complications.ayt | #1000 | 359 bytes | #381C |
+|  easy.ayt | #1000 | 343 bytes | #1C79 |
+|  stillscrolling.ayt | #1000 | 359 bytes | #3F9B |
+
+
+### CALL compact bundle:
+
+| AYT Name | AYT Runtime | Player Size | demo RUN | 
+| :-----------: | :--------------: | :-------------: | :---------: |
+|  Arhey.ayt | #01A7 | 4270 bytes | #10EE |
+|  complications.ayt | #01A7 | 10627 bytes | #29C3 |
+|  easy.ayt | #0197 | 3536 bytes | #0E10 |
+|  stillscrolling.ayt | #01A7 | 12546 bytes | #3142 |
+
+### SP/JP two files:
+| AYT Name | AYT Runtime | Player Size | demo RUN | return | 
+| :-----------: | :--------------: | :-------------: | :---------: | :-------: |
+|  Arhey.ayt | #1000 | 355 bytes | #1F47 | #1F6B |
+|  complications.ayt | #1000 | 355 bytes | #381C | #3840 |
+|  easy.ayt | #1000 | 339 bytes | #1C79 | #1C9D |
+| stillscrolling.ayt | #1000 | 355 bytes | #3F9B | #3FBF |
+
+### SP/JP compact bundle:
+
+| AYT Name | AYT Runtime | Player Size | demo RUN | return | 
+| :-----------: | :--------------: | :-------------: | :---------: | :-------: |
+|  Arhey.ayt | #01A3 | 4266 bytes | #10EA | #110E |
+| complications.ayt | #01A3 | 10623 bytes | #29BF | #29E3 |
+|  easy.ayt | #0193 | 3532 bytes | #0E0C | #0E30 |
+| stillscrolling.ayt | #01A3 | 12542 bytes | #313E | #3162 |
+
+
+## Important notes
+
+1. `--out-bundle` always generates a compact bundle. The old mode with holes no longer exists.
+
+2. In bundle setup, the AYT runtime is placed immediately after the player. The final address is shown in the report.
+
+3. In SP/JP mode, `--return-addr` is mandatory. For test ASMs generated by the tool:
+		return_addr = program_addr + #24
+
+4. The `.runtime.ayt` files are not original source AYT files. They contain relocated pointers for the final CPC target address.
+
+5. The prebuilt player no longer depends on the Z80 ASM builder at runtime. The builder is replaced by the `aytpcbuild` PC tool.
