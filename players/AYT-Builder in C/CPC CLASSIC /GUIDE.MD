@@ -17,9 +17,9 @@ The results are located in:
 
 ### Folder contents
 
-  dist\
+    dist\
         aytpcbuild.c
-        Portable C99 source code.
+        - Portable C99 source code.
 
         aytpcbuild.exe
         - Pre-compiled Windows executable.
