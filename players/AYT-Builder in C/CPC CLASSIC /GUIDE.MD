@@ -1,10 +1,11 @@
-# AYT PC BUILD - DISTRIBUTION
+AYT PC BUILD - DISTRIBUTION
 ===========================
 
 Etat de cette distribution
 --------------------------
 
 Ce dossier contient l'outil PC qui remplace le builder Z80 runtime AYT.
+
 Il lit un fichier .ayt source, genere directement le player Z80 specialise,
 relocalise les pointeurs de l'AYT runtime, puis produit les fichiers
 utilisables sur Amstrad CPC.
@@ -84,7 +85,6 @@ Le script demande:
 Le script lance uniquement aytpcbuild.exe.
 Il ne lance pas maxam.exe et ne cree pas de *-demo.bin.
 
-
 Exemple avec tatayoyo.ayt
 -------------------------
 
@@ -96,6 +96,7 @@ Exemple de reponses pour generer un bundle CALL de tatayoyo.ayt:
 
   Choix AYT
     Choisir tatayoyo.ayt dans la liste.
+
   Cas de generation
     2. CALL - bundle compact
 
@@ -120,14 +121,14 @@ Exemple de reponses pour generer un bundle CALL de tatayoyo.ayt:
   Generer le rapport TXT
     O
 
-Le script lance alors aytpcbuild.exe and produit:
+Le script lance alors aytpcbuild.exe et produit:
 
   results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin
   results\manual\call_bundle\tatayoyo\tatayoyo.bundle.asm
   results\manual\call_bundle\tatayoyo\tatayoyo.report.txt
 
-Le fichier ASM genere reste portable dans son dossier.
-Son INCBIN ne contient que le nom du fichier binaire, pas le chemin complet:
+Le fichier ASM genere reste portable dans son dossier. Son INCBIN ne contient
+que le nom du fichier binaire, pas le chemin complet:
 
   incbin "tatayoyo.bundle.bin"
 
@@ -153,14 +154,18 @@ Options
 
 --input fichier.ayt
   Fichier AYT source.
+
 --player-addr ADDR
   Adresse CPC ou le player genere sera charge.
+
 --ayt-addr ADDR
   Adresse CPC de l'AYT runtime dans le cas deux fichiers.
-Si --out-bundle est demande, l'outil produit toujours un bundle compact.
-Dans ce cas, l'AYT runtime est place juste apres le player et son adresse
-est recalculee automatiquement.
-La valeur --ayt-addr sert alors d'adresse initiale avant compactage.
+
+  Si --out-bundle est demande, l'outil produit toujours un bundle compact.
+  Dans ce cas, l'AYT runtime est place juste apres le player et son adresse
+  est recalculee automatiquement. La valeur --ayt-addr sert alors d'adresse
+  initiale avant compactage.
+
 --loops N
   Nombre de lectures de la musique, de 0 a 255.
 
@@ -172,6 +177,7 @@ La valeur --ayt-addr sert alors d'adresse initiale avant compactage.
     call AYT_Player
 
   Dans ce mode, le player sauvegarde et restaure SP lui-meme.
+
 --mode jp
   Genere le mode rapide SP/JP.
 
@@ -181,6 +187,7 @@ La valeur --ayt-addr sert alors d'adresse initiale avant compactage.
 
   Le player utilise SP comme pointeur rapide, puis revient par un JP vers
   l'adresse fournie par --return-addr.
+
 --return-addr ADDR
   Obligatoire en mode jp.
 
@@ -191,41 +198,50 @@ La valeur --ayt-addr sert alors d'adresse initiale avant compactage.
 --program-addr ADDR
   Adresse du mini programme ASM de test genere par --out-asm-two ou
   --out-asm-bundle.
-En mode call, cette option est facultative.
-Si elle est absente, l'outil place le launcher a #0500 quand c'est possible,
-sinon juste apres les donnees generees.
-En mode jp, cette option est optionnelle mais doit rester coherente avec
+
+  En mode call, cette option est facultative.
+  Si elle est absente, l'outil place le launcher a #0500 quand c'est possible,
+  sinon juste apres les donnees generees.
+
+  En mode jp, cette option est optionnelle mais doit rester coherente avec
   --return-addr.
+
 --out-player fichier.bin
   Ecrit le player Z80 genere.
 
 --out-ayt-runtime fichier.ayt
   Ecrit l'AYT runtime, avec les pointeurs de sequences relocalises.
+
 --out-bundle fichier.bin
   Ecrit un bundle compact:
 
     player + ayt-runtime
 
   Il n'y a aucun trou de remplissage dans ce fichier.
+
 --bundle-base ADDR
   Base du bundle.
 
   Dans cette version, cette adresse doit correspondre a --player-addr.
+
 --out-asm-two fichier.asm
   Genere un mini source ASM de test pour le cas deux fichiers:
 
     player.bin + runtime.ayt
 
   Cette option demande aussi --out-player et --out-ayt-runtime.
+
 --out-asm-bundle fichier.asm
   Genere un mini source ASM de test pour le cas bundle:
 
     bundle.bin
 
   Cette option demande aussi --out-bundle.
+
 --report fichier.txt
   Ecrit un rapport texte lisible: tailles, adresses, registres actifs,
   bloc d'init, cout CPU, fichiers generes et RUN des ASM de test.
+
 --help
   Affiche l'aide courte.
 
@@ -298,6 +314,7 @@ Exemples de commandes
 ---------------------
 
 Les exemples ci-dessous sont a lancer depuis dist\.
+
 CALL deux fichiers, exemple Arhey:
 
   .\aytpcbuild.exe --input ayt\Arhey.ayt ^
@@ -353,6 +370,7 @@ Assembler les ASM de test
 -------------------------
 
 Les fichiers .asm generes sont compatibles avec maxam.
+
 Deux solutions sont possibles:
 
   - utiliser maxam.exe en local, fourni dans le dossier parent du projet;
@@ -361,8 +379,7 @@ Deux solutions sont possibles:
       https://amstrad.neocities.org/maxamweb/
 
 Dans les deux cas, le source ASM doit avoir acces aux fichiers appeles par
-INCBIN.
-Les ASM generes par aytpcbuild utilisent uniquement le nom du fichier,
+INCBIN. Les ASM generes par aytpcbuild utilisent uniquement le nom du fichier,
 par exemple:
 
   incbin "tatayoyo.bundle.bin"
