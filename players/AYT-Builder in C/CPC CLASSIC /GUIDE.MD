@@ -18,26 +18,22 @@ The results are located in:
 ### Folder contents
 
   dist\
-    aytpcbuild.c
-    Portable C99 source code.
+        aytpcbuild.c
+        Portable C99 source code.
 
-aytpcbuild.exe
-Pre-compiled Windows executable.
+        aytpcbuild.exe
+        - Pre-compiled Windows executable.
 
-aytpcbuild-menu.bat
-Interactive Windows menu to launch aytpcbuild.exe without typing the entire command line.
+        aytpcbuild-menu.bat
+        - Interactive Windows menu to launch aytpcbuild.exe without typing the entire command line.
 
-README.txt
-This documentation.
-
-ayt\
-Included AYT source files:
-
-Arhey.ayt
-complications.ayt
-easy.ayt
-stillscrolling.ayt
-tatayoyo.ayt
+    ayt\
+    Included AYT source files:
+        Arhey.ayt
+        complications.ayt
+        easy.ayt
+        stillscrolling.ayt
+        tatayoyo.ayt
 
 results\#40\
 Pre-built results provided, with player at #0040.
