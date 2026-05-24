@@ -23,11 +23,11 @@ Les resultats sont dans:
 			aytpcbuild.c
 			- Source C99 portable.
 
-		aytpcbuild.exe
-		- Exécutable Windows déjà compilé.
+			aytpcbuild.exe
+			- Exécutable Windows déjà compilé.
 
-		aytpcbuild-menu.bat
-		- Menu interactif Windows pour lancer aytpcbuild.exe sans taper toute la ligne de commande.
+			aytpcbuild-menu.bat
+			- Menu interactif Windows pour lancer aytpcbuild.exe sans taper toute la ligne de commande.
 
 		ayt\
 		Fichiers AYT sources inclus:
