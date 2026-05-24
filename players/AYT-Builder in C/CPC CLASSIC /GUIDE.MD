@@ -8,14 +8,14 @@ It reads a .ayt source file, directly generates the specialized Z80 player, relo
 
 In this distribution, the provided examples were generated with:
 
-    player_addr = #0040
-    loops = 2
+        player_addr = #0040
+        loops = 2
 
 The results are located in:
 
-    dist\results\#40\
+        dist\results\#40\
 
-### Folder contents
+## Folder contents
 
     dist\
         aytpcbuild.c
@@ -35,57 +35,46 @@ The results are located in:
         stillscrolling.ayt
         tatayoyo.ayt
 
-results\#40\
-Pre-built results provided, with player at #0040.
+    results\#40\
+        Pre-built results provided, with player at #0040.
 
-Compiling the tool
-----------------------
+## Compiling the tool
 
 Windows with GCC:
 
-gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe aytpcbuild.c
+        gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe aytpcbuild.c
 
 Linux or macOS:
 
-cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild aytpcbuild.c
+        cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild aytpcbuild.c
 
 The C code does not use any external dependencies.
 
-Interactive Windows Script
--------------------------
+## Interactive Windows Script
 
 From dist\, run:
 
-aytpcbuild-menu.bat
+        aytpcbuild-menu.bat
 
 The script prompts for:
-
-- the AYT file to process;
-
-- the generation case: call_two, call_bundle, sp_two, or sp_bundle;
-
-- the player address;
-
-- the AYT runtime address;
-
-- the number of loops;
-
-- the program_addr and return_addr addresses in SP/JP mode;
-
-- the output folder;
-
-- whether or not to generate the mini ASM and the TXT report.
+        - the AYT file to process;
+        - the generation case: call_two, call_bundle, sp_two, or sp_bundle;
+        - the player address;
+        - the AYT runtime address;
+        - the number of loops;
+        - the program_addr and return_addr addresses in SP/JP mode;
+        - the output folder;
+        - whether or not to generate the mini ASM and the TXT report.
 
 The script only runs aytpcbuild.exe.
 
 It does not run maxam.exe and does not create a *-demo.bin file.
 
-Example with tatayoyo.ayt
--------------------------
+### Example with tatayoyo.ayt
 
 From dist\, run:
 
-aytpcbuild-menu.bat
+        aytpcbuild-menu.bat
 
 Example responses to generate a CALL bundle for tatayoyo.ayt:
 
