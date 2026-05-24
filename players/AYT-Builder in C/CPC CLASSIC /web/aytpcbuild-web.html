@@ -1,1 +1,1353 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AYT PC Build Web</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --text: #18202a;
+      --muted: #5b6675;
+      --line: #cfd6df;
+      --line-strong: #aab4c0;
+      --accent: #176b87;
+      --accent-2: #0f5132;
+      --danger: #9f1d2f;
+      --shadow: 0 1px 2px rgba(18, 32, 46, 0.08);
+      --radius: 6px;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #243447;
+      color: #fff;
+      padding: 14px 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 650;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) 1fr;
+      gap: 14px;
+      padding: 14px;
+      max-width: 1380px;
+      margin: 0 auto;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 650;
+      background: #fafbfc;
+    }
+
+    .panel-body {
+      padding: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      padding: 7px 8px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      border: 1px dashed var(--line-strong);
+      border-radius: 4px;
+      padding: 10px;
+      background: #fbfcfd;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      color: var(--text);
+    }
+
+    .check-row input {
+      width: 16px;
+      height: 16px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      min-height: 34px;
+      padding: 7px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 36px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      background: #fbfcfd;
+    }
+
+    .status.ok {
+      color: var(--accent-2);
+    }
+
+    .status.err {
+      color: var(--danger);
+    }
+
+    .output-tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fafbfc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+      background: #fbfcfd;
+    }
+
+    td.path {
+      font-family: Consolas, Menlo, monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .empty {
+      padding: 18px 12px;
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: Consolas, Menlo, monospace;
+      font-size: 12px;
+    }
+
+    @media (max-width: 920px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AYT PC Build Web</h1>
+  </header>
+
+  <main>
+    <section>
+      <div class="panel-head">Parametres</div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="fileInput">Fichiers AYT</label>
+          <input id="fileInput" type="file" accept=".ayt" multiple>
+        </div>
+
+        <div class="field">
+          <label for="caseSelect">Cas</label>
+          <select id="caseSelect">
+            <option value="call_two">CALL - deux fichiers</option>
+            <option value="call_bundle">CALL - bundle compact</option>
+            <option value="sp_two">SP/JP - deux fichiers</option>
+            <option value="sp_bundle">SP/JP - bundle compact</option>
+            <option value="all">Les 4 cas</option>
+          </select>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="playerAddr">Player addr</label>
+            <input id="playerAddr" type="text" value="0x0040">
+          </div>
+          <div class="field">
+            <label for="aytAddr">AYT addr</label>
+            <input id="aytAddr" type="text" value="0x1000">
+          </div>
+          <div class="field">
+            <label for="loops">Loops</label>
+            <input id="loops" type="number" min="0" max="255" value="2">
+          </div>
+          <div class="field">
+            <label for="outRoot">Dossier ZIP</label>
+            <input id="outRoot" type="text" value="results/manual">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>SP/JP</label>
+          <div class="check-row">
+            <input id="autoJp" type="checkbox" checked>
+            <span>Calculer automatiquement program_addr et return_addr</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="programAddr">Program addr</label>
+            <input id="programAddr" type="text" placeholder="optionnel">
+          </div>
+          <div class="field">
+            <label for="returnAddr">Return addr</label>
+            <input id="returnAddr" type="text" placeholder="obligatoire si auto off">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Sorties</label>
+          <div class="check-row">
+            <input id="genAsm" type="checkbox" checked>
+            <span>Generer le mini ASM de test</span>
+          </div>
+          <div class="check-row">
+            <input id="genReport" type="checkbox" checked>
+            <span>Generer le rapport TXT</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="generateBtn" class="primary" type="button">Generer</button>
+          <button id="clearBtn" type="button">Vider</button>
+        </div>
+      </div>
+      <div id="status" class="status">Pret.</div>
+    </section>
+
+    <section>
+      <div class="output-tools">
+        <div>
+          <strong>Sorties</strong>
+          <span id="outputCount" class="mono">0 fichier</span>
+        </div>
+        <div class="actions">
+          <button id="zipBtn" type="button" disabled>Telecharger ZIP</button>
+        </div>
+      </div>
+      <div id="outputs" class="panel-body">
+        <div class="empty">Aucune sortie generee.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+(function (global) {
+  "use strict";
+
+  const DEFAULT_PROGRAM_ADDR = 0x0500;
+  const JP_RETURN_OFFSET = 36;
+  const CALL_LAUNCHER_SIZE = 63;
+  const JP_LAUNCHER_SIZE = 70;
+
+  const OFF = {
+    B1_JP_FIRST_SEQ: 4,
+    B1_JP_FIRST_REG: 8,
+    B1_JP_PATTERN_IDX: 11,
+    B1_CALL_SAVE_SP: 5,
+    B1_CALL_FIRST_SEQ: 8,
+    B1_CALL_FIRST_REG: 12,
+    B1_CALL_PATTERN_IDX: 15,
+    B3_SEQ_PTR_UPD: 30,
+    B3_PAT_COUNT_1: 21,
+    B3_PATTERN_SIZE: 25,
+    B3_PAT_COUNT_2: 34,
+    B3_JP_EXIT_PTR: 37,
+    B3_JP_MUSIC_CNT: 44,
+    B3_JP_MUSIC_CNT_PTR: 49,
+    B3_JP_LOOP_SEQ: 52,
+    B3_CALL_RELOAD_SP: 37,
+    B3_CALL_MUSIC_CNT: 45,
+    B3_CALL_MUSIC_CNT_PTR: 50,
+    B3_CALL_LOOP_SEQ: 53,
+    B4_PTR_INIT: 11,
+    B4_PLAYER_ENTRY: 37,
+    B4_FINE_WAIT: 46,
+    B4_CPT_WAIT: 51
+  };
+
+  const B1_JP = [
+    0x01,0x80,0xf6,0x31,0x00,0x00,0xd9,0x01,
+    0x00,0xf4,0x11,0x00,0x00,0x3e,0xe6,0xd3,
+    0xff
+  ];
+
+  const B1_CALL = [
+    0x01,0x80,0xf6,0xed,0x73,0x00,0x00,0x31,
+    0x00,0x00,0xd9,0x01,0x00,0xf4,0x11,0x00,
+    0x00,0x3e,0xe6,0xd3,0xff
+  ];
+
+  const B2 = [
+    0xed,0x49,0x47,0xed,0x71,0x05,0xe1,0x19,
+    0xed,0xa3,0xd9,0xed,0x49,0xd3,0xff,0xd9,
+    0x0c
+  ];
+
+  const B3_JP = [
+    0xe1,0x19,0xcb,0x7e,0x20,0x21,0x0c,0xed,
+    0x49,0x47,0xed,0x71,0x05,0xed,0xa3,0xd9,
+    0xed,0x49,0xd3,0xff,0x3a,0x00,0x00,0x3c,
+    0xfe,0x00,0x20,0x2c,0xed,0x73,0x00,0x00,
+    0xaf,0x32,0x00,0x00,0xc3,0x00,0x00,0xcb,
+    0x76,0x20,0x18,0x3e,0x00,0x3d,0x28,0x0a,
+    0x32,0x00,0x00,0x31,0x00,0x00,0xe3,0xe3,
+    0x18,0xe2,0xe3,0xe3,0xe3,0xe3,0xbe,0x18,
+    0x00,0x18,0xe1,0xbe,0xe3,0xe3,0x18,0xcc,
+    0xbe,0x00,0x18,0xd5
+  ];
+
+  const B3_CALL = [
+    0xe1,0x19,0xcb,0x7e,0x20,0x22,0x0c,0xed,
+    0x49,0x47,0xed,0x71,0x05,0xed,0xa3,0xd9,
+    0xed,0x49,0xd3,0xff,0x3a,0x00,0x00,0x3c,
+    0xfe,0x00,0x20,0x2d,0xed,0x73,0x00,0x00,
+    0xaf,0x32,0x00,0x00,0x31,0x00,0x00,0xc9,
+    0xcb,0x76,0x20,0x18,0x3e,0x00,0x3d,0x28,
+    0x0a,0x32,0x00,0x00,0x31,0x00,0x00,0xe3,
+    0xe3,0x18,0xe1,0xe3,0xe3,0xe3,0xe3,0xbe,
+    0x18,0x00,0x18,0xe0,0xbe,0xe3,0xe3,0x18,
+    0xcb,0xbe,0x00,0x18,0xd4
+  ];
+
+  const B4_JP = [
+    0x01,0x80,0xf6,0xd9,0x06,0xf4,0x3e,0xe6,
+    0xd3,0xff,0x21,0x00,0x00,0x4e,0xcb,0x79,
+    0x20,0x11,0x23,0xed,0x49,0x47,0xed,0x71,
+    0x05,0xed,0xa3,0xd9,0xed,0x49,0xd3,0xff,
+    0xd9,0x18,0xea,0xd9,0x21,0x00,0x00,0x36,
+    0x01,0x23,0x71,0x23,0x70,0x18,0xfe,0x00,
+    0x00,0x00,0x3e,0x00,0x3d,0x20,0xfd,0x18,
+    0x9f
+  ];
+
+  const B4_CALL = [
+    0x01,0x80,0xf6,0xd9,0x06,0xf4,0x3e,0xe6,
+    0xd3,0xff,0x21,0x00,0x00,0x4e,0xcb,0x79,
+    0x20,0x11,0x23,0xed,0x49,0x47,0xed,0x71,
+    0x05,0xed,0xa3,0xd9,0xed,0x49,0xd3,0xff,
+    0xd9,0x18,0xea,0xd9,0x21,0x00,0x00,0x36,
+    0x01,0x23,0x71,0x23,0x70,0x18,0xfe,0x00,
+    0x00,0x00,0x3e,0x00,0x3d,0x20,0xfd,0xc9
+  ];
+
+  const enc = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+
+  function fail(message) {
+    throw new Error(message);
+  }
+
+  function u16(v) {
+    return v & 0xffff;
+  }
+
+  function rd16le(data, off) {
+    return data[off] | (data[off + 1] << 8);
+  }
+
+  function wr16le(data, off, v) {
+    data[off] = v & 0xff;
+    data[off + 1] = (v >>> 8) & 0xff;
+  }
+
+  function patch8(buf, off, v) {
+    if (off < 0 || off >= buf.length) fail("internal patch out of range");
+    buf[off] = v & 0xff;
+  }
+
+  function patch16(buf, off, v) {
+    if (off < 0 || off + 1 >= buf.length) fail("internal patch out of range");
+    buf[off] = v & 0xff;
+    buf[off + 1] = (v >>> 8) & 0xff;
+  }
+
+  function append(buf, bytes) {
+    const off = buf.length;
+    for (let i = 0; i < bytes.length; i++) buf.push(bytes[i] & 0xff);
+    return off;
+  }
+
+  function parseAddress(s, name) {
+    let text = String(s == null ? "" : s).trim();
+    let base = 10;
+    let value;
+    if (!text) fail(name + " is required");
+    if (text[0] === "#") {
+      text = text.slice(1);
+      base = 16;
+    } else if (text[0] === "$") {
+      text = text.slice(1);
+      base = 16;
+    } else if (/^0x/i.test(text)) {
+      text = text.slice(2);
+      base = 16;
+    }
+    if (!/^[0-9a-fA-F]+$/.test(text)) fail("invalid " + name);
+    value = parseInt(text, base);
+    if (!Number.isFinite(value) || value < 0 || value > 0xffff) {
+      fail("invalid " + name);
+    }
+    return value;
+  }
+
+  function parseLoops(s) {
+    const text = String(s == null ? "" : s).trim();
+    const value = Number(text);
+    if (!Number.isInteger(value) || value < 0 || value > 255) {
+      fail("invalid loops");
+    }
+    return value;
+  }
+
+  function hex2(v) {
+    return (v & 0xff).toString(16).toUpperCase().padStart(2, "0");
+  }
+
+  function hex4(v) {
+    return "#" + (v & 0xffff).toString(16).toUpperCase().padStart(4, "0");
+  }
+
+  function stripExt(name) {
+    return String(name || "music").replace(/\.[^.\\/]+$/, "");
+  }
+
+  function baseName(path) {
+    return String(path || "").split(/[\\/]/).pop();
+  }
+
+  function normalizeZipPath(path) {
+    return String(path || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  }
+
+  function bytesFromText(text) {
+    if (enc) return enc.encode(text);
+    const out = new Uint8Array(text.length);
+    for (let i = 0; i < text.length; i++) out[i] = text.charCodeAt(i) & 0xff;
+    return out;
+  }
+
+  function parseHeader(ayt) {
+    const h = {
+      version: 0,
+      activeMask: 0,
+      patternSize: 0,
+      firstSeq: 0,
+      loopSeq: 0,
+      listInit: 0,
+      nbPatternPtr: 0,
+      platformFreq: 0,
+      reserved: 0,
+      active: new Array(14).fill(false),
+      activeCount: 0
+    };
+
+    if (ayt.length < 14) fail("AYT file is smaller than 14-byte header");
+    h.version = ayt[0];
+    h.activeMask = rd16le(ayt, 1);
+    h.patternSize = ayt[3];
+    h.firstSeq = rd16le(ayt, 4);
+    h.loopSeq = rd16le(ayt, 6);
+    h.listInit = rd16le(ayt, 8);
+    h.nbPatternPtr = rd16le(ayt, 10);
+    h.platformFreq = ayt[12];
+    h.reserved = ayt[13];
+
+    if (h.patternSize === 0) fail("AYT pattern size is zero");
+    if (h.firstSeq < 14 || h.firstSeq > ayt.length) {
+      fail("AYT first sequence offset is invalid");
+    }
+    if (h.loopSeq < h.firstSeq || h.loopSeq > ayt.length) {
+      fail("AYT loop sequence offset is invalid");
+    }
+    if (h.listInit >= ayt.length) fail("AYT init list offset is invalid");
+    if (h.firstSeq + h.nbPatternPtr * 2 > ayt.length) {
+      fail("AYT sequence pointer table exceeds file size");
+    }
+
+    for (let r = 0; r <= 13; r++) {
+      if (h.activeMask & (0x8000 >>> r)) {
+        h.active[r] = true;
+        h.activeCount++;
+      }
+    }
+    if (!h.active[13]) fail("AYT R13 must be active for this player format");
+    return h;
+  }
+
+  function countInitPairs(ayt, listInit) {
+    let p = listInit;
+    let n = 0;
+    while (p < ayt.length) {
+      const r = ayt[p++];
+      if (r === 0xff) return n;
+      if (p >= ayt.length) fail("AYT init list is truncated");
+      p++;
+      n++;
+    }
+    fail("AYT init list is missing 0xff terminator");
+  }
+
+  function makeRuntimeAyt(src, h, aytAddr) {
+    const out = new Uint8Array(src);
+    const patternBase = u16(aytAddr + 14);
+    for (let i = 0; i < h.nbPatternPtr; i++) {
+      const p = h.firstSeq + i * 2;
+      const off = rd16le(out, p);
+      wr16le(out, p, u16(patternBase + off));
+    }
+    return out;
+  }
+
+  function firstActiveBeforeR13(h) {
+    for (let r = 0; r <= 12; r++) {
+      if (h.active[r]) return r;
+    }
+    return -1;
+  }
+
+  function nextActiveBeforeR13(h, from) {
+    for (let r = from + 1; r <= 12; r++) {
+      if (h.active[r]) return r;
+    }
+    return -1;
+  }
+
+  function absAddr(base, off) {
+    return u16(base + off);
+  }
+
+  function buildPlayer(o, runtimeAyt, h) {
+    const out = [];
+    const info = {
+      cpuNops: 0,
+      playerSize: 0,
+      b4Offset: 0,
+      hasInit: false,
+      initCount: 0,
+      firstReg: 0,
+      b2Blocks: 0,
+      patchedLdC: 0,
+      removedIncC: 0
+    };
+
+    let b1FirstSeq;
+    let b1FirstReg;
+    let b1PatternIdx;
+    let musicCntOff;
+    let musicCntPtrOff;
+    let loopSeqOff;
+    let cpu;
+
+    const firstReg = firstActiveBeforeR13(h);
+    if (firstReg < 0) {
+      fail("AYT has no active register in R0..R12; original builder would hang");
+    }
+    info.firstReg = firstReg;
+
+    const ptrFirstSeq = u16(o.aytAddr + h.firstSeq);
+    const ptrLoopSeq = u16(o.aytAddr + h.loopSeq);
+    const ptrInit = u16(o.aytAddr + h.listInit);
+
+    if (o.modeJp) {
+      append(out, B1_JP);
+      b1FirstSeq = OFF.B1_JP_FIRST_SEQ;
+      b1FirstReg = OFF.B1_JP_FIRST_REG;
+      b1PatternIdx = OFF.B1_JP_PATTERN_IDX;
+      cpu = 21 + 58;
+    } else {
+      append(out, B1_CALL);
+      b1FirstSeq = OFF.B1_CALL_FIRST_SEQ;
+      b1FirstReg = OFF.B1_CALL_FIRST_REG;
+      b1PatternIdx = OFF.B1_CALL_PATTERN_IDX;
+      cpu = 29 + 61;
+    }
+
+    patch16(out, b1FirstSeq, ptrFirstSeq);
+    patch8(out, b1FirstReg, firstReg);
+    patch16(out, b1PatternIdx, 0);
+
+    let current = firstReg;
+    while (current >= 0 && current <= 12) {
+      const b2Off = append(out, B2);
+      info.b2Blocks++;
+      cpu = u16(cpu + 31);
+      const next = nextActiveBeforeR13(h, current);
+
+      if (next >= 0) {
+        if (next === current + 1) {
+          current = next;
+          continue;
+        }
+        patch8(out, b2Off + B2.length - 1, 0x0e);
+        out.splice(b2Off + B2.length, 0, next & 0xff);
+        info.patchedLdC++;
+        cpu = u16(cpu + 1);
+        current = next;
+      } else {
+        if (current === 12) {
+          out.length--;
+          info.removedIncC++;
+          cpu = u16(cpu - 1);
+        } else {
+          patch8(out, b2Off + B2.length - 1, 0x0e);
+          out.splice(b2Off + B2.length, 0, 12);
+          info.patchedLdC++;
+          cpu = u16(cpu + 1);
+        }
+        break;
+      }
+    }
+
+    const b3 = o.modeJp ? B3_JP : B3_CALL;
+    const b3Off = append(out, b3);
+
+    patch16(out, b3Off + OFF.B3_SEQ_PTR_UPD, absAddr(o.playerAddr, b1FirstSeq));
+    patch16(out, b3Off + OFF.B3_PAT_COUNT_1, absAddr(o.playerAddr, b1PatternIdx));
+    patch8(out, b3Off + OFF.B3_PATTERN_SIZE, h.patternSize);
+    patch16(out, b3Off + OFF.B3_PAT_COUNT_2, absAddr(o.playerAddr, b1PatternIdx));
+
+    if (o.modeJp) {
+      patch16(out, b3Off + OFF.B3_JP_EXIT_PTR, o.returnAddr);
+      musicCntOff = OFF.B3_JP_MUSIC_CNT;
+      musicCntPtrOff = OFF.B3_JP_MUSIC_CNT_PTR;
+      loopSeqOff = OFF.B3_JP_LOOP_SEQ;
+    } else {
+      const reloadSpAbs = absAddr(o.playerAddr, b3Off + OFF.B3_CALL_RELOAD_SP);
+      patch16(out, OFF.B1_CALL_SAVE_SP, reloadSpAbs);
+      musicCntOff = OFF.B3_CALL_MUSIC_CNT;
+      musicCntPtrOff = OFF.B3_CALL_MUSIC_CNT_PTR;
+      loopSeqOff = OFF.B3_CALL_LOOP_SEQ;
+    }
+
+    patch8(out, b3Off + musicCntOff, o.loops);
+    patch16(out, b3Off + musicCntPtrOff, absAddr(o.playerAddr, b3Off + musicCntOff));
+    patch16(out, b3Off + loopSeqOff, ptrLoopSeq);
+
+    const initCount = countInitPairs(runtimeAyt, h.listInit);
+    info.initCount = initCount;
+    info.hasInit = initCount > 0;
+    info.cpuNops = cpu;
+
+    if (initCount > 0) {
+      const b4 = o.modeJp ? B4_JP : B4_CALL;
+      const b4Abs = absAddr(o.playerAddr, out.length);
+      patch8(out, 0, 0xc3);
+      patch16(out, 1, b4Abs);
+
+      const initCpu = (o.modeJp ? (83 - 35) : (82 - 35)) + initCount * 35;
+      const diff = u16(cpu - initCpu);
+      const fineWait = ((diff & 3) ^ 3) & 0xff;
+      const cptWait = ((((diff >>> 2) - 1) & 0xff) >>> 0);
+
+      const b4Off = append(out, b4);
+      patch16(out, b4Off + OFF.B4_PTR_INIT, ptrInit);
+      patch16(out, b4Off + OFF.B4_PLAYER_ENTRY, o.playerAddr);
+      patch8(out, b4Off + OFF.B4_FINE_WAIT, fineWait);
+      patch8(out, b4Off + OFF.B4_CPT_WAIT, cptWait);
+      info.b4Offset = b4Off;
+    }
+
+    info.playerSize = out.length;
+    return { data: new Uint8Array(out), info };
+  }
+
+  function rangesOverlap(a0, a1, b0, b1) {
+    return a0 < b1 && b0 < a1;
+  }
+
+  function checkProgramRange(programAddr, launcherSize, d0a, d0b, d1a, d1b) {
+    const p0 = programAddr;
+    const p1 = p0 + launcherSize;
+    if (p1 > 0x10000) fail("launcher program range exceeds CPC 64K address space");
+    if (rangesOverlap(p0, p1, d0a, d0b) ||
+        (d1a !== d1b && rangesOverlap(p0, p1, d1a, d1b))) {
+      fail("launcher program overlaps generated player/AYT data");
+    }
+  }
+
+  function pickCallProgramAddr(o, launcherSize, d0a, d0b, d1a, d1b) {
+    let p = o.haveProgramAddr ? o.programAddr : DEFAULT_PROGRAM_ADDR;
+    const maxEnd = Math.max(d0b, d1b);
+
+    if (!o.haveProgramAddr) {
+      const p1 = p + launcherSize;
+      if (p < maxEnd ||
+          rangesOverlap(p, p1, d0a, d0b) ||
+          (d1a !== d1b && rangesOverlap(p, p1, d1a, d1b))) {
+        p = maxEnd;
+      }
+    } else if (p < maxEnd) {
+      fail("--program-addr must be after generated data for generated ASM");
+    }
+
+    if (p > 0xffff) fail("cannot place launcher program");
+    if (p < maxEnd) fail("--return-addr places generated launcher before generated data");
+    checkProgramRange(p, launcherSize, d0a, d0b, d1a, d1b);
+    return p & 0xffff;
+  }
+
+  function pickJpProgramAddr(o, launcherSize, d0a, d0b, d1a, d1b) {
+    let p;
+
+    if (o.autoJp && !o.haveReturnAddr) {
+      p = pickCallProgramAddr(o, launcherSize, d0a, d0b, d1a, d1b);
+      o.programAddr = p;
+      o.haveProgramAddr = true;
+      o.returnAddr = u16(p + JP_RETURN_OFFSET);
+      o.haveReturnAddr = true;
+      return p;
+    }
+
+    if (!o.haveReturnAddr) fail("--return-addr is required in jp mode");
+    if (o.returnAddr < JP_RETURN_OFFSET) fail("--return-addr is too low for generated jp launcher");
+    p = o.returnAddr - JP_RETURN_OFFSET;
+
+    if (o.haveProgramAddr) {
+      const expectedReturn = o.programAddr + JP_RETURN_OFFSET;
+      if ((expectedReturn & 0xffff) !== o.returnAddr) {
+        fail("--program-addr + jp return offset does not match --return-addr");
+      }
+      p = o.programAddr;
+    }
+
+    if (p > 0xffff) fail("cannot place launcher program");
+    checkProgramRange(p, launcherSize, d0a, d0b, d1a, d1b);
+    return p & 0xffff;
+  }
+
+  function asmProgramAddrTwo(o, playerLen, aytLen) {
+    const p0 = o.playerAddr;
+    const p1 = p0 + playerLen;
+    const a0 = o.aytAddr;
+    const a1 = a0 + aytLen;
+    const launcherSize = o.modeJp ? JP_LAUNCHER_SIZE : CALL_LAUNCHER_SIZE;
+
+    if (o.modeJp) return pickJpProgramAddr(o, launcherSize, p0, p1, a0, a1);
+    return pickCallProgramAddr(o, launcherSize, p0, p1, a0, a1);
+  }
+
+  function asmProgramAddrBundle(o, bundleLen) {
+    const b0 = o.haveBundleBase ? o.bundleBase : o.playerAddr;
+    const b1 = b0 + bundleLen;
+    const launcherSize = o.modeJp ? JP_LAUNCHER_SIZE : CALL_LAUNCHER_SIZE;
+
+    if (o.modeJp) return pickJpProgramAddr(o, launcherSize, b0, b1, 0, 0);
+    return pickCallProgramAddr(o, launcherSize, b0, b1, 0, 0);
+  }
+
+  function makeBundle(o, player, runtimeAyt) {
+    const p0 = o.playerAddr;
+    const p1 = p0 + player.length;
+    const a0 = o.aytAddr;
+    const a1 = a0 + runtimeAyt.length;
+    const base = o.haveBundleBase ? o.bundleBase : p0;
+
+    if (base !== p0) fail("--bundle-base must equal --player-addr");
+    if (a0 !== p1) fail("bundle internal error: AYT is not immediately after player");
+    if (a1 > 0x10000) fail("bundle exceeds CPC 64K address space");
+
+    const out = new Uint8Array(player.length + runtimeAyt.length);
+    out.set(player, 0);
+    out.set(runtimeAyt, player.length);
+    return out;
+  }
+
+  function writeAsmLauncher(o, bundle, binary0, binary1, programAddr) {
+    const lines = [];
+    lines.push(";; AYT prebuilt " + (bundle ? "bundle" : "two-file") +
+      " test / " + (o.modeJp ? "SP-JP" : "CALL") + " mode");
+    lines.push(";; Generated by aytpcbuild.");
+    lines.push("");
+
+    if (bundle) {
+      lines.push("AYT_Bundle equ " + hex4(o.haveBundleBase ? o.bundleBase : o.playerAddr));
+      lines.push("AYT_Player equ AYT_Bundle");
+      lines.push("MyProgram  equ " + hex4(programAddr));
+      lines.push("");
+      lines.push("        org AYT_Bundle");
+      lines.push("        incbin \"" + baseName(binary0) + "\"");
+      lines.push("");
+    } else {
+      lines.push("AYT_Player equ " + hex4(o.playerAddr));
+      lines.push("AYT_File   equ " + hex4(o.aytAddr));
+      lines.push("MyProgram  equ " + hex4(programAddr));
+      lines.push("");
+      lines.push("        org AYT_Player");
+      lines.push("        incbin \"" + baseName(binary0) + "\"");
+      lines.push("");
+      lines.push("        org AYT_File");
+      lines.push("        incbin \"" + baseName(binary1) + "\"");
+      lines.push("");
+    }
+
+    lines.push("        org MyProgram");
+    lines.push("        run $");
+    lines.push("");
+    lines.push("StartExample");
+    lines.push("        di");
+    lines.push("        ld sp,MyStack");
+    if (o.modeJp) lines.push("        ld (AYT_Player_ReloadSP),sp");
+    lines.push("        ld hl,#c9fb");
+    lines.push("        ld (#38),hl");
+    lines.push("        ei");
+    lines.push("");
+    lines.push("MainLoop");
+    lines.push("        ld b,#f5");
+    lines.push("");
+    lines.push("WaitVsync");
+    lines.push("        in a,(c)");
+    lines.push("        rra");
+    lines.push("        jr nc,WaitVsync");
+    lines.push("");
+    lines.push("        halt");
+    lines.push("        halt");
+    lines.push("");
+    lines.push("        ld bc,#7f10");
+    lines.push("        ld a,#4c");
+    lines.push("        out (c),c");
+    lines.push("        out (c),a");
+    lines.push("");
+    if (o.modeJp) {
+      lines.push("        jp AYT_Player");
+      lines.push("AYT_Player_Ret");
+      lines.push("AYT_Player_ReloadSP equ $+1");
+      lines.push("        ld sp,0");
+      lines.push("");
+    } else {
+      lines.push("        call AYT_Player");
+      lines.push("");
+    }
+    lines.push("        ld bc,#7f10");
+    lines.push("        ld a,#54");
+    lines.push("        out (c),c");
+    lines.push("        out (c),a");
+    lines.push("");
+    lines.push("        jr MainLoop");
+    lines.push("");
+    lines.push("        ds 20");
+    lines.push("MyStack");
+    return lines.join("\n") + "\n";
+  }
+
+  function writeReport(o, h, bi, aytSize, bundleSize, outputs, asmTwoProgram, asmBundleProgram) {
+    const lines = [];
+    const active = [];
+    for (let r = 0; r <= 13; r++) {
+      if (h.active[r]) active.push("R" + String(r).padStart(2, "0"));
+    }
+
+    lines.push("AYT PC BUILD REPORT");
+    lines.push("===================");
+    lines.push("");
+    lines.push("Input file        : " + o.inputName);
+    lines.push("Mode              : " + (o.modeJp ? "SP/JP" : "CALL"));
+    lines.push("Player address    : " + hex4(o.playerAddr));
+    lines.push("Runtime AYT addr  : " + hex4(o.aytAddr));
+    if (outputs.bundle) {
+      lines.push("Bundle layout     : compact");
+      lines.push("Bundle base       : " + hex4(o.haveBundleBase ? o.bundleBase : o.playerAddr));
+      lines.push("Bundle size       : " + bundleSize + " bytes");
+    }
+    if (o.modeJp) lines.push("Return address    : " + hex4(o.returnAddr));
+    lines.push("Loops             : " + o.loops);
+    lines.push("");
+    lines.push("Outputs");
+    lines.push("-------");
+    if (outputs.player) lines.push("Player binary     : " + outputs.player);
+    if (outputs.runtime) lines.push("Runtime AYT       : " + outputs.runtime);
+    if (outputs.bundle) lines.push("Bundle binary     : " + outputs.bundle);
+    if (outputs.asmTwo) {
+      lines.push("Two-file ASM      : " + outputs.asmTwo +
+        (asmTwoProgram != null ? " (RUN " + hex4(asmTwoProgram) + ")" : ""));
+    }
+    if (outputs.asmBundle) {
+      lines.push("Bundle ASM        : " + outputs.asmBundle +
+        (asmBundleProgram != null ? " (RUN " + hex4(asmBundleProgram) + ")" : ""));
+    }
+    lines.push("");
+    lines.push("AYT");
+    lines.push("---");
+    lines.push("Size              : " + aytSize + " bytes");
+    lines.push("Version           : #" + hex2(h.version));
+    lines.push("Pattern size      : " + h.patternSize);
+    lines.push("First seq offset  : " + hex4(h.firstSeq));
+    lines.push("Loop seq offset   : " + hex4(h.loopSeq));
+    lines.push("Init list offset  : " + hex4(h.listInit));
+    lines.push("Pattern pointers  : " + h.nbPatternPtr);
+    lines.push("Platform id       : " + (h.platformFreq & 31));
+    lines.push("Frequency id      : " + (h.platformFreq >>> 5));
+    lines.push("Active registers  : " + active.join(", "));
+    lines.push("Active count      : " + h.activeCount);
+    lines.push("");
+    lines.push("Player");
+    lines.push("------");
+    lines.push("Size              : " + bi.playerSize + " bytes");
+    lines.push("CPU               : " + bi.cpuNops + " nops");
+    lines.push("First AY reg      : R" + String(bi.firstReg).padStart(2, "0"));
+    lines.push("B2 blocks         : " + bi.b2Blocks);
+    lines.push("Patched ld c,n    : " + bi.patchedLdC);
+    lines.push("Removed inc c     : " + bi.removedIncC);
+    lines.push("Init block        : " + (bi.hasInit ? "yes" : "no"));
+    lines.push("Init pairs        : " + bi.initCount);
+    if (bi.hasInit) lines.push("B4 offset         : " + bi.b4Offset);
+    return lines.join("\n") + "\n";
+  }
+
+  function buildCore(src, inputName, rawOptions, caseName) {
+    const h = parseHeader(src);
+    const kind = caseName.indexOf("bundle") >= 0 ? "bundle" : "two";
+    const modeJp = caseName.indexOf("sp_") === 0;
+    const outputs = {};
+    const o = {
+      inputName,
+      playerAddr: rawOptions.playerAddr,
+      aytAddr: rawOptions.aytAddr,
+      bundleBase: rawOptions.bundleBase || rawOptions.playerAddr,
+      haveBundleBase: !!rawOptions.haveBundleBase,
+      programAddr: rawOptions.programAddr || 0,
+      haveProgramAddr: !!rawOptions.haveProgramAddr,
+      returnAddr: rawOptions.returnAddr || 0,
+      haveReturnAddr: !!rawOptions.haveReturnAddr,
+      autoJp: !!rawOptions.autoJp,
+      loops: rawOptions.loops,
+      modeJp
+    };
+
+    let runtime = makeRuntimeAyt(src, h, o.aytAddr);
+    let built = buildPlayer(o, runtime, h);
+    let player = built.data;
+    let info = built.info;
+    let bundle = null;
+    let asmTwoProgram = null;
+    let asmBundleProgram = null;
+
+    if (kind === "bundle") {
+      const compactAytAddr = o.playerAddr + player.length;
+      if (compactAytAddr + src.length > 0x10000) {
+        fail("compact player+AYT range exceeds CPC 64K address space");
+      }
+      if (compactAytAddr !== o.aytAddr) {
+        o.aytAddr = compactAytAddr & 0xffff;
+        runtime = makeRuntimeAyt(src, h, o.aytAddr);
+        built = buildPlayer(o, runtime, h);
+        player = built.data;
+        info = built.info;
+      }
+      bundle = makeBundle(o, player, runtime);
+    }
+
+    if (modeJp && o.autoJp && !o.haveReturnAddr) {
+      if (kind === "bundle") {
+        asmBundleProgram = asmProgramAddrBundle(o, bundle.length);
+      } else {
+        asmTwoProgram = asmProgramAddrTwo(o, player.length, src.length);
+      }
+      runtime = makeRuntimeAyt(src, h, o.aytAddr);
+      built = buildPlayer(o, runtime, h);
+      player = built.data;
+      info = built.info;
+      if (kind === "bundle") {
+        bundle = makeBundle(o, player, runtime);
+      }
+    }
+
+    if (kind === "two") {
+      asmTwoProgram = asmProgramAddrTwo(o, player.length, src.length);
+    } else {
+      asmBundleProgram = asmProgramAddrBundle(o, bundle.length);
+    }
+
+    return { h, o, player, runtime, bundle, info, asmTwoProgram, asmBundleProgram, outputs };
+  }
+
+  function buildCase(src, inputName, rawOptions, caseName, names) {
+    const result = buildCore(src, inputName, rawOptions, caseName);
+    const out = [];
+    const base = names.base;
+    const prefix = names.prefix;
+    const caseDir = caseName;
+    const dir = prefix ? prefix + "/" + caseDir + "/" + base : caseDir + "/" + base;
+    const outputs = {};
+    const kind = caseName.indexOf("bundle") >= 0 ? "bundle" : "two";
+
+    function add(relName, bytes, type) {
+      const path = normalizeZipPath(dir + "/" + relName);
+      out.push({ path, name: relName, bytes, type });
+      return relName;
+    }
+
+    if (kind === "two") {
+      outputs.player = add(base + ".player.bin", result.player, "application/octet-stream");
+      outputs.runtime = add(base + ".runtime.ayt", result.runtime, "application/octet-stream");
+      if (rawOptions.generateAsm) {
+        const asm = writeAsmLauncher(result.o, false, outputs.player, outputs.runtime, result.asmTwoProgram);
+        outputs.asmTwo = add(base + ".two.asm", bytesFromText(asm), "text/plain");
+      }
+    } else {
+      outputs.bundle = add(base + ".bundle.bin", result.bundle, "application/octet-stream");
+      if (rawOptions.generateAsm) {
+        const asm = writeAsmLauncher(result.o, true, outputs.bundle, null, result.asmBundleProgram);
+        outputs.asmBundle = add(base + ".bundle.asm", bytesFromText(asm), "text/plain");
+      }
+    }
+
+    if (rawOptions.generateReport) {
+      const report = writeReport(
+        result.o,
+        result.h,
+        result.info,
+        src.length,
+        result.bundle ? result.bundle.length : 0,
+        outputs,
+        outputs.asmTwo ? result.asmTwoProgram : null,
+        outputs.asmBundle ? result.asmBundleProgram : null
+      );
+      add(base + ".report.txt", bytesFromText(report), "text/plain");
+    }
+
+    return out;
+  }
+
+  function buildFromBytes(src, inputName, options) {
+    const cases = options.caseName === "all"
+      ? ["call_two", "call_bundle", "sp_two", "sp_bundle"]
+      : [options.caseName];
+    const base = stripExt(baseName(inputName));
+    const prefix = normalizeZipPath(options.outputRoot || "");
+    let outputs = [];
+
+    for (const caseName of cases) {
+      outputs = outputs.concat(buildCase(src, inputName, options, caseName, { base, prefix }));
+    }
+    return outputs;
+  }
+
+  function crc32(bytes) {
+    let c = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++) {
+      c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+    }
+    return (c ^ 0xffffffff) >>> 0;
+  }
+
+  const CRC_TABLE = (function () {
+    const table = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      table[n] = c >>> 0;
+    }
+    return table;
+  }());
+
+  function dosTimeDate(date) {
+    const year = Math.max(1980, date.getFullYear());
+    const time = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+    const day = ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+    return { time, day };
+  }
+
+  function push16(out, v) {
+    out.push(v & 0xff, (v >>> 8) & 0xff);
+  }
+
+  function push32(out, v) {
+    out.push(v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, (v >>> 24) & 0xff);
+  }
+
+  function createZip(files) {
+    const out = [];
+    const central = [];
+    const now = dosTimeDate(new Date());
+
+    for (const file of files) {
+      const pathBytes = bytesFromText(normalizeZipPath(file.path));
+      const data = file.bytes;
+      const crc = crc32(data);
+      const offset = out.length;
+
+      push32(out, 0x04034b50);
+      push16(out, 20);
+      push16(out, 0x0800);
+      push16(out, 0);
+      push16(out, now.time);
+      push16(out, now.day);
+      push32(out, crc);
+      push32(out, data.length);
+      push32(out, data.length);
+      push16(out, pathBytes.length);
+      push16(out, 0);
+      for (const b of pathBytes) out.push(b);
+      for (const b of data) out.push(b);
+
+      push32(central, 0x02014b50);
+      push16(central, 20);
+      push16(central, 20);
+      push16(central, 0x0800);
+      push16(central, 0);
+      push16(central, now.time);
+      push16(central, now.day);
+      push32(central, crc);
+      push32(central, data.length);
+      push32(central, data.length);
+      push16(central, pathBytes.length);
+      push16(central, 0);
+      push16(central, 0);
+      push16(central, 0);
+      push16(central, 0);
+      push32(central, 0);
+      push32(central, offset);
+      for (const b of pathBytes) central.push(b);
+    }
+
+    const centralOffset = out.length;
+    for (const b of central) out.push(b);
+    push32(out, 0x06054b50);
+    push16(out, 0);
+    push16(out, 0);
+    push16(out, files.length);
+    push16(out, files.length);
+    push32(out, central.length);
+    push32(out, centralOffset);
+    push16(out, 0);
+    return new Uint8Array(out);
+  }
+
+  function setupUI() {
+    const doc = global.document;
+    const fileInput = doc.getElementById("fileInput");
+    const caseSelect = doc.getElementById("caseSelect");
+    const playerAddr = doc.getElementById("playerAddr");
+    const aytAddr = doc.getElementById("aytAddr");
+    const loops = doc.getElementById("loops");
+    const outRoot = doc.getElementById("outRoot");
+    const autoJp = doc.getElementById("autoJp");
+    const programAddr = doc.getElementById("programAddr");
+    const returnAddr = doc.getElementById("returnAddr");
+    const genAsm = doc.getElementById("genAsm");
+    const genReport = doc.getElementById("genReport");
+    const generateBtn = doc.getElementById("generateBtn");
+    const clearBtn = doc.getElementById("clearBtn");
+    const zipBtn = doc.getElementById("zipBtn");
+    const outputsEl = doc.getElementById("outputs");
+    const outputCount = doc.getElementById("outputCount");
+    const status = doc.getElementById("status");
+    let generated = [];
+
+    function setStatus(text, kind) {
+      status.textContent = text;
+      status.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function readOptions() {
+      const haveProgramAddr = programAddr.value.trim() !== "";
+      const haveReturnAddr = returnAddr.value.trim() !== "";
+      return {
+        caseName: caseSelect.value,
+        playerAddr: parseAddress(playerAddr.value, "player_addr"),
+        aytAddr: parseAddress(aytAddr.value, "ayt_addr"),
+        loops: parseLoops(loops.value),
+        outputRoot: outRoot.value.trim(),
+        autoJp: autoJp.checked,
+        haveProgramAddr,
+        programAddr: haveProgramAddr ? parseAddress(programAddr.value, "program_addr") : 0,
+        haveReturnAddr,
+        returnAddr: haveReturnAddr ? parseAddress(returnAddr.value, "return_addr") : 0,
+        generateAsm: genAsm.checked,
+        generateReport: genReport.checked
+      };
+    }
+
+    function renderOutputs() {
+      outputCount.textContent = generated.length + (generated.length > 1 ? " fichiers" : " fichier");
+      zipBtn.disabled = generated.length === 0;
+      if (generated.length === 0) {
+        outputsEl.innerHTML = '<div class="empty">Aucune sortie generee.</div>';
+        return;
+      }
+      const rows = generated.map((file, index) => {
+        return "<tr>" +
+          '<td class="path">' + escapeHtml(file.path) + "</td>" +
+          '<td class="mono">' + file.bytes.length + "</td>" +
+          '<td><button type="button" data-index="' + index + '">Telecharger</button></td>' +
+          "</tr>";
+      }).join("");
+      outputsEl.innerHTML =
+        "<table><thead><tr><th>Fichier</th><th>Taille</th><th></th></tr></thead><tbody>" +
+        rows + "</tbody></table>";
+      outputsEl.querySelectorAll("button[data-index]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const file = generated[Number(btn.dataset.index)];
+          downloadBytes(file.name || baseName(file.path), file.bytes, file.type || "application/octet-stream");
+        });
+      });
+    }
+
+    async function generate() {
+      try {
+        const files = Array.from(fileInput.files || []);
+        if (files.length === 0) fail("Selectionne au moins un fichier .ayt");
+        const options = readOptions();
+        generated = [];
+        for (const file of files) {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          generated = generated.concat(buildFromBytes(bytes, file.name, options));
+        }
+        renderOutputs();
+        setStatus("Generation terminee: " + generated.length + " fichier(s).", "ok");
+      } catch (err) {
+        setStatus(err && err.message ? err.message : String(err), "err");
+      }
+    }
+
+    function clear() {
+      generated = [];
+      renderOutputs();
+      setStatus("Pret.");
+    }
+
+    generateBtn.addEventListener("click", generate);
+    clearBtn.addEventListener("click", clear);
+    zipBtn.addEventListener("click", () => {
+      if (generated.length === 0) return;
+      const zip = createZip(generated);
+      downloadBytes("aytpcbuild-web.zip", zip, "application/zip");
+    });
+
+    renderOutputs();
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[ch]));
+  }
+
+  function downloadBytes(name, bytes, type) {
+    const blob = new Blob([bytes], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  global.AYTPCBuildWeb = {
+    buildFromBytes,
+    createZip,
+    parseAddress,
+    parseHeader,
+    buildPlayer,
+    makeRuntimeAyt
+  };
+
+  if (global.document) setupUI();
+}(typeof window !== "undefined" ? window : globalThis));
+  </script>
+</body>
+</html>
