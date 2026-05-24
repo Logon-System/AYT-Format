@@ -54,6 +54,11 @@ Linux or macOS:
 
 The C code does not use any external dependencies.
 
+## Web Html/Js Application 
+
+On your internet explorer:
+
+		aytpcbuild-web.html (see "web" repertory)
 
 ## Windows interactive script
 
