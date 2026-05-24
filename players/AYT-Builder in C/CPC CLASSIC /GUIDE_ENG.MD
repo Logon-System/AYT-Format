@@ -23,11 +23,11 @@ The results are located in:
 			aytpcbuild.c
 			- Portable C99 source.
 
-		aytpcbuild.exe
-		- Precompiled Windows executable.
+			aytpcbuild.exe
+			- Precompiled Windows executable.
 
-		aytpcbuild-menu.bat
-		- Interactive Windows menu script to run aytpcbuild.exe without typing the whole command line.
+			aytpcbuild-menu.bat
+			- Interactive Windows menu script to run aytpcbuild.exe without typing the whole command line.
 
 		ayt\
 		Included source AYT files:
