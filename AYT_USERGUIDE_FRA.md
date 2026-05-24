@@ -7,7 +7,7 @@ Il est possible d'en récupérer des quantités extraordinaires sur différents 
 
 Mais il est aussi possible de partir de ses propres compositions, pour les exporter dans ce format. 
 
-Si le tracker **Arkos Tracker**[^1] propose un export **YM**, il est également possible d'exporter directement des fichiers AYT depuis une version spécifique disponible ici:
+Si le tracker **Arkos Tracker**[^1] propose un export **YM**, il est également possible d'exporter directement des fichiers **AYT** depuis une version spécifique disponible ici:
 http://e.pc.cd/pkly6alK (documentation en français https://amstrad.neocities.org/chiptoolz-readme)
 
 Vous pourrez y trouver une version spécifique du tracker **Furnace Tracker**[^3] qui permet d'exporter des fichiers **YM6**.
