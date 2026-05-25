@@ -7,12 +7,12 @@ It is possible to find an extraordinary number of them on various dedicated webs
 
 But it is also possible to start from your own compositions and export them in this format.
 
-For example, while the **Arkos Tracker** tracker offers a **YM** export.
+For example, while the **Arkos Tracker** [^1] tracker offers a **YM** export.
 
 (it is also possible to directly export **AYT** files from a derived version available here:
 http://e.pc.cd/pkly6alK (documentation in French: https://amstrad.neocities.org/chiptoolz-readme))
 
-You can also find there a specific version of the **Furnace Tracker** tracker that allows exporting **YM6** files.
+You can also find there a specific version of the **Furnace Tracker** [^3] tracker that allows exporting **YM6** files.
 
 Some emulators, such as **WinAPE** (CPC), also allow capturing a **YM** stream.
 
