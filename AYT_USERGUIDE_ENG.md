@@ -7,15 +7,19 @@ It is possible to find an extraordinary number of them on various dedicated webs
 
 But it is also possible to start from your own compositions and export them in this format.
 
-For example, while the **Arkos Tracker** tracker offers a **YM** export, it is also possible to directly export **AYT** files from a derived version available here:
+For example, while the **Arkos Tracker** tracker offers a **YM** export.
 
-http://e.pc.cd/pkly6alK (documentation in French: https://amstrad.neocities.org/chiptoolz-readme)
+(it is also possible to directly export **AYT** files from a derived version available here:
+http://e.pc.cd/pkly6alK (documentation in French: https://amstrad.neocities.org/chiptoolz-readme))
 
 You can also find there a specific version of the **Furnace Tracker** tracker that allows exporting **YM6** files.
 
 Some emulators, such as **WinAPE** (CPC), also allow capturing a **YM** stream.
 
 Players such as **AY_Emul**[^2] support playback of numerous ZX Spectrum formats and provide this type of export.
+
+Regarding ZX Spectrum formats, Tronic has created a tool that allows you to directly transfer **PT3** music to **YM6** format.
+You'll find it in the "converters" section. The archive contains 151 **YM6** tracks.
 
 Ideally, the **YM** file should contain only the music data — without extra silence at the beginning or end — and be as short as possible, playing the track only once (i.e., no recorded looping).  
 It is therefore preferable to use a tracker to produce a **YM** file, as this avoids post-processing cleanup.
