@@ -24,7 +24,7 @@ You'll find it in the "converters" section. The archive contains 151 **YM6** tra
 A compilation of several of these tools has been created in the **forge** folder.
 
 **aytforge** combines various tools into one:
-- It currently allows conversion of **PT1**, **PT2**, **PT3**, **PSG**, **SQT**, **YM**, **YM5**, and **YM6** formats to **AYT**.
+- It currently allows conversion of **FAP**, **PT1**, **PT2**, **PT3**, **PSG**, **SQT**, **YM**, **YM5**, and **YM6** formats to **AYT**.
 - It manages clock corrections and compresses the converted **AYT** files.
 - It can optionally generate a pre-compiled **CPC** or **CPC+** player (RAM versions).
 
