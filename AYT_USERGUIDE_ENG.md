@@ -21,8 +21,14 @@ Players such as **AY_Emul**[^2] support playback of numerous ZX Spectrum formats
 Regarding ZX Spectrum formats, Tronic has created a tool that allows you to directly transfer **PT3** music to **YM6** format.
 You'll find it in the "converters" section. The archive contains 151 **YM6** tracks.
 
-Ideally, the **YM** file should contain only the music data — without extra silence at the beginning or end — and be as short as possible, playing the track only once (i.e., no recorded looping).  
-It is therefore preferable to use a tracker to produce a **YM** file, as this avoids post-processing cleanup.
+A compilation of several of these tools has been created in the **forge** folder.
+
+**aytforge** combines various tools into one:
+- It currently allows conversion of **PT1**, **PT2**, **PT3**, **PSG**, **SQT**, **YM**, **YM5**, and **YM6** formats to **AYT**.
+- It manages clock corrections and compresses the converted **AYT** files.
+- It can optionally generate a pre-compiled **CPC** or **CPC+** player (RAM versions).
+
+Regarding **YMx** formats, they should ideally contain only the music data, without any additional silence at the beginning or end, and should be as short as possible, playing the track only once (the loop is not recorded). It is also recommended to use a tracker to produce a **YM** file, as this avoids the need for subsequent cleanup.
 
 As part of the **AYT Project**, online tools have been developed.
 
