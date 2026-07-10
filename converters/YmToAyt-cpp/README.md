@@ -9,7 +9,8 @@ The tool uses an advanced pattern search and an optional Genetic Algorithm (GA) 
 1.  [Features](#features)
 2.  [Building](#building)
 3.  [Usage](#usage)
-4.  [Options Reference](#options-reference)
+4.  [Optimizing for Compressed Size (compress-sweep.sh)](#optimizing-for-compressed-size-compress-sweepsh)
+5.  [Options Reference](#options-reference)
       - [General Options](#general-options)
       - [Pattern Search & Optimization](#pattern-search--optimization)
       - [Sound Scaling Options](#sound-scaling-options)
@@ -91,6 +92,77 @@ The two parameters (Mu and Lambda) for population size are used for the explorat
 ## Masking 
 
 By default, an additional method is enabled. It results in sending random data when register values can be ignored. It provides better results, at it reduces the number of unique sequences. If works usually well, but if you hear sound artifacts (due to internal PSG counter not reset), you can force using 0s instead of random values with `-Oz` or `--norm-patterns`. Final files will be slightly bigger, but the songs should play without any artifacts. You also can completly force using strict deduplication method only  with `--disable-pattern-masking` 
+
+## Optimizing for Compressed Size (compress-sweep.sh)
+
+When the `.AYT` is going to be **crunched** by a Z80 packer (ZX0, Shrinkler, …)
+before being embedded in a final binary — typically a **size-restricted
+production such as a 4K demo** — the goal is *not* the smallest raw `.AYT`, but
+the smallest file **after compression**. These two are not the same: a slightly
+looser `.AYT` heap often exposes more long-range redundancy for the cruncher, so
+it can compress *smaller* than a more tightly packed one.
+
+Because the `.AYT` is read through pointers (random access into the heap), it is
+fully decompressed into RAM once at load time. Decompression speed therefore
+matters little here — ratio is what counts — which is why a heavier cruncher like
+Shrinkler is a perfectly reasonable, deliberate choice despite its slower,
+larger decompressor.
+
+`compress-sweep.sh` explores this trade-off **without modifying the converter**:
+it just invokes it repeatedly. For each input file it sweeps
+`pattern size × optimization stage × masking × normalize`, compresses every
+candidate with a compressor you provide, and ranks the results by compressed
+size. It works on one or many `.ym` files.
+
+### Key finding: pattern size is the dominant lever
+
+Across tunes, **the pattern size is by far the most important parameter** for the
+final compressed size, and the best size *varies per tune* (hence the per-file
+sweep). By contrast, the heavy metaheuristics (`ga`, `sa`, `ils`, `tabu`) bring
+almost nothing once the data is compressed: **`greedy` is enough**. For fast
+sweeps, restrict the stages to `--stages "none greedy"`.
+
+### Invocation
+
+Two ready-made presets point at the Linux binaries in `compressors/`:
+
+```bash
+# ZX0 — tiny, fast, buffer-free decompressor (great default)
+./compress-sweep.sh --preset zx0 --stages "none greedy" yms/*.ym
+
+# Shrinkler — best ratio, slower/larger decompressor (chosen on purpose)
+./compress-sweep.sh --preset shrinkler --stages "none greedy" yms/*.ym
+```
+
+Or pass any compressor via a command template (`{in}` = candidate `.ayt`,
+`{out}` = compressed output):
+
+```bash
+./compress-sweep.sh --compressor './compressors/zx0.exe -f {in} {out}' yms/my_tune.ym
+```
+
+Useful axes: `--sizes MIN:MAX:STEP` (default `4:64:4`, use `1:128:1` for a full
+scan), `--stages "..."`, `--masking off|on|both`, `--normalize off|on|both`,
+`--seed N`, `--keep` (save the best `.ayt` per file), `-v` (show every candidate).
+
+### What you get
+
+A per-file recap comparing the compressed-aware optimum against the naive
+"smallest raw `.AYT`" choice, plus a global ranking and a full CSV
+(`compress-sweep.csv`). Example (ZX0, `--stages "none greedy"`):
+
+```
+fichier      b.size b.stage  comp*  | comp@raw  gain%
+an_base.ym   12     greedy   3338   | 3503      +4.7
+intro.ym     12     greedy   1543   | 1739      +11.3
+logon.ym     16     greedy   2295   | 2295      +0.0
+TOTAL                        7176   | 7537      +4.8
+```
+
+`comp*` is the smallest compressed size found; `comp@raw` is what you would have
+shipped by naively minimizing the raw `.AYT`. Here, picking parameters by
+compressed size saves ~5% overall (up to +11% on a single tune) — and note the
+winning pattern size differs between tunes (12 vs 16).
 
 ## Options Reference
 
