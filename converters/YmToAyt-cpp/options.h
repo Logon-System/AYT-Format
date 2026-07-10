@@ -50,6 +50,10 @@ struct Options {
     int ga_NUM_GENERATION_MAX = 100000;
     int ga_ADDITIONAL_GENERATIONS = 10000;
 
+    // Seed for the random generator (reproducible metaheuristics). Disabled by default.
+    bool useSeed = false;
+    uint32_t seed = 0;
+
     // Verbosity level
     int verbosity = 1;
 };

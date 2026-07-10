@@ -158,6 +158,8 @@ static void printUsage(const char* prog) {
          << "  --ga-gen-max N               Maximum number of generations" << endl
          << "  --ga-gen-ext N               When finding a new solution, extends number of "
             "generation, for further search"
+         << endl
+         << "  --seed N                     Seed the RNG for reproducible optimization results"
          << endl;
 }
 
@@ -380,6 +382,7 @@ int main(int argc, char** argv) {
             options.patternSizeStep = 1;
             options.patternSizeMax = 128;
             options.optimizationMethod = "ga";
+            options.optimizationLevel = 2; // Required so the metaheuristic actually runs
             continue;
         }
 
@@ -538,6 +541,21 @@ int main(int argc, char** argv) {
 
         if (parseOptionArgument({"--ga-gen-ext"}, &Options::ga_ADDITIONAL_GENERATIONS, options,
                                 argv, i, argc, &parseInt)) {
+            continue;
+        }
+
+        if (arg == "--seed") {
+            if (i + 1 >= argc) {
+                cerr << "Option " << arg << " requires an argument" << endl;
+                return 1;
+            }
+            try {
+                options.seed = static_cast<uint32_t>(stoul(argv[++i]));
+                options.useSeed = true;
+            } catch (...) {
+                cerr << "Invalid seed value for " << arg << endl;
+                return 1;
+            }
             continue;
         }
 
@@ -762,6 +780,10 @@ int main(int argc, char** argv) {
             }
 
             if (options.optimizationLevel > 1) {
+
+                // Reset the RNG per file so a given --seed yields reproducible results
+                if (options.useSeed)
+                    seed_rng(options.seed);
 
                 // Amélioration de l'ordre par stratégie d'évolution
                 optimization_running = true;

@@ -134,7 +134,7 @@ void mutate_by_index_swap(vector<int>& order, double tmut) {
  */
 OptimizedResult
 refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
-                                         const map<int, ByteBlock>& original_patterns,
+                                         const PatternBlocks& original_patterns,
                                          int patSize, Options &options, bool &optimization_running) {
     size_t N = original_patterns.size();
     if (N < 2)

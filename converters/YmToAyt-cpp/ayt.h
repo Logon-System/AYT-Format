@@ -14,8 +14,8 @@ class ResultSequences {
     int num_patterns;
     // Sequences (pointers to patterns)
     vector<ByteBlock> sequenced;
-    // patterns are data blocs to be sent to a register
-    map<int, ByteBlock> patternMap;   // Initial map of patterns
+    // patterns are data blocs to be sent to a register (indexed by dense pattern id)
+    PatternBlocks patternMap;         // Initial list of unique patterns
     OptimizedResult optimizedOverlap; // Optimized by greedy algorithm
 };
 

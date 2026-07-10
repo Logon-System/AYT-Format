@@ -58,7 +58,7 @@ vector<int> get_neighbor_by_reversal(const vector<int>& current_order) {
  * @return OptimizedResult : Optimized result
  */
 OptimizedResult refine_order_with_simulated_annealing(const OptimizedResult& glouton_result,
-                                                      const map<int, ByteBlock>& original_patterns,
+                                                      const PatternBlocks& original_patterns,
                                                       int patSize, Options& options,
                                                       bool& optimization_running) {
     if (glouton_result.optimized_block_order.size() < 2)

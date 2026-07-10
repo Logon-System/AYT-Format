@@ -34,7 +34,7 @@ vector<int> perturb(vector<int> order, mt19937& rng) {
  * @return La paire (ordre_optimal_local, coût_optimal_local).
  */
 pair<vector<int>, double> local_search(const vector<int>& current_order,
-                                       const map<int, ByteBlock>& original_patterns,
+                                       const PatternBlocks& original_patterns,
                                        double current_cost, int patSize) {
     vector<int> current = current_order;
     double cost = current_cost;
@@ -92,7 +92,7 @@ pair<vector<int>, double> local_search(const vector<int>& current_order,
  * @return OptimizedResult Le résultat final optimisé.
  */
 OptimizedResult refine_order_with_ils(const OptimizedResult& glouton_result,
-                                      const map<int, ByteBlock>& original_patterns,
+                                      const PatternBlocks& original_patterns,
                                       int max_iterations, int patSize, bool &optimization_running) {
     if (glouton_result.optimized_block_order.size() < 2)
         return glouton_result;

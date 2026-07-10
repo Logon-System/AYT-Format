@@ -368,23 +368,25 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
 
     // --- PHASE 1c: dedupllicate ---
 
-    // Pour stocker l'index optimisé
-    map<int, vector<int>> temp_sequence_indices;
+    // Sequence of deduplicated pattern ids, per register (dense index by register 0..15).
+    // Registers are few and fixed, so a plain array beats a map<int,...> lookup per instance.
+    array<vector<int>, 16> temp_sequence_indices;
     for (size_t i = 0; i < 14; ++i) {
         if (activeRegs & (1 << i)) {
-            temp_sequence_indices[(int)i].resize((rawData[i].size() + patSize - 1) / patSize, -1);
+            temp_sequence_indices[i].assign((rawData[i].size() + patSize - 1) / patSize, -1);
         }
     }
 
-    map<int, ByteBlock> uniquePatternsMap;
+    // Unique patterns stored in a dense vector indexed by pattern id (0..N-1).
+    PatternBlocks uniquePatternsMap;
 
-    // Map: Hash Brut -> Unique Pattern Index 
+    // Map: Hash Brut -> Unique Pattern Index
     // Used for strict deduplication
     unordered_map<uint32_t, int> uniqueHashesBrut;
-    
+
     int next_pattern_idx = 0;
 
-    // Evaluate all patterns 
+    // Evaluate all patterns
     for (const auto& p_inst : all_patterns) {
 
         int idx = -1;
@@ -396,25 +398,24 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
         auto it_brut = uniqueHashesBrut.find(h_brut);
         if (it_brut != uniqueHashesBrut.end()) {
             // Vérification de l'identité des patterns bruts
-            if (uniquePatternsMap.at(it_brut->second) == p_inst.pat_brut) {
+            if (uniquePatternsMap[it_brut->second] == p_inst.pat_brut) {
                 idx = it_brut->second; // Pattern index
                 found = true;
             }
         }
 
-        // 2. Deduplication using masking 
+        // 2. Deduplication using masking
         if (!found && options.enableMaskPatterns) {
             if (p_inst.significance >= 0) {
                 // Check compatibiity with all pattern already stored in heap
-                for (const auto& pair : uniquePatternsMap) {
-                    int unique_idx = pair.first;                  // Index dans l'ordre trié
-                    const ByteBlock& p_unique_brut = pair.second; // block de reference
-
-                    if (are_patterns_compatible(p_unique_brut, p_inst.pat_brut, p_inst.mask)) {
+                // (ascending pattern id == creation order, as with the previous ordered map)
+                for (size_t unique_idx = 0; unique_idx < uniquePatternsMap.size(); ++unique_idx) {
+                    if (are_patterns_compatible(uniquePatternsMap[unique_idx], p_inst.pat_brut,
+                                                p_inst.mask)) {
                         // Found a (partially) matching pattern
-                        idx = unique_idx;
+                        idx = (int)unique_idx;
                         found = true;
-                        
+
                         break; // Le premier compatible trouvé est le bon.
                     }
                 }
@@ -424,24 +425,22 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
         // No pattern matching, it's a new pattern
         if (!found) {
             idx = next_pattern_idx++;
+            // Vérification de la Contrainte 16 bits
+            if (idx > 0xFFFF)
+                throw runtime_error("Pattern index exceeds 16-bit");
             // Stores hash and pattern
             uniqueHashesBrut[h_brut] = idx;
-            uniquePatternsMap[idx] = p_inst.pat_brut;
+            uniquePatternsMap.push_back(p_inst.pat_brut);
         }
 
         // Enregistrer l'index dédupliqué dans le tableau temporaire de séquences
-        if (idx > 0xFFFF)
-            throw runtime_error("Pattern index exceeds 16-bit");
-
-        temp_sequence_indices.at(p_inst.reg_idx).at(p_inst.sequence_pos) = idx;
+        temp_sequence_indices[p_inst.reg_idx][p_inst.sequence_pos] = idx;
     }
 
     // Rebuilds sequence pointers from optimized indices
     vector<ByteBlock> sequenceBuffers(14);
-    for (const auto& pair : temp_sequence_indices) {
-        int reg_idx = pair.first;
-
-        const auto& indices = pair.second;
+    for (int reg_idx = 0; reg_idx < 14; ++reg_idx) {
+        const auto& indices = temp_sequence_indices[reg_idx];
         ByteBlock& seq = sequenceBuffers[reg_idx];
 
         for (int idx : indices) {
@@ -461,16 +460,16 @@ ResultSequences buildBuffers(const array<ByteBlock, 16>& rawData, uint16_t activ
     } else {
         // --- Phase 2: Niveau 1 - Déduplication SANS chevauchement ---
         OptimizedResult no_opt_result;
+        no_opt_result.optimized_pointers.assign(uniquePatternsMap.size(), -1);
         int current_offset = 0;
-        for (const auto& pair : uniquePatternsMap) {
-            int pattern_idx = pair.first;
-            const ByteBlock& pattern_data = pair.second;
+        for (size_t pattern_idx = 0; pattern_idx < uniquePatternsMap.size(); ++pattern_idx) {
+            const ByteBlock& pattern_data = uniquePatternsMap[pattern_idx];
 
             no_opt_result.optimized_heap.insert(no_opt_result.optimized_heap.end(),
                                                 pattern_data.begin(), pattern_data.end());
 
             no_opt_result.optimized_pointers[pattern_idx] = current_offset;
-            no_opt_result.optimized_block_order.push_back(pattern_idx);
+            no_opt_result.optimized_block_order.push_back((int)pattern_idx);
             current_offset += patSize;
         }
 
@@ -549,13 +548,15 @@ ByteBlock interleaveSequenceBuffers(const vector<ByteBlock>& sequenceBuffers) {
 
 // Rebuids heap and final sequence pointers
 OptimizedResult reconstruct_result(const vector<int>& best_order,
-                                   const map<int, ByteBlock>& original_blocks, int patSize) {
+                                   const PatternBlocks& original_blocks, int patSize) {
     OptimizedResult final_result;
     if (best_order.empty())
         return final_result;
 
+    final_result.optimized_pointers.assign(original_blocks.size(), -1);
+
     int current_block_index = best_order[0];
-    const ByteBlock& first_block = original_blocks.at(current_block_index);
+    const ByteBlock& first_block = original_blocks[current_block_index];
 
     final_result.optimized_heap.insert(final_result.optimized_heap.end(), first_block.begin(),
                                        first_block.end());
@@ -568,14 +569,14 @@ OptimizedResult reconstruct_result(const vector<int>& best_order,
         int prev_index = best_order[i - 1];
         int curr_index = best_order[i];
 
-        const ByteBlock& B_prev = original_blocks.at(prev_index);
-        const ByteBlock& B_curr = original_blocks.at(curr_index);
+        const ByteBlock& B_prev = original_blocks[prev_index];
+        const ByteBlock& B_curr = original_blocks[curr_index];
 
         int overlap = find_max_overlap(B_prev, B_curr, patSize);
         int non_overlapping_length = patSize - overlap;
 
         current_heap_pointer =
-            final_result.optimized_pointers.at(prev_index) + non_overlapping_length;
+            final_result.optimized_pointers[prev_index] + non_overlapping_length;
 
         // Greffer le nouveau fragment au Heap
         final_result.optimized_heap.insert(final_result.optimized_heap.end(),
