@@ -140,13 +140,17 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
     if (N < 2)
         return glouton_result;
 
+    // Precompute the directed overlap matrix once (roadmap #1) : chaque
+    // évaluation de fitness passe alors de O(N.patSize^2) à O(N).
+    const OverlapMatrix overlap = build_overlap_matrix(original_patterns, patSize);
+
     // 1. Initialisation de la Population
     // La population contient des paires (Ordre, Coût)
     vector<pair<vector<int>, double>> population;
 
     // Utiliser l'ordre glouton comme premier individu
     double glouton_fitness =
-        calculate_fitness(glouton_result.optimized_block_order, original_patterns, patSize);
+        calculate_fitness(glouton_result.optimized_block_order, original_patterns, overlap, patSize);
     population.push_back({glouton_result.optimized_block_order, glouton_fitness});
 
     // Remplir le reste de la population avec des ordres aléatoires
@@ -160,7 +164,7 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
 
     for (size_t i = 1; i < options.ga_MU; ++i) {
         shuffle(base_order.begin(), base_order.end(), rng);
-        double fitness = calculate_fitness(base_order, original_patterns, patSize);
+        double fitness = calculate_fitness(base_order, original_patterns, overlap, patSize);
         population.push_back({base_order, fitness});
     }
 
@@ -216,7 +220,7 @@ refine_order_with_evolutionary_algorithm(const OptimizedResult& glouton_result,
             }
 
             //  Évaluation de l'enfant
-            double child_fitness = calculate_fitness(child_order, original_patterns, patSize);
+            double child_fitness = calculate_fitness(child_order, original_patterns, overlap, patSize);
             children.push_back({move(child_order), child_fitness});
         }
 

@@ -42,6 +42,44 @@ void seed_rng(uint32_t seed);
 
 int find_max_overlap(const ByteBlock& B1, const ByteBlock& B2, int ByteBlockSize);
 
+// ---------------------------------------------------------------------------
+// Incremental / matrix-based fitness (roadmap #1)
+// ---------------------------------------------------------------------------
+// Directed overlap matrix: overlap(from, to) = max k such that the k-byte
+// suffix of pattern `from` equals the k-byte prefix of pattern `to`.
+// Since patSize <= 128, overlap <= 127 and fits in a uint8_t. Stored dense
+// row-major (data[from * N + to]). An empty matrix (N == 0) means "not built"
+// (memory guard tripped) and callers transparently fall back to on-the-fly
+// find_max_overlap via overlapOf() below.
+struct OverlapMatrix {
+    int N = 0;
+    std::vector<uint8_t> data;
+    int get(int from, int to) const { return data[(size_t)from * N + to]; }
+};
+
+// Build the full N*N overlap matrix, or return an empty matrix if it would
+// exceed the memory budget (callers then fall back to on-the-fly computation).
+OverlapMatrix build_overlap_matrix(const PatternBlocks& patterns, int patSize);
+
+// Overlap of two pattern ids, using the matrix when available, else recomputing
+// on the fly. The branch is loop-invariant (matrix present for the whole run),
+// so it predicts perfectly and inlines cleanly under LTO.
+inline int overlapOf(const OverlapMatrix& M, const PatternBlocks& P, int patSize,
+                     int from, int to) {
+    return M.N ? M.get(from, to) : find_max_overlap(P[from], P[to], patSize);
+}
+
+// O(N) fitness using the overlap matrix. Equivalent to
+// calculate_fitness(order, P, patSize) but without the per-pair patSize^2 scan.
+double calculate_fitness(const vector<int>& order, const PatternBlocks& P,
+                         const OverlapMatrix& M, int patSize);
+
+// O(1) delta cost of swapping order[i] and order[j] WITHOUT mutating `order`.
+// Returns new_cost - old_cost (negative == improvement). Only the <=4 edges
+// incident to positions i and j change, so a swap costs a handful of lookups.
+double swap_delta_cost(const vector<int>& order, const PatternBlocks& P,
+                       const OverlapMatrix& M, int patSize, size_t i, size_t j);
+
 void replaceByOptimizedIndex(vector<ByteBlock>& sequenceBuffers,
                              const OptimizedResult& optimized_result);
 

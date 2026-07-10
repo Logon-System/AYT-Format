@@ -34,9 +34,14 @@ OptimizedResult refine_order_with_tabu_search(const OptimizedResult& glouton_res
     if (glouton_result.optimized_block_order.size() < 2)
         return glouton_result;
 
+    // Precompute the directed overlap matrix once (roadmap #1). Neighbour swaps
+    // are then evaluated in O(1) via swap_delta_cost instead of a full O(N)
+    // rescan per candidate (previously O(N.patSize^2) per candidate).
+    const OverlapMatrix overlap = build_overlap_matrix(original_patterns, patSize);
+
     vector<int> current_order = glouton_result.optimized_block_order;
     vector<int> best_order = current_order;
-    double current_cost = calculate_fitness(current_order, original_patterns, patSize);
+    double current_cost = calculate_fitness(current_order, original_patterns, overlap, patSize);
     double best_cost = current_cost;
 
     TabuList tabu_list;
@@ -49,19 +54,17 @@ OptimizedResult refine_order_with_tabu_search(const OptimizedResult& glouton_res
     for (int iter = 0; iter < max_iterations && optimization_running; ++iter) {
 
         double best_neighbor_cost = numeric_limits<double>::max();
-        vector<int> best_neighbor_order;
         pair<int, int> best_move = {-1, -1}; // Indices de la permutation (pas des patterns)
 
         // 1. Exploration du Voisinage (Recherche du Meilleur Voisin non Tabou)
         for (size_t i = 0; i < N; ++i) {
             for (size_t j = i + 1; j < N; ++j) {
 
-                // Mouvement : échange des éléments aux positions i et j
-                vector<int> neighbor_order = current_order;
-                swap(neighbor_order[i], neighbor_order[j]);
-
+                // Mouvement : échange des éléments aux positions i et j.
+                // Coût du voisin obtenu en O(1) par delta (seules <=4 arêtes changent).
                 double neighbor_cost =
-                    calculate_fitness(neighbor_order, original_patterns, patSize);
+                    current_cost + swap_delta_cost(current_order, original_patterns,
+                                                   overlap, patSize, i, j);
 
                 // Critère d'Aspiration : Accepter un mouvement tabou si c'est le meilleur jamais
                 // trouvé
@@ -69,8 +72,7 @@ OptimizedResult refine_order_with_tabu_search(const OptimizedResult& glouton_res
                 if (neighbor_cost < best_neighbor_cost &&
                     (!is_tabu(tabu_list, i, j) || aspiration_criterion)) {
                     best_neighbor_cost = neighbor_cost;
-                    best_neighbor_order = neighbor_order;
-                    best_move = {i, j};
+                    best_move = {(int)i, (int)j};
                 }
             }
         }
@@ -78,8 +80,8 @@ OptimizedResult refine_order_with_tabu_search(const OptimizedResult& glouton_res
         // 2. Mise à jour de la solution (si un mouvement valide a été trouvé)
         if (best_move.first != -1) {
 
-            // Effectuer le mouvement
-            current_order = best_neighbor_order;
+            // Effectuer le mouvement (swap in place aux positions retenues)
+            swap(current_order[best_move.first], current_order[best_move.second]);
             current_cost = best_neighbor_cost;
 
             // Mettre à jour la meilleure solution globale

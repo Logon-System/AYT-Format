@@ -134,3 +134,81 @@ double calculate_fitness(const vector<int>& ByteBlock_order, const PatternBlocks
     }
     return total_size;
 }
+
+// ---------------------------------------------------------------------------
+// Matrix-based / incremental fitness (roadmap #1)
+// ---------------------------------------------------------------------------
+
+// Memory budget for the dense overlap matrix (1 byte per entry). Beyond this
+// the matrix is not built and callers fall back to on-the-fly computation.
+static constexpr size_t MAX_OVERLAP_MATRIX_BYTES = 512ull * 1024 * 1024; // 512 MiB
+
+OverlapMatrix build_overlap_matrix(const PatternBlocks& patterns, int patSize) {
+    OverlapMatrix M;
+    const size_t N = patterns.size();
+    if (N == 0 || N * N > MAX_OVERLAP_MATRIX_BYTES)
+        return M; // empty => callers fall back to find_max_overlap
+
+    M.N = (int)N;
+    M.data.assign(N * N, 0);
+    for (size_t a = 0; a < N; ++a) {
+        // Diagonal stays 0: a valid block order is a permutation of distinct
+        // ids, so overlap(x, x) is never queried by fitness/delta.
+        for (size_t b = 0; b < N; ++b) {
+            if (a != b)
+                M.data[a * N + b] =
+                    (uint8_t)find_max_overlap(patterns[a], patterns[b], patSize);
+        }
+    }
+    return M;
+}
+
+// O(N) fitness: cost = N * patSize - sum(overlap of adjacent directed pairs).
+double calculate_fitness(const vector<int>& order, const PatternBlocks& P,
+                         const OverlapMatrix& M, int patSize) {
+    if (order.empty())
+        return 0;
+
+    double total_size = (double)order.size() * patSize;
+    for (size_t i = 1; i < order.size(); ++i)
+        total_size -= overlapOf(M, P, patSize, order[i - 1], order[i]);
+    return total_size;
+}
+
+// Delta cost of swapping order[i] and order[j] (i != j). Only the edges whose
+// left endpoint is one of {i-1, i, j-1, j} change; we sum those before/after
+// the (virtual) swap. Returns new_cost - old_cost, i.e. old_overlap_sum minus
+// new_overlap_sum (cost drops when overlap rises).
+double swap_delta_cost(const vector<int>& order, const PatternBlocks& P,
+                       const OverlapMatrix& M, int patSize, size_t i, size_t j) {
+    const int N = (int)order.size();
+
+    // Collect unique in-range affected edge left-indices (handles i,j adjacent).
+    int candidates[4] = {(int)i - 1, (int)i, (int)j - 1, (int)j};
+    int edges[4];
+    int ne = 0;
+    for (int c : candidates) {
+        if (c < 0 || c >= N - 1)
+            continue;
+        bool dup = false;
+        for (int k = 0; k < ne; ++k)
+            if (edges[k] == c) { dup = true; break; }
+        if (!dup)
+            edges[ne++] = c;
+    }
+
+    // Value at a position under the virtual swap of i and j.
+    auto at = [&](int pos) -> int {
+        if (pos == (int)i) return order[j];
+        if (pos == (int)j) return order[i];
+        return order[pos];
+    };
+
+    double old_sum = 0, new_sum = 0;
+    for (int k = 0; k < ne; ++k) {
+        const int e = edges[k];
+        old_sum += overlapOf(M, P, patSize, order[e], order[e + 1]);
+        new_sum += overlapOf(M, P, patSize, at(e), at(e + 1));
+    }
+    return old_sum - new_sum; // new_cost - old_cost
+}

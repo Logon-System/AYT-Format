@@ -35,6 +35,7 @@ vector<int> perturb(vector<int> order, mt19937& rng) {
  */
 pair<vector<int>, double> local_search(const vector<int>& current_order,
                                        const PatternBlocks& original_patterns,
+                                       const OverlapMatrix& overlap,
                                        double current_cost, int patSize) {
     vector<int> current = current_order;
     double cost = current_cost;
@@ -47,18 +48,13 @@ pair<vector<int>, double> local_search(const vector<int>& current_order,
         double best_local_gain = 0.0;
         int best_i = -1, best_j = -1;
 
-        // Tester tous les swaps (voisinage)
+        // Tester tous les swaps (voisinage). Gain évalué en O(1) par delta :
+        // gain = -(new_cost - old_cost) = -swap_delta_cost(...).
         for (size_t i = 0; i < N; ++i) {
             for (size_t j = i + 1; j < N; ++j) {
 
-                // 1. Simuler le swap
-                swap(current[i], current[j]);
-
-                // 2. Calculer le nouveau coût
-                double neighbor_cost = calculate_fitness(current, original_patterns, patSize);
-
-                // 3. Évaluer l'amélioration
-                double gain = cost - neighbor_cost; // gain > 0 si amélioration
+                double gain = -swap_delta_cost(current, original_patterns, overlap,
+                                               patSize, i, j); // gain > 0 si amélioration
 
                 if (gain > best_local_gain) {
                     best_local_gain = gain;
@@ -66,9 +62,6 @@ pair<vector<int>, double> local_search(const vector<int>& current_order,
                     best_j = j;
                     improved = true;
                 }
-
-                // Annuler le swap pour la prochaine itération de la boucle
-                swap(current[i], current[j]);
             }
         }
 
@@ -100,9 +93,14 @@ OptimizedResult refine_order_with_ils(const OptimizedResult& glouton_result,
     //    random_device rd;
     //    mt19937 rng(rd());
 
+    // Precompute the directed overlap matrix once (roadmap #1) : local_search
+    // et les coûts de perturbation s'évaluent alors en O(1)/O(N) au lieu de
+    // O(N.patSize^2).
+    const OverlapMatrix overlap = build_overlap_matrix(original_patterns, patSize);
+
     // Initialisation avec le résultat glouton (ou un ordre aléatoire)
     vector<int> current_order = glouton_result.optimized_block_order;
-    double current_cost = calculate_fitness(current_order, original_patterns, patSize);
+    double current_cost = calculate_fitness(current_order, original_patterns, overlap, patSize);
 
     // La meilleure solution trouvée
     vector<int> best_order = current_order;
@@ -116,7 +114,7 @@ OptimizedResult refine_order_with_ils(const OptimizedResult& glouton_result,
         //  1. Recherche Locale (Passer à l'optimum local S*)
         //  Cette étape est essentielle et consomme le plus de temps.
         auto local_optimum_pair =
-            local_search(current_order, original_patterns, current_cost, patSize);
+            local_search(current_order, original_patterns, overlap, current_cost, patSize);
         vector<int> S_star = local_optimum_pair.first;
         double cost_S_star = local_optimum_pair.second;
 
@@ -129,7 +127,7 @@ OptimizedResult refine_order_with_ils(const OptimizedResult& glouton_result,
 
         // 2. Perturbation (Créer S' très différent de S*)
         vector<int> S_prime = perturb(S_star, rng);
-        double cost_S_prime = calculate_fitness(S_prime, original_patterns, patSize);
+        double cost_S_prime = calculate_fitness(S_prime, original_patterns, overlap, patSize);
 
         // 3. Critère d'Acceptation (Acceptation purement déterministe ici : accepter si S' est
         // meilleur) Pour une version plus robuste (similaire au SA), on pourrait ajouter une

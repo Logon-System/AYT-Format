@@ -67,9 +67,14 @@ OptimizedResult refine_order_with_simulated_annealing(const OptimizedResult& glo
     // --- Paramètres de l'Algorithme de Recuit Simulé ---
     uniform_real_distribution<> prob_distrib(0.0, 1.0);
 
+    // Precompute the directed overlap matrix once (roadmap #1) : les swaps
+    // s'évaluent alors en O(1) par delta, les reversals en O(N), au lieu de
+    // O(N.patSize^2) à chaque itération.
+    const OverlapMatrix overlap = build_overlap_matrix(original_patterns, patSize);
+
     // --- Initialisation ---
     vector<int> current_order = glouton_result.optimized_block_order;
-    double current_cost = calculate_fitness(current_order, original_patterns, patSize);
+    double current_cost = calculate_fitness(current_order, original_patterns, overlap, patSize);
 
     double temp_initial = 5.0; // Température initiale (point de départ de l'exploration)
     double alpha = 0.99; // Facteur de refroidissement (diminution de la température par palier)
@@ -94,18 +99,40 @@ OptimizedResult refine_order_with_simulated_annealing(const OptimizedResult& glo
     // --- Boucle Principale ---
     for (int iter = 0; optimization_running; ++iter) {
 
-        // Générer un état voisin par swap
+        // Générer un état voisin. On préserve la séquence exacte de tirages RNG
+        // de l'ancien code (get_neighbor_by_swap / get_neighbor_by_reversal) pour
+        // garantir une trajectoire identique à seed fixe.
+        bool move_is_swap;
+        int swap_i = -1, swap_j = -1;
+        vector<int> neighbor_order; // utilisé uniquement pour le reversal
+        double neighbor_cost;
 
-        vector<int> neighbor_order;
         // Exploraion locale la plupart du temps
         if (prob_distrib(rng) < 0.75) {
-            neighbor_order = get_neighbor_by_swap(current_order, rng);
+            // Swap : mêmes tirages que get_neighbor_by_swap, mais coût en O(1) (delta).
+            uniform_int_distribution<> distrib(0, current_order.size() - 1);
+            swap_i = distrib(rng);
+            swap_j = distrib(rng);
+            while (swap_i == swap_j) {
+                swap_j = distrib(rng);
+            }
+            move_is_swap = true;
+            neighbor_cost = current_cost + swap_delta_cost(current_order, original_patterns,
+                                                           overlap, patSize, swap_i, swap_j);
         } else {
             neighbor_order = get_neighbor_by_reversal(current_order);
+            move_is_swap = false;
+            neighbor_cost = calculate_fitness(neighbor_order, original_patterns, overlap, patSize);
         }
 
-        // Calculer le coût du voisin
-        double neighbor_cost = calculate_fitness(neighbor_order, original_patterns, patSize);
+        // Applique le mouvement retenu et met à jour current_cost (delta exact).
+        auto apply_move = [&]() {
+            if (move_is_swap)
+                swap(current_order[swap_i], current_order[swap_j]);
+            else
+                current_order = neighbor_order;
+            current_cost = neighbor_cost;
+        };
 
         // delta_E < 0 signifie un GAIN (réduction du coût/taille = meilleur fitness)
         double delta_E = neighbor_cost - current_cost;
@@ -113,8 +140,7 @@ OptimizedResult refine_order_with_simulated_annealing(const OptimizedResult& glo
         // 1. Condition d'Acceptation
         if (delta_E < 0) {
             // Solution améliorée : accepter toujours
-            current_order = neighbor_order;
-            current_cost = neighbor_cost;
+            apply_move();
 
             // Mise à jour du MEILLEUR état global
             if (current_cost < best_cost) {
@@ -132,8 +158,7 @@ OptimizedResult refine_order_with_simulated_annealing(const OptimizedResult& glo
 
             if (prob_distrib(rng) < acceptance_prob) {
                 // Mouvement accepté pour échapper aux optima locaux
-                current_order = neighbor_order;
-                current_cost = neighbor_cost;
+                apply_move();
             }
         }
 
