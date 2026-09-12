@@ -94,7 +94,7 @@
 ;; { 
 ;;  uint8_t Ayt_Version      	; version aaaabbbb >> a.b
 ;;  uint16_t Ayt_ActiveRegs     ; active reg (bit 15:reg 0...bit 2:reg 13) 1=active 0:inactive
-;;  uint8_t Ayt_PatternSize  	; Pattern size 1..255
+;;  uint8_t Ayt_PatternSize  	; Pattern size 0..255 (0==>256)
 ;;  uint16_t Ayt_FirstSeqMarker ; Offset from Ayt_Start for Seq Ptr on patterns
 ;;  uint16_t Ayt_LoopSeqMarker 	; Offset from Ayt_Start for Loop Seq Ptr 
 ;;  uint16_t Ayt_ListInit	; Offset from Ayt_Start for Init of ay reg (*)
@@ -267,7 +267,7 @@ PlayerDMAUsed_DCSRMask	equ AYT_Asic_DCSRM0	; Mask for DMA activation
 ;-----------------------------------------------------------------------------------------------------------------------------------------------
 AYT_OFS_Version		equ 0	;; Not yet used (hey it's the 1st version)
 AYT_OFS_ActiveRegs	equ 1	;; active reg (bit 0:reg 0...bit 13:reg 13) 1=active (only r12 off is managed in v1)
-AYT_OFS_PatternSize	equ 3	;; Pattern size in bytes from 1 to 255
+AYT_OFS_PatternSize	equ 3	;; Pattern size in bytes from 0 to 255 (0=>256)
 AYT_OFS_FirstSeq	equ 4	;; Offset on first Seq Ptr for start
 AYT_OFS_LoopSeq		equ 6	;; Offset on Seq Ptr for loop
 AYT_OFS_ListInit	equ 8	;; Offset on Ay Init List
