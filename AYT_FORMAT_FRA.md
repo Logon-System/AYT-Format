@@ -31,7 +31,7 @@ Toutes les valeurs 16 bits sont ordonnées en mémoire selon le format *"little 
         { 
             uint8_t Ayt_Version      	; version aaaabbbb >> a.b
             uint16_t Ayt_ActiveRegs     ; active reg (bit 15:reg 0...bit 2:reg 13) 1=active 0:inactive
-            uint8_t Ayt_PatternSize  	; Pattern size 1..255
+            uint8_t Ayt_PatternSize  	; Pattern size 0..255 (0 pour 256 octets)
             uint16_t Ayt_FirstSeqMarker ; Offset from Ayt_Start for Seq Ptr on patterns
             uint16_t Ayt_LoopSeqMarker 	; Offset from Ayt_Start for Loop Seq Ptr 
             uint16_t Ayt_ListInit	; Offset from Ayt_Start for Init of ay reg (*)
@@ -50,6 +50,7 @@ Les registres inactifs ne disposent pas de pointeurs dans une séquence, mais so
 
 ### Ayt_PatternSize, Taille d'un pattern_
 **1 octet** : Cette valeur, de **0 à 255**, correspond à la taille d'un pattern (unique pour l'ensemble du fichier)
+0 correspond à une taille de 256 octets.
 
 ### Ayt_FirstSeqMarker, Première séquence
 **2 octets** : Cette valeur contient l'offset de la première séquence par rapport au début du fichier **AYT**.
