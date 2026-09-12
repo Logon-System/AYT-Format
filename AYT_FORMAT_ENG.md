@@ -30,7 +30,7 @@ Ayt_Start
     { 
         uint8_t Ayt_Version;         // version aaaabbbb >> a.b
         uint16_t Ayt_ActiveRegs;     // active reg (bit 15:reg0...bit2:reg13) 1=active 0=inactive
-        uint8_t Ayt_PatternSize;     // Pattern size 1..255
+        uint8_t Ayt_PatternSize;     // Pattern size 0..255 (0 ==> 256 bytes)
         uint16_t Ayt_FirstSeqMarker; // Offset from Ayt_Start for Seq Ptr on patterns
         uint16_t Ayt_LoopSeqMarker;  // Offset from Ayt_Start for Loop Seq Ptr 
         uint16_t Ayt_ListInit;       // Offset from Ayt_Start for Init of AY registers (*)
@@ -50,6 +50,7 @@ Inactive registers have no pointers in sequences but are initialized.
 
 ### Ayt_PatternSize – Pattern Size
 **1 byte:** This value, from **0 to 255**, defines the size of a pattern (the same for the whole file).
+0 for 256 bytes.
 
 ### Ayt_FirstSeqMarker – First Sequence
 **2 bytes:** Contains the offset of the first sequence relative to the start of the **AYT** file.  
