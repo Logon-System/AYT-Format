@@ -16,7 +16,7 @@ echo  AYT PC BUILD - menu interactif Windows
 echo ============================================================
 echo.
 echo Ce script lance aytpcbuild.exe uniquement.
-echo Il ne lance pas maxam et ne cree pas de *-demo.bin.
+echo Il n assemble rien et ne cree pas de *-demo.bin.
 echo.
 
 call :select_ayt || goto end

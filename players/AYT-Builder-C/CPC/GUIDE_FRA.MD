@@ -5,71 +5,104 @@
 
 Ce dossier contient l'outil PC qui remplace le *builder Z80 runtime AYT*.
 
-Il lit un fichier .ayt source, genere directement le player Z80 spécialisé, relocalise les pointeurs de l'AYT runtime, puis produit les fichiers utilisables sur Amstrad CPC.
+Il lit un fichier .ayt source, génère directement le player Z80 spécialisé, relocalise les pointeurs de l'AYT runtime, puis produit les fichiers utilisables sur Amstrad CPC.
 
-Dans cette distribution, les exemples fournis ont été générés avec:
+Les exemples de ce guide utilisent les fichiers .ayt présents à la **racine du dépôt**, dans `ayt-files/`, avec:
 
 		player_addr = #0040
 		loops       = 2
 
-Les resultats sont dans:
-
-		dist\results\#40\
+Les résultats ne sont pas fournis pré-générés: ils sont créés par les commandes ci-dessous (dossier `out/`).
 
 
 ## Contenu du dossier
 
-		dist\
-			aytpcbuild.c
+		players/AYT-Builder-C/CPC/
+			bin/aytpcbuild.c
 			- Source C99 portable.
 
-			aytpcbuild.exe
+			bin/build/aytpcbuild-win.exe
 			- Exécutable Windows déjà compilé.
 
-			aytpcbuild-menu.bat
-			- Menu interactif Windows pour lancer aytpcbuild.exe sans taper toute la ligne de commande.
+			bin/build/aytpcbuild-menu.bat
+			- Menu interactif Windows pour lancer l'exécutable sans taper toute la ligne de commande.
 
-		ayt\
-		Fichiers AYT sources inclus:
-			Arhey.ayt
-			complications.ayt
-			easy.ayt
-			stillscrolling.ayt
-			tatayoyo.ayt
+			web/aytpcbuild-web.html
+			- Application web (navigateur).
 
-		results\#40\
-			Résultats prebuild fournis, avec player en #0040.
+		ayt-files/   (à la racine du dépôt)
+		Fichiers AYT sources utilisés dans les exemples:
+			david_whittaker_demo.ayt
+			med-Merci_Monsieur.ayt
+			med-My_Ai_Is_Dumb.ayt
+			still_scrolling.ayt
 
 
 ## Compilation de l'outil
 
-
-Windows avec GCC:
-
-		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe aytpcbuild.c
+Depuis la racine du dépôt.
 
 Linux ou macOS:
 
-		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild aytpcbuild.c
+		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild players/AYT-Builder-C/CPC/bin/aytpcbuild.c
+
+Windows avec GCC:
+
+		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe players\AYT-Builder-C\CPC\bin\aytpcbuild.c
 
 Le code C n'utilise pas de dépendance externe.
 
-## Application Web Html/Js
+Windows sans compilateur: utiliser directement `players\AYT-Builder-C\CPC\bin\build\aytpcbuild-win.exe` à la place de `aytpcbuild`.
 
-Lancer sur un navigateur:
+Dans les exemples suivants, `aytpcbuild` désigne l'exécutable compilé, lancé depuis la racine du dépôt.
 
-		aytpcbuild-web.html (présent sous dossier web)
+
+## Premier exemple (5 minutes)
+
+Générer, pour la musique `ayt-files/still_scrolling.ayt`, un bundle (player + données) chargé en #0040, avec un petit programme de test:
+
+		aytpcbuild --input ayt-files/still_scrolling.ayt \
+			--player-addr 0x0040 --ayt-addr 0x1000 --loops 2 --mode call \
+			--out-bundle out/still_scrolling.bundle.bin \
+			--out-asm-bundle out/still_scrolling.bundle.asm \
+			--report out/still_scrolling.report.txt
+
+(créer le dossier `out/` au préalable: `mkdir out`)
+
+L'outil affiche:
+
+		AYT PC build ok: player=359 bytes, ayt=11051 bytes at #01A7, cpu=463 nops, init block present
+
+et produit dans `out/`:
+
+		still_scrolling.bundle.bin     (11410 octets = player 359 + AYT runtime 11051, chargé en #0040)
+		still_scrolling.bundle.asm     (programme de test, RUN #2CD2)
+		still_scrolling.report.txt     (rapport lisible)
+
+Il reste à assembler le programme de test (voir [Assembler les ASM de test](#assembler-les-asm-de-test)):
+
+		cd out
+		<assembleur> still_scrolling.bundle.asm still_scrolling.bundle-demo.bin
+
+Le binaire obtenu se charge en #0040 et se lance en #2CD2.
+
 
 ## Script interactif Windows
 
-Depuis dist\, lancer:
+Le script `bin\build\aytpcbuild-menu.bat` s'utilise avec l'exécutable à côté de lui, sous le nom `aytpcbuild.exe`, et lit les `.ayt` du sous-dossier `ayt\` du dossier courant. Préparer donc un dossier de travail:
+
+		copier  players\AYT-Builder-C\CPC\bin\build\aytpcbuild-menu.bat   -> travail\
+		copier  players\AYT-Builder-C\CPC\bin\build\aytpcbuild-win.exe    -> travail\aytpcbuild.exe
+		copier  ayt-files\*.ayt                                           -> travail\ayt\
+
+Puis, depuis `travail\`, lancer:
 
 		aytpcbuild-menu.bat
 
 Le script demande:
 
 		- le fichier AYT à traiter;
-		- le cas de generation: call_two, call_bundle, sp_two ou sp_bundle;
+		- le cas de génération: call_two, call_bundle, sp_two ou sp_bundle;
 		- l'adresse du player;
 		- l'adresse du runtime AYT;
 		- le nombre de loops;
@@ -77,44 +110,48 @@ Le script demande:
 		- le dossier de sortie;
 		- la génération ou non du mini ASM et du rapport TXT.
 
-Le script lance uniquement aytpcbuild.exe.
+Le script lance uniquement l'exécutable aytpcbuild. Il n'assemble rien et ne crée pas de *-demo.bin.
 
-Il ne lance pas maxam.exe et ne cree pas de *-demo.bin.
+### Exemple avec still_scrolling.ayt
 
-### Exemple avec tatayoyo.ayt
-
-Depuis dist\, lancer:
-
-		aytpcbuild-menu.bat
-
-Exemple de réponses pour générer un bundle CALL de tatayoyo.ayt:
+Exemple de réponses pour générer un bundle CALL de still_scrolling.ayt:
 
 *Choix AYT*
-		- Choisir tatayoyo.ayt dans la liste.
+		- Choisir still_scrolling.ayt dans la liste.
 
 
 | Option | Valeur paramètre | 
 | :-----------: | :--------------: |
 | Cas de génération  | 2. CALL - bundle compact  |
-| Adresse CPC du player | 0x0666  |
+| Adresse CPC du player | 0x0040  |
 | Adresse AYT initiale pour l'outil| 0x1000  |
 | Nombre de lectures / loops |  2 |
 |  Dossier racine de sortie |  results\manual |
-|  Dossier final | results\manual\call_bundle\tatayoyo |
+|  Dossier final | results\manual\call_bundle\still_scrolling |
 |  Générer le mini ASM de test |    O |
 |  Générer le rapport TXT |    O |
 
-Le script lance alors aytpcbuild.exe et produit:
+Le script lance alors aytpcbuild et produit:
 
-		results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin
-		results\manual\call_bundle\tatayoyo\tatayoyo.bundle.asm
-		results\manual\call_bundle\tatayoyo\tatayoyo.report.txt
+		results\manual\call_bundle\still_scrolling\still_scrolling.bundle.bin
+		results\manual\call_bundle\still_scrolling\still_scrolling.bundle.asm
+		results\manual\call_bundle\still_scrolling\still_scrolling.report.txt
 
-Le fichier ASM genere reste portable dans son dossier. Son INCBIN ne contient que le nom du fichier binaire, pas le chemin complet:
-		incbin "tatayoyo.bundle.bin"
+Le fichier ASM généré reste portable dans son dossier. Son INCBIN ne contient que le nom du fichier binaire, pas le chemin complet:
+		incbin "still_scrolling.bundle.bin"
 
 Il ne faut donc pas obtenir:
-		incbin "results\manual\call_bundle\tatayoyo\tatayoyo.bundle.bin"
+		incbin "results\manual\call_bundle\still_scrolling\still_scrolling.bundle.bin"
+
+
+## Application Web Html/Js
+
+Ouvrir dans un navigateur:
+
+		players/AYT-Builder-C/CPC/web/aytpcbuild-web.html
+
+puis charger un ou plusieurs fichiers `.ayt` (par exemple ceux de `ayt-files/`).
+
 
 ### Syntaxe générale
 
@@ -138,12 +175,12 @@ Il ne faut donc pas obtenir:
 		--ayt-addr ADDR
 			Adresse CPC de l'AYT runtime dans le cas deux fichiers.
 
-		Si --out-bundle est demande, l'outil produit toujours un bundle compact.
+		Si --out-bundle est demandé, l'outil produit toujours un bundle compact.
 		Dans ce cas, l'AYT runtime est placé juste après le player et son adresse est recalculée automatiquement. La valeur --ayt-addr sert alors d'adresse initiale avant compactage.
 
 		--loops N
-			Nombre de lectures de la musique, de 0 a 255.
-			Les exemples fournis utilisent --loops 2.
+			Nombre de lectures de la musique, de 0 à 255.
+			Les exemples de ce guide utilisent --loops 2.
 
 		--mode call
 			Génère un player appelé avec:
@@ -158,13 +195,13 @@ Il ne faut donc pas obtenir:
 
 		--return-addr ADDR
 			Obligatoire en mode jp.
-			Pour les ASM de test generes par l'outil:
+			Pour les ASM de test générés par l'outil:
 				return_addr = program_addr + #24
 
 		--program-addr ADDR
 				Adresse du mini programme ASM de test généré par --out-asm-two ou --out-asm-bundle.
   			En mode call, cette option est facultative.
-			Si elle est absente, l'outil place le launcher a #0500 quand c'est possible, sinon juste après les donnees générées.
+			Si elle est absente, l'outil place le launcher à #0500 quand c'est possible, sinon juste après les données générées.
 			En mode jp, cette option est optionnelle mais doit rester cohérente avec --return-addr.
 
 		--out-player fichier.bin
@@ -180,7 +217,7 @@ Il ne faut donc pas obtenir:
 
 		--bundle-base ADDR
 			Base du bundle.
-			Dans cette version, cette adresse doit correspondre a --player-addr.
+			Dans cette version, cette adresse doit correspondre à --player-addr.
 
 		--out-asm-two fichier.asm
 			Génère un mini source ASM de test pour le cas deux fichiers:
@@ -199,9 +236,7 @@ Il ne faut donc pas obtenir:
 			Affiche l'aide courte.
 
 
-### Les 4 cas générés
-
-Pour chaque AYT, quatre cas sont fournis dans dist\results\#40:
+### Les 4 cas de génération
 
 #### 1. call_two
 
@@ -209,7 +244,6 @@ Mode CALL, deux fichiers:
 		<nom>.player.bin
 		<nom>.runtime.ayt
 		<nom>.two.asm
-		<nom>.two-demo.bin
 		<nom>.report.txt
 
 #### 2. call_bundle
@@ -217,7 +251,6 @@ Mode CALL, bundle compact:
 
 		<nom>.bundle.bin
 		<nom>.bundle.asm
-		<nom>.bundle-demo.bin
 		<nom>.report.txt
 
 #### 3. sp_two
@@ -226,7 +259,6 @@ Mode SP/JP, deux fichiers:
 		<nom>.player.bin
 		<nom>.runtime.ayt
 		<nom>.two.asm
-		<nom>.two-demo.bin
 		<nom>.report.txt
 
 #### 4. sp_bundle
@@ -234,120 +266,127 @@ Mode SP/JP, bundle compact:
 
 		<nom>.bundle.bin
 		<nom>.bundle.asm
-		<nom>.bundle-demo.bin
 		<nom>.report.txt
 
-
-### Arborescence des resultats #0040
-
-		dist\results\#40\call_two\Arhey\
-		dist\results\#40\call_two\complications\
-		dist\results\#40\call_two\easy\
-		dist\results\#40\call_two\stillscrolling\
-
-		dist\results\#40\call_bundle\Arhey\
-		dist\results\#40\call_bundle\complications\
-		dist\results\#40\call_bundle\easy\
-		dist\results\#40\call_bundle\stillscrolling\
-
-		dist\results\#40\sp_two\Arhey\
-		dist\results\#40\sp_two\complications\
-		dist\results\#40\sp_two\easy\
-		dist\results\#40\sp_two\stillscrolling\
-
-		dist\results\#40\sp_bundle\Arhey\
-		dist\results\#40\sp_bundle\complications\
-		dist\results\#40\sp_bundle\easy\
-		dist\results\#40\sp_bundle\stillscrolling\
+Après assemblage des .asm de test, on obtient en plus `<nom>.two-demo.bin` ou `<nom>.bundle-demo.bin`.
 
 
 ### Exemples de commandes
 
-Les exemples ci-dessous sont a lancer depuis dist\.
+Les exemples ci-dessous sont à lancer depuis la racine du dépôt, avec les fichiers de `ayt-files/`. Les sorties vont dans `out/<cas>/<nom>/` (créer le dossier au préalable, par exemple `mkdir -p out/call_two/still_scrolling`).
 
-#### CALL deux fichiers, exemple Arhey:
+#### CALL deux fichiers, exemple still_scrolling:
 
-		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
-		--player-addr 0x0040 ^
-		--ayt-addr 0x1000 ^
-		--loops 2 ^
-		--mode call ^
-		--out-player "results\#40\call_two\Arhey\Arhey.player.bin" ^
-		--out-ayt-runtime "results\#40\call_two\Arhey\Arhey.runtime.ayt" ^
-		--out-asm-two "results\#40\call_two\Arhey\Arhey.two.asm" ^
-		--report "results\#40\call_two\Arhey\Arhey.report.txt"
+		aytpcbuild --input ayt-files/still_scrolling.ayt \
+		--player-addr 0x0040 \
+		--ayt-addr 0x1000 \
+		--loops 2 \
+		--mode call \
+		--out-player out/call_two/still_scrolling/still_scrolling.player.bin \
+		--out-ayt-runtime out/call_two/still_scrolling/still_scrolling.runtime.ayt \
+		--out-asm-two out/call_two/still_scrolling/still_scrolling.two.asm \
+		--report out/call_two/still_scrolling/still_scrolling.report.txt
 
-#### CALL bundle compact, exemple Arhey:
+Résultat: player de 359 octets en #0040, AYT runtime en #1000, programme de test (RUN) en #3B2B.
 
-		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
-		--player-addr 0x0040 ^
-		--ayt-addr 0x1000 ^
-		--loops 2 ^
-		--mode call ^
-		--out-bundle "results\#40\call_bundle\Arhey\Arhey.bundle.bin" ^
-		--out-asm-bundle "results\#40\call_bundle\Arhey\Arhey.bundle.asm" ^
-		--report "results\#40\call_bundle\Arhey\Arhey.report.txt"
+#### CALL bundle compact, exemple still_scrolling:
 
-#### SP/JP deux fichiers, exemple Arhey:
+		aytpcbuild --input ayt-files/still_scrolling.ayt \
+		--player-addr 0x0040 \
+		--ayt-addr 0x1000 \
+		--loops 2 \
+		--mode call \
+		--out-bundle out/call_bundle/still_scrolling/still_scrolling.bundle.bin \
+		--out-asm-bundle out/call_bundle/still_scrolling/still_scrolling.bundle.asm \
+		--report out/call_bundle/still_scrolling/still_scrolling.report.txt
 
-		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
-		--player-addr 0x0040 ^
-		--ayt-addr 0x1000 ^
-		--loops 2 ^
-		--mode jp ^
-		--program-addr 0x1F47 ^
-		--return-addr 0x1F6B ^
-		--out-player "results\#40\sp_two\Arhey\Arhey.player.bin" ^
-		--out-ayt-runtime "results\#40\sp_two\Arhey\Arhey.runtime.ayt" ^
-		--out-asm-two "results\#40\sp_two\Arhey\Arhey.two.asm" ^
-		--report "results\#40\sp_two\Arhey\Arhey.report.txt"
+Résultat: bundle de 11410 octets en #0040, AYT runtime en #01A7, RUN en #2CD2.
 
-#### SP/JP bundle compact, exemple Arhey:
+#### SP/JP deux fichiers, exemple still_scrolling:
 
-		.\aytpcbuild.exe --input ayt\Arhey.ayt ^
-		--player-addr 0x0040 ^
-		--ayt-addr 0x1000 ^
-		--loops 2 ^
-		--mode jp ^
-		--program-addr 0x10EA ^
-		--return-addr 0x110E ^
-		--out-bundle "results\#40\sp_bundle\Arhey\Arhey.bundle.bin" ^
-		--out-asm-bundle "results\#40\sp_bundle\Arhey\Arhey.bundle.asm" ^
-		--report "results\#40\sp_bundle\Arhey\Arhey.report.txt"
+		aytpcbuild --input ayt-files/still_scrolling.ayt \
+		--player-addr 0x0040 \
+		--ayt-addr 0x1000 \
+		--loops 2 \
+		--mode jp \
+		--program-addr 0x3B2B \
+		--return-addr 0x3B4F \
+		--out-player out/sp_two/still_scrolling/still_scrolling.player.bin \
+		--out-ayt-runtime out/sp_two/still_scrolling/still_scrolling.runtime.ayt \
+		--out-asm-two out/sp_two/still_scrolling/still_scrolling.two.asm \
+		--report out/sp_two/still_scrolling/still_scrolling.report.txt
+
+Résultat: player de 355 octets en #0040, AYT runtime en #1000, RUN en #3B2B.
+
+#### SP/JP bundle compact, exemple still_scrolling:
+
+		aytpcbuild --input ayt-files/still_scrolling.ayt \
+		--player-addr 0x0040 \
+		--ayt-addr 0x1000 \
+		--loops 2 \
+		--mode jp \
+		--program-addr 0x2CCE \
+		--return-addr 0x2CF2 \
+		--out-bundle out/sp_bundle/still_scrolling/still_scrolling.bundle.bin \
+		--out-asm-bundle out/sp_bundle/still_scrolling/still_scrolling.bundle.asm \
+		--report out/sp_bundle/still_scrolling/still_scrolling.report.txt
+
+Résultat: bundle de 11406 octets en #0040, AYT runtime en #01A3, RUN en #2CCE.
+
+#### Traiter tous les fichiers du dépôt d'un coup (CALL bundle)
+
+		mkdir -p out/call_bundle
+		for f in ayt-files/*.ayt; do
+		  n=$(basename "$f" .ayt)
+		  mkdir -p "out/call_bundle/$n"
+		  aytpcbuild --input "$f" --player-addr 0x0040 --ayt-addr 0x1000 --loops 2 --mode call \
+		    --out-bundle "out/call_bundle/$n/$n.bundle.bin" \
+		    --out-asm-bundle "out/call_bundle/$n/$n.bundle.asm" \
+		    --report "out/call_bundle/$n/$n.report.txt"
+		done
+
+#### Choisir program-addr et return-addr en mode SP/JP
+
+En mode jp, `--return-addr` est obligatoire et vaut `program-addr + #24` pour les ASM de test générés. Pour obtenir les adresses sans calcul, générer d'abord le cas CALL correspondant et lire l'adresse `RUN` dans son rapport:
+
+- deux fichiers: `--program-addr` = RUN du cas call_two;
+- bundle: `--program-addr` = RUN du cas call_bundle - 4 (le player SP/JP est 4 octets plus court).
+
+Les valeurs sont données dans les tableaux ci-dessous.
+
 
 ### Assembler les ASM de test
 
-Les fichiers .asm générés sont compatibles avec maxam.
+Les fichiers .asm générés utilisent une syntaxe de type Maxam (`org`, `equ`, `incbin`, `run`). **N'importe quel assembleur Z80 moderne** convient (par exemple rasm, sjasmplus, fantams, pasmo, etc.); Maxam n'est pas fourni dans ce dépôt. Selon l'assembleur, la directive `run $` ou l'écriture de la sortie (binaire ou fichier SNA) peut demander une petite adaptation: se référer à sa documentation.
 
-Deux solutions sont possibles:
+Le source ASM doit avoir accès aux fichiers appelés par INCBIN. Les ASM générés par aytpcbuild utilisent uniquement le nom du fichier, par exemple:
 
-- utiliser maxam.exe en local, fourni dans le dossier parent du projet;
-- utiliser Maxam Web:
-		https://amstrad.neocities.org/maxamweb/
+		incbin "still_scrolling.bundle.bin"
 
-Dans les deux cas, le source ASM doit avoir accès aux fichiers appelés par INCBIN. 
+Il faut donc lancer l'assembleur **depuis le dossier** qui contient le .asm et le .bin référencé (ou les placer ensemble).
 
-Les ASM générés par aytpcbuild utilisent uniquement le nom du fichier, par exemple:
-		incbin "tatayoyo.bundle.bin"
+Exemple, cas call_two:
 
-Il suffit donc de garder le .asm et le .bin référence dans le meme dossier, ou de les fournir ensemble a Maxam Web si l'interface le demande.
+		cd out/call_two/still_scrolling
+		<assembleur> still_scrolling.two.asm still_scrolling.two-demo.bin
 
-Exemple depuis:
-		dist\results\#40\call_two\Arhey\
+Exemple, cas call_bundle:
 
-Assembler le test:
-		..\..\..\..\..\maxam.exe Arhey.two.asm Arhey.two-demo.bin
+		cd out/call_bundle/still_scrolling
+		<assembleur> still_scrolling.bundle.asm still_scrolling.bundle-demo.bin
 
-Exemple depuis:
-		dist\results\#40\call_bundle\Arhey\
+(`<assembleur>` et sa ligne de commande dépendent de l'outil choisi.) Avec fantams, par exemple:
 
-Assembler le test:
-		..\..\..\..\..\maxam.exe Arhey.bundle.asm Arhey.bundle-demo.bin
+		fantams still_scrolling.bundle.asm -o still_scrolling.bundle-demo.bin
+
+Le résultat se charge à l'adresse du player (#0040) et se lance à l'adresse `RUN` indiquée dans le rapport (#2CD2 pour ce bundle).
+
+Si l'on préfère un assembleur en ligne, tout assembleur Z80 web acceptant plusieurs fichiers convient; il faut fournir ensemble le .asm et le .bin.
 
 
-## Recapitulatif des AYT inclus
+## Récapitulatif des fichiers AYT du dépôt
 
-Tous les exemples ci-dessous utilisent:
+Tous les exemples ci-dessous utilisent (valeurs générées par aytpcbuild à partir de `ayt-files/`):
 
 	player_addr = #0040
 	loops       = 2
@@ -356,37 +395,39 @@ Tous les exemples ci-dessous utilisent:
 
 | Nom AYT | AYT Runtime | Taille Player | demo RUN | 
 | :-----------: | :--------------: | :-------------: | :---------: |
-| Arhey.ayt | #1000 | 359 bytes | #1F47 |
-| complications.ayt | #1000 | 359 bytes | #381C |
-|  easy.ayt | #1000 | 343 bytes | #1C79 |
-|  stillscrolling.ayt | #1000 |359 bytes |#3F9B |
+| david_whittaker_demo.ayt | #1000 | 326 bytes | #3BB0 |
+| med-Merci_Monsieur.ayt | #1000 | 326 bytes | #4574 |
+| med-My_Ai_Is_Dumb.ayt | #1000 | 359 bytes | #3D37 |
+| still_scrolling.ayt | #1000 | 359 bytes | #3B2B |
 
 
 ### CALL bundle compact:
 
-| Nom AYT | AYT Runtime | Taille Player | demo RUN | 
+| Nom AYT | AYT Runtime | Taille bundle | demo RUN | 
 | :-----------: | :--------------: | :-------------: | :---------: |
-|  Arhey.ayt | #01A7 |4270 bytes | #10EE |
-|  complications.ayt | #01A7 | 10627 bytes | #29C3 |
-|  easy.ayt | #0197 | 3536 bytes |#0E10 |
-|  stillscrolling.ayt| #01A7 |12546 bytes | #3142|
+| david_whittaker_demo.ayt | #0186 | 11510 bytes | #2D36 |
+| med-Merci_Monsieur.ayt | #0186 | 14010 bytes | #36FA |
+| med-My_Ai_Is_Dumb.ayt | #01A7 | 11934 bytes | #2EDE |
+| still_scrolling.ayt | #01A7 | 11410 bytes | #2CD2 |
 
 ### SP/JP deux fichiers:
 | Nom AYT | AYT Runtime | Taille Player | demo RUN | return | 
 | :-----------: | :--------------: | :-------------: | :---------: | :-------: |
-|  Arhey.ayt | #1000 | 355 bytes |#1F47 |#1F6B |
-|  complications.ayt |#1000 |355 bytes | #381C | #3840 |
-|  easy.ayt | #1000 | 339 bytes | #1C79 | #1C9D |
-| stillscrolling.ayt | #1000 |355 bytes | #3F9B| #3FBF|
+| david_whittaker_demo.ayt | #1000 | 322 bytes | #3BB0 | #3BD4 |
+| med-Merci_Monsieur.ayt | #1000 | 322 bytes | #4574 | #4598 |
+| med-My_Ai_Is_Dumb.ayt | #1000 | 355 bytes | #3D37 | #3D5B |
+| still_scrolling.ayt | #1000 | 355 bytes | #3B2B | #3B4F |
 
 ### SP/JP bundle compact:
 
-| Nom AYT | AYT Runtime | Taille Player | demo RUN | return | 
+| Nom AYT | AYT Runtime | Taille bundle | demo RUN | return | 
 | :-----------: | :--------------: | :-------------: | :---------: | :-------: |
-|  Arhey.ayt |#01A3 |4266 bytes| #10EA|#110E|
-| complications.ayt |#01A3| 10623 bytes|#29BF| #29E3|
-|  easy.ayt | #0193| 3532 bytes| #0E0C |#0E30 |
-| stillscrolling.ayt | #01A3 | 12542 bytes | #313E |#3162|
+| david_whittaker_demo.ayt | #0182 | 11506 bytes | #2D32 | #2D56 |
+| med-Merci_Monsieur.ayt | #0182 | 14006 bytes | #36F6 | #371A |
+| med-My_Ai_Is_Dumb.ayt | #01A3 | 11930 bytes | #2EDA | #2EFE |
+| still_scrolling.ayt | #01A3 | 11406 bytes | #2CCE | #2CF2 |
+
+(En mode SP/JP, `demo RUN` est la valeur à passer en `--program-addr`, et `return` en `--return-addr`.)
 
 
 ## Notes importantes
@@ -406,4 +447,3 @@ Ils contiennent les pointeurs relocalisés pour l'adresse CPC finale.
 
 5. Le player prebuild ne dépend plus du builder ASM Z80 à l'exécution.
 Le builder est remplacé par l'outil PC aytpcbuild.
-
