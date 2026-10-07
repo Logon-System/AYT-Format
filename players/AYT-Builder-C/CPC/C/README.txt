@@ -45,12 +45,12 @@ Depuis la racine du depot.
 Linux ou macOS:
 
   cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild \
-    players/AYT-Builder-C/CPC/bin/aytpcbuild.c
+    players/AYT-Builder-C/CPC/C/aytpcbuild.c
 
 Windows avec GCC:
 
   gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe \
-    players\AYT-Builder-C\CPC\bin\aytpcbuild.c
+    players\AYT-Builder-C\CPC\C\aytpcbuild.c
 
 
 Exemple rapide

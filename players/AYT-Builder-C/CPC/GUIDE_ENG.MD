@@ -18,13 +18,13 @@ Results are not shipped pre-generated: they are created by the commands below (i
 ## Folder content
 
 		players/AYT-Builder-C/CPC/
-			bin/aytpcbuild.c
+			C/aytpcbuild.c
 			- Portable C99 source.
 
-			bin/build/aytpcbuild-win.exe
+			C/build/aytpcbuild-win.exe
 			- Precompiled Windows executable.
 
-			bin/build/aytpcbuild-menu.bat
+			C/build/aytpcbuild-menu.bat
 			- Interactive Windows menu script to run the executable without typing the whole command line.
 
 			web/aytpcbuild-web.html
@@ -44,15 +44,15 @@ From the repository root.
 
 Linux or macOS:
 
-		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild players/AYT-Builder-C/CPC/bin/aytpcbuild.c
+		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild players/AYT-Builder-C/CPC/C/aytpcbuild.c
 
 Windows with GCC:
 
-		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe players\AYT-Builder-C\CPC\bin\aytpcbuild.c
+		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe players\AYT-Builder-C\CPC\C\aytpcbuild.c
 
 The C code does not use any external dependencies.
 
-Windows without a compiler: use `players\AYT-Builder-C\CPC\bin\build\aytpcbuild-win.exe` directly in place of `aytpcbuild`.
+Windows without a compiler: use `players\AYT-Builder-C\CPC\C\build\aytpcbuild-win.exe` directly in place of `aytpcbuild`.
 
 In the following examples, `aytpcbuild` means the compiled executable, run from the repository root.
 
@@ -89,10 +89,10 @@ The resulting binary loads at #0040 and runs at #2CD2.
 
 ## Windows interactive script
 
-The `bin\build\aytpcbuild-menu.bat` script expects the executable next to it, named `aytpcbuild.exe`, and reads the `.ayt` files from the `ayt\` sub-folder of the current folder. So prepare a working folder:
+The `C\build\aytpcbuild-menu.bat` script expects the executable next to it, named `aytpcbuild.exe`, and reads the `.ayt` files from the `ayt\` sub-folder of the current folder. So prepare a working folder:
 
-		copy  players\AYT-Builder-C\CPC\bin\build\aytpcbuild-menu.bat   -> work\
-		copy  players\AYT-Builder-C\CPC\bin\build\aytpcbuild-win.exe    -> work\aytpcbuild.exe
+		copy  players\AYT-Builder-C\CPC\C\build\aytpcbuild-menu.bat   -> work\
+		copy  players\AYT-Builder-C\CPC\C\build\aytpcbuild-win.exe    -> work\aytpcbuild.exe
 		copy  ayt-files\*.ayt                                           -> work\ayt\
 
 Then, from `work\`, run:

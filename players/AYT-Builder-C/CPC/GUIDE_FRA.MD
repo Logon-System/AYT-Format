@@ -18,13 +18,13 @@ Les résultats ne sont pas fournis pré-générés: ils sont créés par les com
 ## Contenu du dossier
 
 		players/AYT-Builder-C/CPC/
-			bin/aytpcbuild.c
+			C/aytpcbuild.c
 			- Source C99 portable.
 
-			bin/build/aytpcbuild-win.exe
+			C/build/aytpcbuild-win.exe
 			- Exécutable Windows déjà compilé.
 
-			bin/build/aytpcbuild-menu.bat
+			C/build/aytpcbuild-menu.bat
 			- Menu interactif Windows pour lancer l'exécutable sans taper toute la ligne de commande.
 
 			web/aytpcbuild-web.html
@@ -44,15 +44,15 @@ Depuis la racine du dépôt.
 
 Linux ou macOS:
 
-		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild players/AYT-Builder-C/CPC/bin/aytpcbuild.c
+		cc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild players/AYT-Builder-C/CPC/C/aytpcbuild.c
 
 Windows avec GCC:
 
-		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe players\AYT-Builder-C\CPC\bin\aytpcbuild.c
+		gcc -std=c99 -O2 -Wall -Wextra -pedantic -o aytpcbuild.exe players\AYT-Builder-C\CPC\C\aytpcbuild.c
 
 Le code C n'utilise pas de dépendance externe.
 
-Windows sans compilateur: utiliser directement `players\AYT-Builder-C\CPC\bin\build\aytpcbuild-win.exe` à la place de `aytpcbuild`.
+Windows sans compilateur: utiliser directement `players\AYT-Builder-C\CPC\C\build\aytpcbuild-win.exe` à la place de `aytpcbuild`.
 
 Dans les exemples suivants, `aytpcbuild` désigne l'exécutable compilé, lancé depuis la racine du dépôt.
 
@@ -89,10 +89,10 @@ Le binaire obtenu se charge en #0040 et se lance en #2CD2.
 
 ## Script interactif Windows
 
-Le script `bin\build\aytpcbuild-menu.bat` s'utilise avec l'exécutable à côté de lui, sous le nom `aytpcbuild.exe`, et lit les `.ayt` du sous-dossier `ayt\` du dossier courant. Préparer donc un dossier de travail:
+Le script `C\build\aytpcbuild-menu.bat` s'utilise avec l'exécutable à côté de lui, sous le nom `aytpcbuild.exe`, et lit les `.ayt` du sous-dossier `ayt\` du dossier courant. Préparer donc un dossier de travail:
 
-		copier  players\AYT-Builder-C\CPC\bin\build\aytpcbuild-menu.bat   -> travail\
-		copier  players\AYT-Builder-C\CPC\bin\build\aytpcbuild-win.exe    -> travail\aytpcbuild.exe
+		copier  players\AYT-Builder-C\CPC\C\build\aytpcbuild-menu.bat   -> travail\
+		copier  players\AYT-Builder-C\CPC\C\build\aytpcbuild-win.exe    -> travail\aytpcbuild.exe
 		copier  ayt-files\*.ayt                                           -> travail\ayt\
 
 Puis, depuis `travail\`, lancer:
